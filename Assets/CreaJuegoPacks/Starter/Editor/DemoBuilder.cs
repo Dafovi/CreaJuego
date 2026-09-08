@@ -37,7 +37,7 @@ namespace CreaJuego.Starter
             AssetDatabase.Refresh();
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
             var sprite = MakeSprite();
-            Definition("jugador", "Jugador", "Personajes", "Corre y salta.", "Usa las flechas y Espacio para saltar.", ItemKind.Player, new Color(.3f,.8f,1), new Vector2(.7f,1), sprite,
+            Definition("jugador", "Jugador", "Personajes", "Corre y salta.", "Muévete con A/D o las flechas y salta con Espacio.", ItemKind.Player, new Color(.3f,.8f,1), new Vector2(.7f,1), sprite,
                 Float(nameof(GameItem.speed), "Velocidad", .2f, 5), Float(nameof(GameItem.jump), "Salto", 5, 18), Integer(nameof(GameItem.health), "Vidas", 1, 10));
             Definition("plataforma", "Plataforma", "Mundo", "Un lugar donde apoyarse.", "Mueve y escala esta plataforma en la vista Escena.", ItemKind.Platform, new Color(.35f,.65f,.55f), new Vector2(3,.45f), sprite, Tint());
             Definition("movil", "Plataforma móvil", "Mundo", "Viaja de un lado al otro.", "Distancia indica cuánto recorre hacia la derecha y regresa.", ItemKind.MovingPlatform, new Color(.35f,.8f,.7f), new Vector2(2,.4f), sprite,
@@ -76,7 +76,7 @@ namespace CreaJuego.Starter
         private static GameItem Place(string id, float x, float y) => ItemService.Create(ItemService.Catalog().Single(d => d.id == id), new Vector3(x,y,0));
         private static EducationalProperty Float(string path, string label, float min, float max) => new EducationalProperty { path = path, label = label, minimum = min, maximum = max, control = EducationalControl.Float, help = "Ajusta " + label.ToLowerInvariant() + " y prueba el resultado." };
         private static EducationalProperty Integer(string path, string label, int min, int max) => new EducationalProperty { path = path, label = label, minimum = min, maximum = max, control = EducationalControl.Integer, help = "Cantidad de " + label.ToLowerInvariant() + "." };
-        private static EducationalProperty Tint() => new EducationalProperty { path = nameof(GameItem.tint), label = "Color", control = EducationalControl.Color, help = "Elige el color que tendrá al probar." };
+        private static EducationalProperty Tint() => new EducationalProperty { path = nameof(GameItem.tint), label = "Color", control = EducationalControl.Color, help = "Elige el color que tendrá al jugar." };
 
         private static Sprite MakeSprite()
         {
@@ -179,20 +179,21 @@ namespace CreaJuego.Starter
             finally { camera.targetTexture = null; RenderTexture.active = previous; UnityEngine.Object.DestroyImmediate(image); UnityEngine.Object.DestroyImmediate(target); }
         }
 
-        private static void MakeHUD()
+        internal static DemoSession MakeHUD()
         {
             var canvas = new GameObject("Indicaciones del juego").AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = canvas.gameObject.AddComponent<CanvasScaler>(); scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1280,720);
             var ui = canvas.gameObject.AddComponent<UIScript>(); ui.gameType = UIScript.GameType.Life;
             var stats = new GameObject("Marcador", typeof(RectTransform)); stats.transform.SetParent(canvas.transform,false); ui.statsPanel = stats;
             // HUD labels live on the canvas, so their coordinates are independent of panel anchors.
-            Label(canvas.transform,"Controles","CREAJUEGO  ·  Flechas: moverte  ·  Espacio: saltar",new Vector2(24,-18));
-            Label(canvas.transform,"Vidas","Vidas",new Vector2(24,-55)); ui.numberLabels[0] = Label(canvas.transform,"Cantidad de vidas","3",new Vector2(100,-55));
-            Label(canvas.transform,"Puntos","Puntos",new Vector2(170,-55)); ui.numberLabels[1] = Label(canvas.transform,"Cantidad de puntos","0",new Vector2(250,-55));
-            ui.gameOverPanel = Label(canvas.transform,"Fin","Sin vidas. Detén y vuelve a probar.",new Vector2(280,-300),32).gameObject; ui.gameOverPanel.SetActive(false);
+            Label(canvas.transform,"Controles","CREAJUEGO  ·  A/D o flechas: moverte  ·  Espacio: saltar",new Vector2(24,-18));
+            Label(canvas.transform,"Vida:","Vida:",new Vector2(24,-55)); ui.numberLabels[0] = Label(canvas.transform,"Cantidad de puntos de vida","3",new Vector2(180,-55));
+            Label(canvas.transform,"Puntos","Puntos",new Vector2(240,-55)); ui.numberLabels[1] = Label(canvas.transform,"Cantidad de puntos","0",new Vector2(330,-55));
+            ui.gameOverPanel = Label(canvas.transform,"Fin","Sin puntos de vida. Detén y vuelve a jugar.",new Vector2(280,-300),32).gameObject; ui.gameOverPanel.SetActive(false);
             ui.winLabel = Label(canvas.transform,"Victoria","¡Lo lograste!",new Vector2(280,-300),32); ui.winPanel = ui.winLabel.gameObject; ui.winPanel.SetActive(false);
             var session = canvas.gameObject.AddComponent<DemoSession>(); session.playgroundUI = ui;
             session.status = Label(canvas.transform,"Objetivo","Recoge premios, evita el peligro y llega a la puerta verde.",new Vector2(24,-660));
+            return session;
         }
     }
 }

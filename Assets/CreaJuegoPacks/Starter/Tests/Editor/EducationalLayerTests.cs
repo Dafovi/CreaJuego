@@ -21,12 +21,12 @@ namespace CreaJuego.Starter.Tests
             Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         }
 
-        [Test] public void WorkshopPublishesOnlyFiveP0ItemsWithDistinctIcons()
+        [Test] public void WorkshopPublishesFiveP0AndValidatedEnemyWithDistinctIcons()
         {
             var catalog = ItemService.WorkshopCatalog();
-            Assert.That(catalog.Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal }));
+            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal }));
             Assert.That(catalog.All(d => d.icon != null), Is.True);
-            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(5));
+            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(6));
             Assert.That(ItemService.Catalog().Length, Is.EqualTo(8), "Experimental content is preserved");
         }
 
@@ -75,7 +75,7 @@ namespace CreaJuego.Starter.Tests
             Selection.activeGameObject = prize.gameObject;
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Null);
-            Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Null);
+            Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(prize.definition.icon));
             var number = window.rootVisualElement.Q<IntegerField>("propiedad-points");
             number.value = 500;

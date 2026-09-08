@@ -23,12 +23,15 @@ namespace Playground.Movement
         //if not, the player can jump even while in the air
         public bool checkGround = true;
 
+        // CREAJUEGO V1: optional external support predicate; null preserves upstream behavior.
+        [System.NonSerialized] public System.Func<bool> jumpAllowed;
         private bool canJump = true;
 
         // Read the input from the player
         private void Update()
         {
             if (Keyboard.current != null && canJump // CREAJUEGO: keyboard may be absent.
+                && (jumpAllowed == null || jumpAllowed())
                 && Keyboard.current[key].wasPressedThisFrame)
             {
                 // Apply an instantaneous upwards force

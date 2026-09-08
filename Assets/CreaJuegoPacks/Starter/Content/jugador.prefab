@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 612396641493810657}
   - component: {fileID: 6382684905590849594}
   - component: {fileID: 4299549847957765423}
+  - component: {fileID: 237047563895058268}
   m_Layer: 0
   m_Name: jugador
   m_TagString: Player
@@ -114,6 +115,7 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 3f30cacea794c834cad04e96290670d7, type: 2}
   speed: 2.5
   jump: 14
+  canJump: 1
   distance: 3
   health: 3
   damage: 1
@@ -254,3 +256,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a83b7acdd24dafa449975c837d8dbf9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreaJuego.Playground::CreaJuego.PlaygroundBackend.PlaygroundAdapter
+--- !u!114 &237047563895058268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8597619160083865053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 198ea4d913b573b4288a408cd2988e58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreaJuego.Playground::CreaJuego.PlaygroundBackend.GroundedJumpGate

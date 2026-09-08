@@ -1,0 +1,61 @@
+.creajuego {
+    --cj-bg: #151c29;
+    --cj-panel: #202c3d;
+    --cj-text: #edf2f6;
+    --cj-muted: #b5c5d5;
+    --cj-accent: #78dcc2;
+    --cj-border: #40536a;
+    background-color: var(--cj-bg);
+    color: var(--cj-text);
+    padding: 18px;
+    font-size: 13px;
+}
+.header { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.brand { flex-grow: 1; }
+.title { font-size: 25px; -unity-font-style: bold; letter-spacing: 1px; }
+.subtitle { font-size: 13px; color: var(--cj-muted); margin-top: 4px; }
+.creajuego Button { min-height: 34px; padding: 6px 12px; border-radius: 6px; border-width: 1px; border-color: var(--cj-border); background-color: var(--cj-panel); color: var(--cj-text); }
+.creajuego Button:hover { background-color: #2d4259; border-color: var(--cj-accent); }
+.creajuego Button:focus { border-color: var(--cj-accent); }
+.creajuego .primary { height: 44px; min-width: 128px; background-color: #256e5d; font-size: 15px; -unity-font-style: bold; }
+.toolbar { flex-direction: row; align-items: center; margin-bottom: 14px; }
+.toolbar .hint { flex-grow: 1; flex-shrink: 1; margin-left: 12px; }
+.columns { flex-direction: row; flex-grow: 1; min-height: 0; }
+.left-column { width: 40%; max-width: 300px; margin-right: 18px; flex-shrink: 0; }
+.properties { flex-grow: 1; min-width: 0; }
+.section-title { font-size: 11px; letter-spacing: 2px; -unity-font-style: bold; color: var(--cj-muted); margin-bottom: 10px; }
+.category { font-size: 11px; -unity-font-style: bold; margin-top: 14px; margin-bottom: 8px; color: var(--cj-muted); }
+.creajuego .card { flex-direction: row; align-items: center; min-height: 80px; margin: 0 3px 8px 0; padding: 10px; }
+.creajuego .card.selected { border-color: var(--cj-accent); background-color: #294439; }
+.card-copy { flex-grow: 1; flex-shrink: 1; min-width: 0; }
+.card-title { font-size: 15px; -unity-font-style: bold; white-space: normal; }
+.item-icon { width: 32px; height: 32px; flex-shrink: 0; margin-right: 10px; }
+.hint { font-size: 12px; color: var(--cj-muted); white-space: normal; margin-top: 5px; }
+.selection-heading { flex-direction: row; align-items: center; margin-bottom: 8px; }
+.selection-title { font-size: 22px; -unity-font-style: bold; white-space: normal; flex-shrink: 1; }
+.selection-help { white-space: normal; margin-bottom: 16px; color: var(--cj-muted); }
+.property-group { padding: 12px; margin-right: 4px; margin-bottom: 10px; border-radius: 7px; background-color: var(--cj-panel); }
+.group-title { font-size: 11px; letter-spacing: 1px; -unity-font-style: bold; margin-bottom: 10px; color: var(--cj-accent); }
+.property { margin-bottom: 12px; }
+.property .unity-base-field { flex-direction: column; align-items: stretch; margin-left: 0; margin-right: 0; }
+.property .unity-base-field__label { min-width: 0; margin-bottom: 6px; white-space: normal; color: var(--cj-text); }
+.property .unity-base-field__input { min-height: 26px; }
+.property .unity-toggle { flex-direction: row; }
+.property .unity-toggle__input { flex-grow: 0; margin-left: 8px; }
+.message .unity-text-field__input { min-height: 64px; white-space: normal; }
+.unit { color: var(--cj-muted); font-size: 11px; }
+.actions { flex-direction: row; flex-wrap: wrap; margin-bottom: 10px; }
+.actions Button { margin-right: 6px; margin-bottom: 5px; }
+.empty { white-space: normal; color: var(--cj-muted); margin-top: 20px; font-size: 16px; }
+.status { white-space: normal; color: var(--cj-accent); border-top-width: 1px; border-top-color: var(--cj-border); padding-top: 12px; margin-top: 12px; }
+.validation { max-height: 185px; padding: 10px; margin-bottom: 12px; border-width: 1px; border-color: var(--cj-border); border-radius: 6px; }
+.validation Label { white-space: normal; margin-bottom: 4px; }
+.check-ok { color: var(--cj-muted); }
+.check-missing { color: #ffcc89; }
+
+
+.creajuego .left-column { min-height: 0; }
+.creajuego .catalog { flex-grow: 3; flex-basis: 0; min-height: 100px; }
+.creajuego .game-items { flex-grow: 2; flex-basis: 0; min-height: 90px; }
+.creajuego .scene-item { min-height: 30px; -unity-text-align: middle-left; }
+.creajuego .scene-item.selected { border-color: var(--cj-accent); border-width: 2px; }

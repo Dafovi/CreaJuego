@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
   id: enemigo
   displayName: Enemigo
-  category: Objetos
+  category: Retos
   description: "Patrulla y hace da\xF1o."
-  learningHint: Recorre un tramo horizontal. Puedes saltar para evitarlo.
+  learningHint: Este enemigo va y vuelve por un tramo. Evita tocarlo para no perder puntos de vida.
   icon: {fileID: -1092110371768519499, guid: 04ce8474e899c4247b7082ff21a6db2e, type: 3}
   prefab: {fileID: 3042381860002088035, guid: a8e26b2a41720f344af8b89469e1b65e, type: 3}
   kind: 6
   order: 6
-  availableInWorkshop: 0
+  availableInWorkshop: 1
   allowMultiple: 1
   properties:
   - path: speed
     label: Velocidad
-    group: 
+    group: Movimiento
     unit: 
     visibleWhen: 
     help: Ajusta velocidad y prueba el resultado.
@@ -34,17 +34,17 @@ MonoBehaviour:
     minimum: 0.2
     maximum: 3
   - path: distance
-    label: Distancia
-    group: 
+    label: Distancia de recorrido
+    group: Movimiento
     unit: 
     visibleWhen: 
-    help: Ajusta distancia y prueba el resultado.
+    help: Va hacia la derecha y vuelve. Su recorrido debe quedar libre.
     control: 0
     minimum: 0.5
     maximum: 6
   - path: damage
-    label: "Da\xF1o"
-    group: 
+    label: "Da\xF1o al personaje"
+    group: Contacto
     unit: 
     visibleWhen: 
     help: "Cantidad de da\xF1o."

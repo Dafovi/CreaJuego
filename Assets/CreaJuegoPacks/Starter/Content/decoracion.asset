@@ -29,7 +29,7 @@ MonoBehaviour:
     group: 
     unit: 
     visibleWhen: 
-    help: "Elige el color que tendr\xE1 al probar."
+    help: "Elige el color que tendr\xE1 al jugar."
     control: 4
     minimum: 0
     maximum: 10

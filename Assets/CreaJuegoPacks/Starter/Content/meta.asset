@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Meta
   category: Objetos
   description: El final de tu recorrido.
-  learningHint: "Llega aqu\xED para completar el recorrido. El mensaje celebra el final de tu juego."
+  learningHint: "Llega aqu\xED para completar el recorrido."
   icon: {fileID: 5879908866151352552, guid: 32b64b354f66c2e46aca92e648f1bc61, type: 3}
   prefab: {fileID: 9076860138798354513, guid: 862822d0a17fd01498f1a0bac63dafe7, type: 3}
   kind: 4
@@ -26,7 +26,7 @@ MonoBehaviour:
   properties:
   - path: message
     label: Mensaje al llegar
-    group: Resultado
+    group: Final
     unit: 
     visibleWhen: 
     help: Escribe un mensaje de hasta 120 caracteres.

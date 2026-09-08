@@ -1,4 +1,4 @@
-﻿using Playground.UserInterface;
+using Playground.UserInterface;
 using UnityEngine;
 
 namespace Playground.Attributes
@@ -6,6 +6,9 @@ namespace Playground.Attributes
     [AddComponentMenu("Playground/Attributes/Health System")]
     public class HealthSystemAttribute : MonoBehaviour
     {
+        // CREAJUEGO V1: optional gate/notification, no dependency on CreaJuego types.
+        [System.NonSerialized] public System.Func<bool> modificationAllowed;
+        [System.NonSerialized] public System.Action<int> healthChanged;
         public int health = 3;
         
         private int maxHealth;
@@ -45,6 +48,7 @@ namespace Playground.Attributes
         // also notifies the UI (if present)
         public void ModifyHealth(int amount)
         {
+            if (modificationAllowed != null && !modificationAllowed()) return;
             // Avoid going over the maximum health
             if (health + amount > maxHealth) amount = maxHealth - health;
 
@@ -55,6 +59,7 @@ namespace Playground.Attributes
                 && playerNumber != -1)
                 ui.ChangeHealth(amount, playerNumber);
 
+            healthChanged?.Invoke(health);
             // Dead
             if (health <= 0) Destroy(gameObject);
         }

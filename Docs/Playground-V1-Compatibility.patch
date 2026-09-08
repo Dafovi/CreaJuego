@@ -1,0 +1,112 @@
+# Incremental CreaJuego V1 patch, relative to the prior vendored spike.
+# Apply from Assets/ThirdParty/UnityPlayground. Original MIT license retained.
+diff --git a/Scripts/Attributes/CollectableAttribute.cs b/Scripts/Attributes/CollectableAttribute.cs
+index 0ebdba1..ba6912f 100644
+--- a/Scripts/Attributes/CollectableAttribute.cs
++++ b/Scripts/Attributes/CollectableAttribute.cs
+@@ -1,4 +1,4 @@
+-﻿using Playground.UserInterface;
++using Playground.UserInterface;
+ using Playground.Utilities;
+ using UnityEngine;
+ 
+@@ -7,6 +7,8 @@ namespace Playground.Attributes
+     [AddComponentMenu("Playground/Attributes/Collectable")]
+     public class CollectableAttribute : MonoBehaviour
+     {
++        // CREAJUEGO V1: optional session gate; null preserves upstream behavior.
++        [System.NonSerialized] public System.Func<bool> interactionAllowed;
+         public int pointsWorth = 1;
+ 
+         private UIScript userInterface;
+@@ -28,6 +30,7 @@ namespace Playground.Attributes
+         // This function gets called everytime this object collides with another
+         private void OnTriggerEnter2D(Collider2D otherCollider)
+         {
++            if (interactionAllowed != null && !interactionAllowed()) return;
+             string playerTag = otherCollider.gameObject.tag;
+ 
+             // is the other object a player?
+diff --git a/Scripts/Attributes/HealthSystemAttribute.cs b/Scripts/Attributes/HealthSystemAttribute.cs
+index e900690..00e5b9e 100644
+--- a/Scripts/Attributes/HealthSystemAttribute.cs
++++ b/Scripts/Attributes/HealthSystemAttribute.cs
+@@ -1,4 +1,4 @@
+-﻿using Playground.UserInterface;
++using Playground.UserInterface;
+ using UnityEngine;
+ 
+ namespace Playground.Attributes
+@@ -6,6 +6,9 @@ namespace Playground.Attributes
+     [AddComponentMenu("Playground/Attributes/Health System")]
+     public class HealthSystemAttribute : MonoBehaviour
+     {
++        // CREAJUEGO V1: optional gate/notification, no dependency on CreaJuego types.
++        [System.NonSerialized] public System.Func<bool> modificationAllowed;
++        [System.NonSerialized] public System.Action<int> healthChanged;
+         public int health = 3;
+         
+         private int maxHealth;
+@@ -45,6 +48,7 @@ namespace Playground.Attributes
+         // also notifies the UI (if present)
+         public void ModifyHealth(int amount)
+         {
++            if (modificationAllowed != null && !modificationAllowed()) return;
+             // Avoid going over the maximum health
+             if (health + amount > maxHealth) amount = maxHealth - health;
+ 
+@@ -55,6 +59,7 @@ namespace Playground.Attributes
+                 && playerNumber != -1)
+                 ui.ChangeHealth(amount, playerNumber);
+ 
++            healthChanged?.Invoke(health);
+             // Dead
+             if (health <= 0) Destroy(gameObject);
+         }
+diff --git a/Scripts/Attributes/ModifyHealthAttribute.cs b/Scripts/Attributes/ModifyHealthAttribute.cs
+index c5892cd..e567a65 100644
+--- a/Scripts/Attributes/ModifyHealthAttribute.cs
++++ b/Scripts/Attributes/ModifyHealthAttribute.cs
+@@ -1,4 +1,4 @@
+-﻿using Playground.Utilities;
++using Playground.Utilities;
+ using UnityEngine;
+ 
+ namespace Playground.Attributes
+@@ -6,6 +6,8 @@ namespace Playground.Attributes
+     [AddComponentMenu("Playground/Attributes/Modify Health")]
+     public class ModifyHealthAttribute : MonoBehaviour
+     {
++        // CREAJUEGO V1: optional session gate; null preserves upstream behavior.
++        [System.NonSerialized] public System.Func<bool> interactionAllowed;
+         public bool destroyWhenActivated;
+         public int healthChange = -1;
+ 
+@@ -23,6 +25,7 @@ namespace Playground.Attributes
+ 
+         private void OnTriggerEnter2D(Collider2D colliderData)
+         {
++            if (interactionAllowed != null && !interactionAllowed()) return;
+             if (colliderData.TryGetComponent(out HealthSystemAttribute healthScript))
+             {
+                 // subtract health from the player
+diff --git a/Scripts/Movement/Jump.cs b/Scripts/Movement/Jump.cs
+index 75c37ee..bd19163 100644
+--- a/Scripts/Movement/Jump.cs
++++ b/Scripts/Movement/Jump.cs
+@@ -23,12 +23,15 @@ namespace Playground.Movement
+         //if not, the player can jump even while in the air
+         public bool checkGround = true;
+ 
++        // CREAJUEGO V1: optional external support predicate; null preserves upstream behavior.
++        [System.NonSerialized] public System.Func<bool> jumpAllowed;
+         private bool canJump = true;
+ 
+         // Read the input from the player
+         private void Update()
+         {
+             if (Keyboard.current != null && canJump // CREAJUEGO: keyboard may be absent.
++                && (jumpAllowed == null || jumpAllowed())
+                 && Keyboard.current[key].wasPressedThisFrame)
+             {
+                 // Apply an instantaneous upwards force

@@ -1,0 +1,3 @@
+Round trip/ranges/relative duplication: PASS
+Passenger max separation: 6.00
+Workshop ready: False

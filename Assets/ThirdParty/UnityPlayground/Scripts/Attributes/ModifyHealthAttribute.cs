@@ -1,4 +1,4 @@
-﻿using Playground.Utilities;
+using Playground.Utilities;
 using UnityEngine;
 
 namespace Playground.Attributes
@@ -6,6 +6,8 @@ namespace Playground.Attributes
     [AddComponentMenu("Playground/Attributes/Modify Health")]
     public class ModifyHealthAttribute : MonoBehaviour
     {
+        // CREAJUEGO V1: optional session gate; null preserves upstream behavior.
+        [System.NonSerialized] public System.Func<bool> interactionAllowed;
         public bool destroyWhenActivated;
         public int healthChange = -1;
 
@@ -23,6 +25,7 @@ namespace Playground.Attributes
 
         private void OnTriggerEnter2D(Collider2D colliderData)
         {
+            if (interactionAllowed != null && !interactionAllowed()) return;
             if (colliderData.TryGetComponent(out HealthSystemAttribute healthScript))
             {
                 // subtract health from the player

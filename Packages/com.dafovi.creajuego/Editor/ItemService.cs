@@ -21,7 +21,7 @@ namespace CreaJuego.Editor
 
         public static GameItem Create(GameItemDefinition definition, Vector3 position)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Detén la prueba antes de crear.");
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Detén el juego antes de crear.");
             if (definition == null || definition.prefab == null) throw new ArgumentException("Este elemento no tiene contenido asignado.");
             if (!CanCreate(definition)) throw new InvalidOperationException("Este taller usa un solo " + definition.displayName.ToLowerInvariant() + ". Selecciona el que ya está en la escena.");
             var source = definition.prefab.GetComponent<GameItem>();
@@ -41,7 +41,7 @@ namespace CreaJuego.Editor
 
         private static void RequireEditable(GameItem item)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Detén la prueba antes de editar.");
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Detén el juego antes de editar.");
             if (item == null || EditorUtility.IsPersistent(item) || !item.gameObject.scene.IsValid() || item.definition == null)
                 throw new InvalidOperationException("Elige un elemento de la escena.");
         }
@@ -56,6 +56,7 @@ namespace CreaJuego.Editor
             if (PrefabUtility.GetAddedComponents(source.gameObject).Count > 0 || PrefabUtility.GetRemovedComponents(source.gameObject).Count > 0 ||
                 PrefabUtility.GetAddedGameObjects(source.gameObject).Count > 0 || PrefabUtility.GetRemovedGameObjects(source.gameObject).Count > 0)
                 throw new InvalidOperationException("Este elemento tiene cambios avanzados. Duplícalo desde la vista Escena.");
+            Undo.IncrementCurrentGroup(); int group = Undo.GetCurrentGroup();
             var prefab = PrefabUtility.GetCorrespondingObjectFromSource(source.gameObject);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, source.gameObject.scene);
             PrefabUtility.SetPropertyModifications(go, PrefabUtility.GetPropertyModifications(source.gameObject));
@@ -67,13 +68,18 @@ namespace CreaJuego.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(go);
             EditorSceneManager.MarkSceneDirty(go.scene);
             Selection.activeGameObject = go;
+            Undo.CollapseUndoOperations(group);
             return go.GetComponent<GameItem>();
         }
 
-        public static void Delete(GameItem item)
+        public static string Delete(GameItem item)
         {
             RequireEditable(item);
+            var kind = item.definition.kind;
+            Undo.IncrementCurrentGroup();
             Undo.DestroyObjectImmediate(item.gameObject);
+            Selection.activeGameObject = null;
+            return kind == ItemKind.Player ? "Tu juego necesita un personaje para poder jugarse." : kind == ItemKind.Goal ? "Agrega una Meta para indicar dónde termina el recorrido." : "Elemento eliminado. Ctrl+Z lo recupera.";
         }
 
         private static UnityEngine.SceneManagement.Scene SceneManagerSetup() => UnityEngine.SceneManagement.SceneManager.GetActiveScene();

@@ -23,6 +23,8 @@ namespace Playground.Movement
         [Tooltip("The direction to face while moving.")]
         public Enums.Directions lookAxis = Enums.Directions.Up;
 
+        // CREAJUEGO V1.1: optional input source; the original controls remain the default.
+        [System.NonSerialized] public System.Func<Vector2> movementSource;
         private float moveHorizontal;
 
         private Vector2 movementInput, cachedDirection;
@@ -30,8 +32,9 @@ namespace Playground.Movement
 
         private void Update()
         {
-            moveHorizontal = InputUtils.GetAxis(Enums.Axes.X, typeOfControl);
-            moveVertical = InputUtils.GetAxis(Enums.Axes.Y, typeOfControl);
+            var direction = movementSource != null ? movementSource() : new Vector2(InputUtils.GetAxis(Enums.Axes.X, typeOfControl), InputUtils.GetAxis(Enums.Axes.Y, typeOfControl));
+            moveHorizontal = direction.x;
+            moveVertical = direction.y;
 
             // Zero-out the axes that are not needed, if the movement is constrained
             switch (movementType)

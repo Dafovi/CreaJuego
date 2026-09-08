@@ -59,7 +59,7 @@ namespace CreaJuego.Starter.Tests
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-jugador"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-meta"), Is.Not.Null);
-            Assert.That(window.rootVisualElement.Q<Button>("probar").text, Is.EqualTo("▶ PROBAR"));
+            Assert.That(window.rootVisualElement.Q<Button>("jugar").text, Is.EqualTo("▶ JUGAR"));
             var sliders = window.rootVisualElement.Q<ScrollView>("propiedades").Query<Slider>().ToList().Where(s => s.label == "Velocidad" || s.label == "Fuerza de salto").ToList();
             Assert.That(sliders.Count, Is.EqualTo(2));
             sliders.Single(s => s.label == "Velocidad").value = 3;
@@ -147,6 +147,42 @@ namespace CreaJuego.Starter.Tests
             Assert.That(Object.FindObjectsByType<GameItem>().Count(i => i.definition.kind == ItemKind.Prize), Is.EqualTo(2), "Play mode destruction does not alter authored scene");
         }
 
+        [UnityTest] public IEnumerator BothControlSchemesDriveTheSamePlaygroundBody()
+        {
+            yield return new EnterPlayMode();
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            var keyboard=InputSystem.AddDevice<Keyboard>();
+            var player=Object.FindObjectsByType<GameItem>().Single(i=>i.definition.kind==ItemKind.Player);
+            var body=player.GetComponent<Rigidbody2D>();
+            try
+            {
+                foreach(var keys in new[] {new[]{Key.A},new[]{Key.D},new[]{Key.LeftArrow},new[]{Key.RightArrow},new[]{Key.A,Key.LeftArrow},new[]{Key.D,Key.RightArrow}})
+                {
+                    InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+                    body.position=new Vector2(-7,-1.2f); body.linearVelocity=Vector2.zero;
+                    yield return Wait(.15f);
+                    float start=body.position.x;
+                    InputSystem.QueueStateEvent(keyboard,new KeyboardState(keys));
+                    yield return Wait(.2f);
+                    float sign=keys[0]==Key.A || keys[0]==Key.LeftArrow ? -1 : 1;
+                    Assert.That((body.position.x-start)*sign,Is.GreaterThan(.05f),keys[0].ToString());
+                    // Exact combined magnitude is covered synchronously by CombinedInputHasOneDirectionForEquivalentKeys.
+                }
+                InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+                body.position=new Vector2(-7,-1.2f); body.linearVelocity=Vector2.zero;
+                yield return Wait(.4f);
+                float groundedY=body.position.y;
+                InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.W));
+                yield return Wait(.1f);
+                Assert.That(body.position.y,Is.LessThanOrEqualTo(groundedY+.05f),"W does not jump");
+                InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.D,Key.Space));
+                yield return Wait(.1f);
+                Assert.That(body.position.y,Is.GreaterThan(groundedY+.15f),"Space still jumps with D held");
+            }
+            finally {InputSystem.RemoveDevice(keyboard);}
+            yield return new ExitPlayMode();
+        }
         [UnityTest] public IEnumerator RealPlaygroundHazardCanLoseGame()
         {
             yield return new EnterPlayMode();

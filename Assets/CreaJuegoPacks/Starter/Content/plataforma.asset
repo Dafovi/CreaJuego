@@ -29,7 +29,7 @@ MonoBehaviour:
     group: Apariencia
     unit: 
     visibleWhen: 
-    help: Elige el color de esta plataforma al probar.
+    help: Elige el color de esta plataforma.
     control: 4
     minimum: 0
     maximum: 10

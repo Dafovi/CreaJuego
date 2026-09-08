@@ -9,6 +9,7 @@ namespace CreaJuego
         public GameItemDefinition definition;
         [Range(.1f, 12)] public float speed = 2;
         [Range(1, 20)] public float jump = 10;
+        public bool canJump = true;
         [Range(.5f, 10)] public float distance = 3;
         [Range(1, 10)] public int health = 3;
         [Range(1, 10)] public int damage = 1;

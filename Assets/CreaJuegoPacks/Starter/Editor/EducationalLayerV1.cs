@@ -24,23 +24,23 @@ namespace CreaJuego.Starter
                 {
                     case ItemKind.Player:
                         definition.category = "Personaje";
-                        definition.learningHint = "Este es el personaje que controla quien juega. Muévelo con las flechas y salta con Espacio.";
+                        definition.learningHint = "Este es el personaje que controla quien juega. Muévelo con A/D o las flechas y salta con Espacio.";
                         Set(definition, nameof(GameItem.speed), "Movimiento", "Velocidad", "Controla qué tan rápido se mueve el personaje.");
                         Set(definition, nameof(GameItem.jump), "Salto", "Fuerza de salto", "Aumenta este valor para saltar más alto.");
-                        Set(definition, nameof(GameItem.health), "Resistencia", "Resistencia inicial", "Cuánto daño puede recibir antes de terminar la partida.");
+                        Set(definition, nameof(GameItem.health), "Vida", "Puntos de vida", "Cuánto daño puede recibir antes de terminar la partida.");
                         break;
                     case ItemKind.Platform:
                         definition.learningHint = "Un lugar firme donde el personaje puede caminar y apoyarse.";
-                        Set(definition, nameof(GameItem.tint), "Apariencia", "Color", "Elige el color de esta plataforma al probar.");
+                        Set(definition, nameof(GameItem.tint), "Apariencia", "Color", "Elige el color de esta plataforma al jugar.");
                         break;
                     case ItemKind.Prize:
                         definition.learningHint = "El personaje recoge este premio al tocarlo y suma los puntos que elijas.";
                         Set(definition, nameof(GameItem.points), "Recompensa", "Puntos", "Cantidad que suma al recoger este premio.", "puntos");
                         break;
                     case ItemKind.Hazard:
-                        definition.description = "Al tocarlo pierdes resistencia.";
-                        definition.learningHint = "Al tocar este peligro, el personaje pierde resistencia. Si llega a cero, termina la partida.";
-                        Set(definition, nameof(GameItem.damage), "Contacto", "Daño al personaje", "Resistencia que pierde al entrar en contacto.");
+                        definition.description = "Al tocarlo pierdes puntos de vida.";
+                        definition.learningHint = "Al tocar este peligro, el personaje pierde puntos de vida. Si llega a cero, termina la partida.";
+                        Set(definition, nameof(GameItem.damage), "Contacto", "Daño al personaje", "Vida que pierde al entrar en contacto.");
                         Set(definition, nameof(GameItem.disappear), "Contacto", "Desaparecer después del contacto", "El peligro se retira después del primer contacto.");
                         break;
                     case ItemKind.Goal:

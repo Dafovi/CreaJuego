@@ -26,7 +26,7 @@ MonoBehaviour:
   properties:
   - path: points
     label: Puntos
-    group: Recompensa
+    group: "Puntuaci\xF3n"
     unit: puntos
     visibleWhen: 
     help: Cantidad que suma al recoger este premio.

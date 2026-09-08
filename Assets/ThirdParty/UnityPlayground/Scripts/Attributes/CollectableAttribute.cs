@@ -1,4 +1,4 @@
-﻿using Playground.UserInterface;
+using Playground.UserInterface;
 using Playground.Utilities;
 using UnityEngine;
 
@@ -7,6 +7,8 @@ namespace Playground.Attributes
     [AddComponentMenu("Playground/Attributes/Collectable")]
     public class CollectableAttribute : MonoBehaviour
     {
+        // CREAJUEGO V1: optional session gate; null preserves upstream behavior.
+        [System.NonSerialized] public System.Func<bool> interactionAllowed;
         public int pointsWorth = 1;
 
         private UIScript userInterface;
@@ -28,6 +30,7 @@ namespace Playground.Attributes
         // This function gets called everytime this object collides with another
         private void OnTriggerEnter2D(Collider2D otherCollider)
         {
+            if (interactionAllowed != null && !interactionAllowed()) return;
             string playerTag = otherCollider.gameObject.tag;
 
             // is the other object a player?

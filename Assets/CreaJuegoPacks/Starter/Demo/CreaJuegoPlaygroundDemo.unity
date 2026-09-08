@@ -153,7 +153,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 170, y: -55}
+  m_AnchoredPosition: {x: 240, y: -55}
   m_SizeDelta: {x: 900, y: 70}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &58576241
@@ -249,7 +249,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Sin vidas. Det\xE9n y vuelve a probar."
+  m_Text: "Sin puntos de vida. Det\xE9n y vuelve a jugar."
 --- !u!222 &88564278
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -774,7 +774,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 250, y: -55}
+  m_AnchoredPosition: {x: 330, y: -55}
   m_SizeDelta: {x: 900, y: 70}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1024806459
@@ -853,7 +853,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 100, y: -55}
+  m_AnchoredPosition: {x: 180, y: -55}
   m_SizeDelta: {x: 900, y: 70}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1249094626
@@ -1193,7 +1193,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "CREAJUEGO  \xB7  Flechas: moverte  \xB7  Espacio: saltar"
+  m_Text: "CREAJUEGO  \xB7  A/D o flechas: moverte  \xB7  Espacio: saltar"
 --- !u!222 &1560302322
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1464,7 +1464,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Vidas
+  m_Text: "Vida:"
 --- !u!222 &1901803486
 CanvasRenderer:
   m_ObjectHideFlags: 0

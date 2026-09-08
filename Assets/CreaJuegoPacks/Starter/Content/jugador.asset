@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Jugador
   category: Personaje
   description: Corre y salta.
-  learningHint: "Este es el personaje que controla quien juega. Mu\xE9velo con las flechas y salta con Espacio."
+  learningHint: "Este es el personaje que controla quien juega. Mu\xE9velo con A/D o las flechas y salta con Espacio."
   icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
   prefab: {fileID: 8597619160083865053, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
   kind: 0
@@ -37,17 +37,26 @@ MonoBehaviour:
     label: Fuerza de salto
     group: Salto
     unit: 
-    visibleWhen: 
-    help: "Aumenta este valor para saltar m\xE1s alto."
+    visibleWhen: canJump
+    help: "Controla qu\xE9 tan alto puede saltar el personaje."
     control: 0
     minimum: 5
     maximum: 18
-  - path: health
-    label: Resistencia inicial
-    group: Resistencia
+  - path: canJump
+    label: Puede saltar
+    group: Salto
     unit: 
     visibleWhen: 
-    help: "Cu\xE1nto da\xF1o puede recibir antes de terminar la partida."
+    help: "Desact\xEDvalo si quieres que el personaje s\xF3lo pueda caminar."
+    control: 2
+    minimum: 0
+    maximum: 10
+  - path: health
+    label: Puntos de vida
+    group: Vida
+    unit: 
+    visibleWhen: 
+    help: Indica cuántos puntos de vida tiene el personaje. Los peligros le quitan puntos de vida. Si llegan a cero, termina la partida.
     control: 1
     minimum: 1
     maximum: 10
