@@ -1,0 +1,12 @@
+Assets\CreaJuegoPacks\Starter\Content\enemigo.asset
+Assets\CreaJuegoPacks\Starter\Content\jugador.asset
+Assets\CreaJuegoPacks\Starter\Content\meta.asset
+Assets\CreaJuegoPacks\Starter\Content\peligro.asset
+Assets\CreaJuegoPacks\Starter\Content\plataforma.asset
+Assets\CreaJuegoPacks\Starter\Content\premio.asset
+Assets\CreaJuegoPacks\Starter\Tests\Editor\VisualDirectionTests.cs
+Assets\CreaJuegoPacks\Starter\Tests\Editor\VisualDirectionTests.cs.meta
+Packages\com.dafovi.creajuego\Editor\CreaJuegoWindow.cs
+Packages\com.dafovi.creajuego\Editor\WorkshopPresentation.cs
+Packages\com.dafovi.creajuego\Editor\WorkshopPresentation.cs.meta
+Packages\com.dafovi.creajuego\Editor\Styles\CreaJuegoTheme.uss

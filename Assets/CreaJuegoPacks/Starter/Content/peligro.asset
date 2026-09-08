@@ -15,7 +15,7 @@ MonoBehaviour:
   id: peligro
   displayName: Peligro
   category: Objetos
-  description: Al tocarlo pierdes puntos de vida.
+  description: Quita puntos de vida al personaje.
   learningHint: Al tocar este peligro, el personaje pierde puntos de vida.
   icon: {fileID: 6020323851609522334, guid: 8650b6909be4ee74da5743ad8dcc0171, type: 3}
   prefab: {fileID: 2011784637924788677, guid: 491e549c10beb20419bfdd57c273d7ae, type: 3}

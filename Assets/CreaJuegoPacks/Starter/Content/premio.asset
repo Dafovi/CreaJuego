@@ -15,7 +15,7 @@ MonoBehaviour:
   id: premio
   displayName: Premio
   category: Objetos
-  description: "Rec\xF3gelo para sumar puntos."
+  description: El personaje lo recoge para ganar puntos.
   learningHint: El personaje recoge este premio al tocarlo y suma los puntos que elijas.
   icon: {fileID: 2594184839887779542, guid: dbb364b432bc4094b942a0c3ac5c15fc, type: 3}
   prefab: {fileID: 5305122942234287774, guid: 34704e4c7a422394698f5e6b534dc540, type: 3}

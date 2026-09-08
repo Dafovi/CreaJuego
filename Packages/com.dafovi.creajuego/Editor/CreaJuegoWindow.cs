@@ -12,20 +12,21 @@ namespace CreaJuego.Editor
     {
         private ScrollView catalog, properties, validation, gameItems;
         private Label status;
+        private VisualElement flow, footer;
         private Button play, prepare;
         private SerializedObject binding;
 
         [MenuItem("CreaJuego/Abrir taller")]
-        public static void Open() => GetWindow<CreaJuegoWindow>("CreaJuego Lab");
+        public static void Open() => GetWindow<CreaJuegoWindow>("CreaJuego");
         private void OnEnable()
         {
             Selection.selectionChanged += ShowSelection; Undo.undoRedoPerformed += UndoChanged; EditorApplication.hierarchyChanged += RefreshSceneItems; UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode += SceneChanged;
-            EditorApplication.playModeStateChanged += PlayChanged; EditorApplication.projectChanged += RefreshCatalog;
+            EditorApplication.playModeStateChanged += PlayChanged; EditorApplication.projectChanged += RefreshCatalog; ObjectChangeEvents.changesPublished += ObjectsChanged;
         }
         private void OnDisable()
         {
             Selection.selectionChanged -= ShowSelection; Undo.undoRedoPerformed -= UndoChanged; EditorApplication.hierarchyChanged -= RefreshSceneItems; UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode -= SceneChanged;
-            EditorApplication.playModeStateChanged -= PlayChanged; EditorApplication.projectChanged -= RefreshCatalog;
+            EditorApplication.playModeStateChanged -= PlayChanged; EditorApplication.projectChanged -= RefreshCatalog; ObjectChangeEvents.changesPublished -= ObjectsChanged;
             properties?.Unbind(); binding?.Dispose(); binding = null;
         }
         private static T Styled<T>(T element, string className) where T : VisualElement { element.AddToClassList(className); return element; }
@@ -38,29 +39,35 @@ namespace CreaJuego.Editor
             if (sheet != null && !root.styleSheets.Contains(sheet)) root.styleSheets.Add(sheet);
             var header = Styled(new VisualElement(), "header");
             var brand = Styled(new VisualElement(), "brand");
-            brand.Add(Styled(new Label("CREA JUEGO"), "title"));
-            brand.Add(Styled(new Label("Crea una pequeña experiencia jugable"), "subtitle"));
+            brand.Add(Styled(new Label("CreaJuego"), "title"));
+            brand.Add(Styled(new Label("Crea, aprende y juega con Unity"), "subtitle"));
             header.Add(brand);
             play = Styled(new Button(TogglePlay) { name="jugar", text="▶ JUGAR" }, "primary");
-            header.Add(play); root.Add(header);
+            root.Add(header);
+            flow=Styled(new VisualElement {name="flujo"},"flow");
+            foreach(var step in new[]{"1 · Añadir","2 · Seleccionar","3 · Personalizar","4 · Jugar"})
+                flow.Add(Styled(new Label(step),"flow-step"));
+            root.Add(flow);
             var tools = Styled(new VisualElement(), "toolbar");
-            prepare = new Button(PrepareScene) { name="preparar-escena", text="Preparar escena", tooltip="Añade la cámara y el marcador del taller. Puedes deshacerlo." };
+            prepare = new Button(PrepareScene) { name="preparar-escena", text="Preparar escena", tooltip="Prepara lo necesario para jugar. Puedes deshacerlo." };
             tools.Add(prepare);
-            tools.Add(Styled(new Label("Primero crea. Luego descubre cómo funciona."), "hint"));
+            tools.Add(new Button(()=>GetWindow<SceneView>().Focus()) {text="Ver escena",tooltip="Abre la vista de Unity donde puedes mover los elementos."});
+            tools.Add(Styled(new Label("Construye en la vista Escena."), "hint"));
             root.Add(tools);
             validation = Styled(new ScrollView { name="validacion" }, "validation");
-            validation.style.display=DisplayStyle.None; root.Add(validation);
+            footer=Styled(new VisualElement {name="juego-estado"},"play-footer");
+            footer.Add(validation); footer.Add(play);
             var columns=Styled(new VisualElement(), "columns");
             catalog=Styled(new ScrollView { name="catalogo" }, "catalog");
             properties=Styled(new ScrollView { name="propiedades" }, "properties");
             var left=Styled(new VisualElement(),"left-column");
             left.Add(Styled(new Label("AÑADIR AL JUEGO"),"section-title"));
-            left.Add(Styled(new Label("Crea un elemento nuevo."),"hint"));
+            left.Add(Styled(new Label("Elige algo para añadir a tu juego."),"hint"));
             left.Add(catalog);
             left.Add(Styled(new Label("MI JUEGO"),"section-title"));
             left.Add(Styled(new Label("Selecciona lo que ya has añadido."),"hint"));
             gameItems=Styled(new ScrollView {name="mi-juego"},"game-items");
-            left.Add(gameItems); columns.Add(left); columns.Add(properties); root.Add(columns);
+            left.Add(gameItems); columns.Add(left); columns.Add(properties); root.Add(columns); root.Add(footer);
             status=Styled(new Label("Añade un elemento y muévelo en la vista Escena.") { name="estado" }, "status"); root.Add(status);
             status.schedule.Execute(()=> { if (EditorApplication.isPlaying) status.text=SceneService.RuntimeHelp(); }).Every(250);
             RefreshCatalog(); RefreshSceneItems(); ShowSelection(); PlayChanged(default);
@@ -69,19 +76,14 @@ namespace CreaJuego.Editor
         {
             if(catalog==null) return;
             catalog.Clear();
-            foreach(var group in ItemService.WorkshopCatalog().GroupBy(d=>d.category))
-            {
-                catalog.Add(Styled(new Label(group.Key.ToUpperInvariant()),"category"));
-                foreach(var definition in group)
-                {
-                    var button=Styled(new Button(()=>CreateItem(definition)){name="crear-"+definition.id,tooltip=definition.description},"card");
-                    button.Add(Icon(definition));
-                    var text=Styled(new VisualElement(),"card-copy");
-                    text.Add(Styled(new Label("+ Añadir "+definition.displayName),"card-title"));
-                    text.Add(Styled(new Label(definition.description),"hint"));
-                    button.Add(text); catalog.Add(button);
-                }
+            var cards=Styled(new VisualElement(),"creation-grid");
+            foreach(var definition in ItemService.WorkshopCatalog()) {
+                var button=Styled(new Button(()=>CreateItem(definition)){name="crear-"+definition.id,tooltip=definition.category+" · "+definition.description},"card");
+                button.Add(Icon(definition));
+                button.Add(Styled(new Label("+ "+definition.displayName),"card-title"));
+                cards.Add(button);
             }
+            catalog.Add(cards);
             catalog.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             MarkSelected();
         }
@@ -90,8 +92,36 @@ namespace CreaJuego.Editor
         {
             if(gameItems==null) return;
             var selected=Selection.gameObjects;
-            gameItems.Query<Button>().ForEach(b=>b.EnableInClassList("selected",
-                b.userData is GameItem item && item!=null && selected.Contains(item.gameObject)));
+            gameItems.Query<Button>().ForEach(b=> {
+                bool chosen=b.userData is GameItem item && item!=null && selected.Contains(item.gameObject);
+                b.EnableInClassList("selected",chosen);
+                var marker=b.Q<Label>("marca-seleccion");
+                if(marker!=null) marker.text=chosen ? "✓" : "";
+            });
+            RefreshFlow();
+        }
+        private void RefreshFlow()
+        {
+            if(flow==null) return;
+            int current=EditorApplication.isPlayingOrWillChangePlaymode ? 3 :
+                Selection.gameObjects.Any(g=>g.GetComponent<GameItem>()!=null && !EditorUtility.IsPersistent(g)) ? 2 :
+                SceneItemService.Entries().Length>0 ? 1 : 0;
+            for(int i=0;i<flow.childCount;i++) {
+                flow[i].EnableInClassList("current",i==current);
+                flow[i].tooltip=i==current ? "Estás aquí" : "Puedes volver a este paso cuando quieras.";
+            }
+        }
+        private void ObjectsChanged(ref ObjectChangeEventStream stream)
+        {
+            if(EditorApplication.isPlayingOrWillChangePlaymode) return;
+            bool structure=false;
+            for(int i=0;i<stream.length;i++) {
+                var kind=stream.GetEventType(i);
+                if(kind==ObjectChangeKind.CreateGameObjectHierarchy || kind==ObjectChangeKind.DestroyGameObjectHierarchy || kind==ObjectChangeKind.ChangeScene)
+                    structure=true;
+            }
+            if(structure) RefreshSceneItems();
+            else RefreshPreflight();
         }
         private void UndoChanged() { RefreshSceneItems(); ShowSelection(); }
         private void SceneChanged(UnityEngine.SceneManagement.Scene previous, UnityEngine.SceneManagement.Scene next) { RefreshSceneItems(); ShowSelection(); }
@@ -103,12 +133,18 @@ namespace CreaJuego.Editor
             foreach(var entry in SceneItemService.Entries())
             {
                 var item=entry.item;
-                var button=Styled(new Button(()=>SceneItemService.Select(item)){text=entry.label, userData=item, tooltip="Seleccionar "+entry.label},"scene-item");
+                var button=Styled(new Button(()=>SceneItemService.Select(item)){userData=item, tooltip="Seleccionar "+entry.label},"scene-item");
+                if(item.definition!=null) button.Add(Icon(item.definition));
+                button.Add(Styled(new Label(entry.label),"scene-item-name"));
+                button.Add(Styled(new Label("") {name="marca-seleccion"},"selection-mark"));
                 gameItems.Add(button);
             }
-            if(gameItems.childCount==0) gameItems.Add(Styled(new Label("Todavía no has añadido elementos."),"hint"));
+            if(gameItems.childCount==0) {
+                gameItems.Add(Styled(new Label("Tu juego todavía está vacío."),"empty-title"));
+                gameItems.Add(Styled(new Label("Elige algo arriba para comenzar."),"hint"));
+            }
             gameItems.scrollOffset=offset;
-            MarkSelected();
+            MarkSelected(); RefreshPreflight();
         }
         private void CreateItem(GameItemDefinition definition)
         {
@@ -116,7 +152,7 @@ namespace CreaJuego.Editor
             {
                 var point=SceneView.lastActiveSceneView!=null ? SceneView.lastActiveSceneView.pivot : Vector3.zero; point.z=0;
                 var item=ItemService.Create(definition,point); EditorGUIUtility.PingObject(item.gameObject);
-                validation.style.display=DisplayStyle.None;
+                RefreshPreflight();
                 RefreshSceneItems();
                 status.text=definition.displayName+" creado. Muévelo en la escena y ajusta sus propiedades.";
             }
@@ -126,11 +162,11 @@ namespace CreaJuego.Editor
         {
             if(properties==null) return;
             properties.Unbind(); properties.Clear(); binding?.Dispose(); binding=null; MarkSelected();
-            properties.Add(Styled(new Label("SELECCIÓN"),"section-title"));
+            properties.Add(Styled(new Label("Propiedades"),"section-title"));
             var items=Selection.gameObjects.Select(g=>g.GetComponent<GameItem>()).ToArray();
             if(items.Length==0 || items.Any(i=>i==null || i.definition==null || EditorUtility.IsPersistent(i)))
             {
-                properties.Add(Styled(new Label("Elige un elemento de Mi juego para darle tu toque."),"empty")); return;
+                properties.Add(Styled(new Label("Selecciona algo de Mi juego para cambiar sus propiedades."),"empty")); return;
             }
             var definition=items[0].definition;
             if(items.Any(i=>i.definition!=definition))
@@ -139,7 +175,7 @@ namespace CreaJuego.Editor
             }
             var heading=Styled(new VisualElement(),"selection-heading"); heading.Add(Icon(definition));
             heading.Add(Styled(new Label(items.Length>1 ? definition.displayName+" × "+items.Length : SceneItemService.Label(items[0])),"selection-title")); properties.Add(heading);
-            properties.Add(Styled(new Label(definition.learningHint),"selection-help"));
+            heading.Add(Styled(new Label(definition.description),"selection-help"));
             if(!EditorApplication.isPlayingOrWillChangePlaymode) status.text=definition.learningHint;
             binding=new SerializedObject(items.Cast<UnityEngine.Object>().ToArray());
             VisualElement groupPanel=null; string lastGroup=null;
@@ -199,21 +235,33 @@ namespace CreaJuego.Editor
             delete.SetEnabled(items.Length==1);
             var find=new Button(()=>{Selection.activeGameObject=items[0].gameObject; SceneView.lastActiveSceneView?.FrameSelected();}){text="Encontrar",tooltip="Enfoca el elemento en la escena."};
             find.SetEnabled(items.Length==1);
+            delete.AddToClassList("danger-action");
             actions.Add(duplicate); actions.Add(delete); actions.Add(find); properties.Add(actions);
+            properties.Add(Styled(new Label(definition.learningHint),"context-help"));
             properties.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
         }
         private void RunAction(System.Action action)
         {
             try { action(); RefreshSceneItems(); status.text="Ctrl+Z deshace el cambio. Ctrl+Y lo rehace."; } catch(Exception error){status.text=error.Message;}
         }
+        private void RefreshPreflight()
+        {
+            if(validation==null || EditorApplication.isPlayingOrWillChangePlaymode) return;
+            ShowChecks(SceneService.Validate());
+        }
         private void ShowChecks(System.Collections.Generic.List<SceneCheck> checks)
         {
+            var view=WorkshopPresentation.Describe(checks);
             validation.Clear(); validation.style.display=DisplayStyle.Flex;
-            validation.Add(Styled(new Label(checks.Any(c=>!c.passed)?"TU JUEGO NECESITA ALGO":"TU JUEGO ESTÁ LISTO"),"group-title"));
-            foreach(var check in checks)
-            {
-                validation.Add(Styled(new Label((check.passed?"✓ ":"• ")+check.label+(check.passed?"":": "+check.help)),check.passed?"check-ok":"check-missing"));
+            footer.EnableInClassList("ready",view.ready); footer.EnableInClassList("needs-help",!view.ready);
+            validation.Add(Styled(new Label(view.title){name="preflight-title"},"preflight-title"));
+            validation.Add(Styled(new Label(view.help){name="preflight-help"},"hint"));
+            var badges=Styled(new VisualElement(),"check-list");
+            foreach(var check in view.checks) {
+                string text=check.passed ? "✓ "+check.text : check.optional ? "+ "+check.text+" (opcional)" : "• "+check.text;
+                badges.Add(Styled(new Label(text),check.passed?"check-ok":"check-missing"));
             }
+            validation.Add(badges);
         }
         private void PrepareScene()
         {
@@ -223,7 +271,7 @@ namespace CreaJuego.Editor
         private void TogglePlay()
         {
             if(EditorApplication.isPlayingOrWillChangePlaymode){EditorApplication.ExitPlaymode();return;}
-            if(!SceneService.TryPlay(out var checks)){ShowChecks(checks);status.text=checks.First(c=>!c.passed).help;}
+            if(!SceneService.TryPlay(out var checks)){ShowChecks(checks);status.text=WorkshopPresentation.Describe(checks).help;}
             else validation.style.display=DisplayStyle.None;
         }
         private void PlayChanged(PlayModeStateChange state)
@@ -232,6 +280,13 @@ namespace CreaJuego.Editor
             bool playing=EditorApplication.isPlayingOrWillChangePlaymode;
             play.text=playing?"■ DETENER":"▶ JUGAR";
             catalog.SetEnabled(!playing);properties.SetEnabled(!playing);prepare.SetEnabled(!playing);
+            RefreshFlow();
+            if(playing) {
+                validation.Clear();
+                validation.Add(Styled(new Label("Tu juego está en marcha"),"preflight-title"));
+                validation.Add(Styled(new Label("A/D o flechas para moverte · Espacio para saltar"),"hint"));
+                validation.style.display=DisplayStyle.Flex;
+            } else RefreshPreflight();
             status.text=playing?"Haz clic en Juego para jugar tu recorrido.":"Los cambios se hacen antes de jugar. Ctrl+Z deshace tu último cambio.";
         }
     }

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: plataforma
   displayName: Plataforma
   category: Mundo
-  description: Un lugar donde apoyarse.
+  description: Un lugar firme donde el personaje puede caminar.
   learningHint: Un lugar firme donde el personaje puede caminar y apoyarse.
   icon: {fileID: 5766548593978449095, guid: 32d2fb45ca11b764abf51e201fea8fbd, type: 3}
   prefab: {fileID: 4872372034354581653, guid: 9da1b3b84bc5c9643b99ecbec6719ac3, type: 3}

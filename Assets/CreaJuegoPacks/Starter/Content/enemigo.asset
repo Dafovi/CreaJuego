@@ -15,7 +15,7 @@ MonoBehaviour:
   id: enemigo
   displayName: Enemigo
   category: Retos
-  description: "Patrulla y hace da\xF1o."
+  description: Se mueve por un tramo y hace daño al tocarlo.
   learningHint: Este enemigo va y vuelve por un tramo. Evita tocarlo para no perder puntos de vida.
   icon: {fileID: -1092110371768519499, guid: 04ce8474e899c4247b7082ff21a6db2e, type: 3}
   prefab: {fileID: 3042381860002088035, guid: a8e26b2a41720f344af8b89469e1b65e, type: 3}

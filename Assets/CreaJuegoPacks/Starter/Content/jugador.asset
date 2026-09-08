@@ -15,7 +15,7 @@ MonoBehaviour:
   id: jugador
   displayName: Jugador
   category: Personaje
-  description: Corre y salta.
+  description: Este es el personaje que controla quien juega.
   learningHint: "Este es el personaje que controla quien juega. Mu\xE9velo con A/D o las flechas y salta con Espacio."
   icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
   prefab: {fileID: 8597619160083865053, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
