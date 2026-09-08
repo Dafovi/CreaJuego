@@ -1,0 +1,1 @@
+{"name":"CreaJuego.Starter.Editor","references":["CreaJuego.Runtime","CreaJuego.Editor","CreaJuego.Playground","Playground.Runtime","Unity.ugui"],"includePlatforms":["Editor"]}

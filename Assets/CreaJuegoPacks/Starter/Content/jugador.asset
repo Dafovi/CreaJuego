@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: jugador
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: jugador
+  displayName: Jugador
+  category: Personaje
+  description: Corre y salta.
+  learningHint: "Este es el personaje que controla quien juega. Mu\xE9velo con las flechas y salta con Espacio."
+  icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
+  prefab: {fileID: 8597619160083865053, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
+  kind: 0
+  order: 0
+  availableInWorkshop: 1
+  allowMultiple: 0
+  properties:
+  - path: speed
+    label: Velocidad
+    group: Movimiento
+    unit: 
+    visibleWhen: 
+    help: "Controla qu\xE9 tan r\xE1pido se mueve el personaje."
+    control: 0
+    minimum: 0.2
+    maximum: 5
+  - path: jump
+    label: Fuerza de salto
+    group: Salto
+    unit: 
+    visibleWhen: 
+    help: "Aumenta este valor para saltar m\xE1s alto."
+    control: 0
+    minimum: 5
+    maximum: 18
+  - path: health
+    label: Resistencia inicial
+    group: Resistencia
+    unit: 
+    visibleWhen: 
+    help: "Cu\xE1nto da\xF1o puede recibir antes de terminar la partida."
+    control: 1
+    minimum: 1
+    maximum: 10

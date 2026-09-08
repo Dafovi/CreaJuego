@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: decoracion
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: decoracion
+  displayName: "Decoraci\xF3n"
+  category: "Decoraci\xF3n"
+  description: Dale color a tu mundo.
+  learningHint: "No bloquea el paso ni hace da\xF1o."
+  icon: {fileID: -2216631893085816980, guid: c996e091fec552e43a1fcceebc8f4899, type: 3}
+  prefab: {fileID: 3665539657518204171, guid: 6e63118c433462144a52effb3d233065, type: 3}
+  kind: 7
+  order: 7
+  availableInWorkshop: 0
+  allowMultiple: 1
+  properties:
+  - path: tint
+    label: Color
+    group: 
+    unit: 
+    visibleWhen: 
+    help: "Elige el color que tendr\xE1 al probar."
+    control: 4
+    minimum: 0
+    maximum: 10

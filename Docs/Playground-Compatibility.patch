@@ -1,0 +1,81 @@
+diff --git "a/Scripts/Movement/Jump.cs" "b/Scripts/Movement/Jump.cs"
+index be5f7e9..75c37ee 100644
+--- "a/Scripts/Movement/Jump.cs"
++++ "b/Scripts/Movement/Jump.cs"
+@@ -28,7 +28,7 @@ namespace Playground.Movement
+         // Read the input from the player
+         private void Update()
+         {
+-            if (canJump
++            if (Keyboard.current != null && canJump // CREAJUEGO: keyboard may be absent.
+                 && Keyboard.current[key].wasPressedThisFrame)
+             {
+                 // Apply an instantaneous upwards force
+@@ -44,4 +44,4 @@ namespace Playground.Movement
+                 canJump = true;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git "a/Scripts/Movement/Move.cs" "b/Scripts/Movement/Move.cs"
+index 26d999a..f0edb07 100644
+--- "a/Scripts/Movement/Move.cs"
++++ "b/Scripts/Movement/Move.cs"
+@@ -57,7 +57,8 @@ namespace Playground.Movement
+                 Utils.SetAxisTowards(lookAxis, transform, cachedDirection);
+             }
+ 
+-            movementInput = movementInput.normalized * Time.smoothDeltaTime;
++            // CREAJUEGO: fixed timestep makes force independent of render rate.
++            movementInput = movementInput.normalized * Time.fixedDeltaTime;
+         }
+ 
+         // FixedUpdate is called every frame when the physics are calculated
+@@ -67,4 +68,5 @@ namespace Playground.Movement
+             rigidbody2D.AddForce(movementInput * (speed * perFrameMultiplier));
+         }
+     }
+-}
+\ No newline at end of file
++}
++
+diff --git "a/_Internal/Scripts/Utilities/InputUtils.cs" "b/_Internal/Scripts/Utilities/InputUtils.cs"
+index a46cc88..77570c6 100644
+--- "a/_Internal/Scripts/Utilities/InputUtils.cs"
++++ "b/_Internal/Scripts/Utilities/InputUtils.cs"
+@@ -7,6 +7,8 @@ namespace Playground.Utilities
+     {
+         public static float GetAxis(Enums.Axes axis, Enums.KeyGroups keyGroup)
+         {
++            // CREAJUEGO: headless sessions or disconnected keyboards.
++            if (Keyboard.current == null) return 0f;
+             Key positiveKey;
+             Key negativeKey;
+             if (axis == Enums.Axes.X)
+@@ -42,4 +44,4 @@ namespace Playground.Utilities
+             return positiveValue + negativeValue;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git "a/_Internal/Scripts/Utilities/Utils.cs" "b/_Internal/Scripts/Utilities/Utils.cs"
+index 93a80b7..2bd8ee3 100644
+--- "a/_Internal/Scripts/Utilities/Utils.cs"
++++ "b/_Internal/Scripts/Utilities/Utils.cs"
+@@ -1,4 +1,6 @@
+-﻿using UnityEditor;
++#if UNITY_EDITOR // CREAJUEGO: exclude editor namespace in player builds.
++using UnityEditor;
++#endif
+ using UnityEngine;
+ 
+ namespace Playground.Utilities
+@@ -123,4 +125,4 @@ namespace Playground.Utilities
+ #endif
+         }
+     }
+-}
+\ No newline at end of file
++}

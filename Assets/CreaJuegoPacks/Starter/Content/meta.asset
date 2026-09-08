@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: meta
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: meta
+  displayName: Meta
+  category: Objetos
+  description: El final de tu recorrido.
+  learningHint: "Llega aqu\xED para completar el recorrido. El mensaje celebra el final de tu juego."
+  icon: {fileID: 5879908866151352552, guid: 32b64b354f66c2e46aca92e648f1bc61, type: 3}
+  prefab: {fileID: 9076860138798354513, guid: 862822d0a17fd01498f1a0bac63dafe7, type: 3}
+  kind: 4
+  order: 4
+  availableInWorkshop: 1
+  allowMultiple: 1
+  properties:
+  - path: message
+    label: Mensaje al llegar
+    group: Resultado
+    unit: 
+    visibleWhen: 
+    help: Escribe un mensaje de hasta 120 caracteres.
+    control: 3
+    minimum: 0
+    maximum: 10

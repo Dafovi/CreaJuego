@@ -1,0 +1,25 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]serSettings/
+Builds/
+.spike/
+*.csproj
+*.sln
+*.slnx
+
+# Local diagnostics can contain machine paths, account details and licensing data.
+Docs/*.log
+Docs/*tests*.xml
+Docs/tests-*.xml
+.vs/
+.idea/
+.env
+.env.*
+*.user
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
