@@ -18,7 +18,7 @@ namespace CreaJuego.Starter.Tests
         [TearDown] public void Cleanup()
         {
             foreach (var window in Resources.FindObjectsOfTypeAll<CreaJuegoWindow>()) window.Close();
-            Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
+            WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         }
 
         [Test] public void WorkshopPublishesFiveP0AndValidatedEnemyWithDistinctIcons()
@@ -70,21 +70,21 @@ namespace CreaJuego.Starter.Tests
 
         [UnityTest] public IEnumerator EducationalControlsBindAndClampWithoutTechnicalFields()
         {
-            var window = EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI();
+            var window = EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open();
             var prize = Object.FindObjectsByType<GameItem>().First(i => i.definition.kind == ItemKind.Prize);
             Selection.activeGameObject = prize.gameObject;
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(prize.definition.icon));
-            var number = window.rootVisualElement.Q<IntegerField>("propiedad-points");
+            var number = WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points");
             number.value = 500;
             yield return null;
             Assert.That(prize.points, Is.EqualTo(100));
             number.value = -10;
             yield return null;
             Assert.That(prize.points, Is.EqualTo(1));
-            Assert.That(window.rootVisualElement.Q<VisualElement>("propiedad-speed"), Is.Null);
+            Assert.That(WorkshopTestWindows.Properties.Q<VisualElement>("propiedad-speed"), Is.Null);
             Assert.That(window.rootVisualElement.Q<Button>("duplicar").enabledSelf, Is.True);
             Selection.activeGameObject = Object.FindObjectsByType<GameItem>().Single(i => i.definition.kind == ItemKind.Player).gameObject;
             yield return null;
@@ -101,15 +101,15 @@ namespace CreaJuego.Starter.Tests
                 definition.properties.Single(p => p.path == nameof(GameItem.damage)).visibleWhen = nameof(GameItem.disappear);
                 hazard.definition = definition;
                 Selection.activeGameObject = hazard.gameObject;
-                var window = EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI();
+                var window = EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open();
                 yield return null;
-                var toggle = window.rootVisualElement.Q<Toggle>("propiedad-disappear");
+                var toggle = WorkshopTestWindows.Properties.Q<Toggle>("propiedad-disappear");
                 toggle.value = false;
                 yield return null; yield return null;
-                Assert.That(window.rootVisualElement.Q<VisualElement>("fila-damage").style.display.value, Is.EqualTo(DisplayStyle.None));
+                Assert.That(WorkshopTestWindows.Properties.Q<VisualElement>("fila-damage").style.display.value, Is.EqualTo(DisplayStyle.None));
                 toggle.value = true;
                 yield return null; yield return null;
-                Assert.That(window.rootVisualElement.Q<VisualElement>("fila-damage").style.display.value, Is.EqualTo(DisplayStyle.Flex));
+                Assert.That(WorkshopTestWindows.Properties.Q<VisualElement>("fila-damage").style.display.value, Is.EqualTo(DisplayStyle.Flex));
             }
             finally { Object.DestroyImmediate(definition); }
         }

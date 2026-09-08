@@ -111,3 +111,11 @@
 .creajuego .primary { min-width: 130px; height: 48px; flex-shrink: 0; background-color: var(--cj-success); border-color: var(--cj-success); color: #ffffff; font-size: 19px; -unity-font-style: bold; }
 .creajuego .primary:hover { background-color: #065b32; border-color: #065b32; }
 .creajuego .primary:focus { border-color: #14264b; border-width: 3px; }
+
+.creajuego.elements-window .catalog { flex-grow: 3; min-height: 70px; }
+.creajuego.elements-window .game-items { flex-grow: 2; min-height: 65px; }
+.creajuego.elements-window .section-title { margin-top: 8px; }
+.creajuego.elements-window .actions Button { padding-left: 6px; padding-right: 6px; font-size: 12px; }
+.creajuego.playbar-window .play-footer { flex-grow: 1; min-height: 65px; margin-top: 0; }
+.creajuego.playbar-window .validation { max-height: none; }
+.creajuego.playbar-window .status { font-size: 11px; }

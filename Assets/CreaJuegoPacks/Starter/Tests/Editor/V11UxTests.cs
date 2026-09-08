@@ -18,14 +18,14 @@ namespace CreaJuego.Starter.Tests
         [SetUp] public void Setup() => EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         [TearDown] public void Cleanup() {
             foreach(var w in Resources.FindObjectsOfTypeAll<CreaJuegoWindow>()) w.Close();
-            Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
+            WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         }
         private static void Activate(Button button) {
             using(var evt=NavigationSubmitEvent.GetPooled()) { evt.target=button; button.SendEvent(evt); }
         }
         [UnityTest] public IEnumerator CatalogCreatesAndSceneListOnlySelectsAndTracksUndo()
         {
-            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI();
+            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open();
             yield return null;
             var root=window.rootVisualElement;
             int before=SceneItemService.Entries().Length;
@@ -37,7 +37,7 @@ namespace CreaJuego.Starter.Tests
             var list=root.Q<ScrollView>("mi-juego");
             Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+1));
             Selection.activeGameObject=null;
-            Activate(list.Query<Button>().ToList().Single(b=>b.userData==created));
+            Activate(list.Query<Button>().ToList().Single(b=>ReferenceEquals(b.userData,created)));
             yield return null;
             Assert.That(Selection.activeGameObject,Is.EqualTo(created.gameObject));
             Assert.That(SceneItemService.Entries().Length,Is.EqualTo(before+1));
@@ -79,8 +79,8 @@ namespace CreaJuego.Starter.Tests
         }
         [Test] public void ParticipantTerminologyAndCatalogAreConsistent()
         {
-            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI();
-            Assert.That(window.rootVisualElement.Q<Button>("jugar").text,Is.EqualTo("▶ JUGAR"));
+            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open();
+            Assert.That(WorkshopTestWindows.Play.Q<Button>("jugar").text,Is.EqualTo("▶ JUGAR"));
             var player=ItemService.WorkshopCatalog().Single(d=>d.kind==ItemKind.Player);
             Assert.That(player.properties.Single(p=>p.path=="health").label,Is.EqualTo("Puntos de vida"));
             Assert.That(player.learningHint,Does.Contain("A/D"));

@@ -15,7 +15,7 @@ namespace CreaJuego.Starter.Tests
         [SetUp] public void Setup()=>EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         [TearDown] public void Cleanup() {
             foreach(var w in Resources.FindObjectsOfTypeAll<CreaJuegoWindow>()) w.Close();
-            Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
+            WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         }
         private static string Labels(VisualElement root)=>string.Join(" ",root.Query<Label>().ToList().Select(l=>l.text));
         private static void Activate(Button button) {
@@ -25,33 +25,33 @@ namespace CreaJuego.Starter.Tests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             Selection.activeGameObject=null;
-            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); yield return null;
+            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open(); yield return null;
             var root=window.rootVisualElement;
-            Assert.That(Labels(root),Does.Contain("AÑADIR AL JUEGO").And.Contain("MI JUEGO").And.Contain("Propiedades"));
+            Assert.That(Labels(root)+" "+Labels(WorkshopTestWindows.Properties),Does.Contain("AÑADIR AL JUEGO").And.Contain("MI JUEGO").And.Contain("Propiedades"));
             Assert.That(Labels(root.Q<ScrollView>("mi-juego")),Does.Contain("Tu juego todavía está vacío.").And.Contain("Elige algo arriba para comenzar."));
-            Assert.That(Labels(root.Q<ScrollView>("propiedades")),Does.Contain("Selecciona algo de Mi juego"));
-            Assert.That(root.Q("flujo")[0].ClassListContains("current"),Is.True);
-            Assert.That(root.Query<Button>().ToList().Count(b=>b.name=="jugar"),Is.EqualTo(1));
-            Assert.That(root.Q<Button>("jugar").parent,Is.EqualTo(root.Q("juego-estado")));
+            Assert.That(Labels(WorkshopTestWindows.Properties.Q<ScrollView>("propiedades")),Does.Contain("Selecciona algo de Mi juego"));
+            Assert.That(root.Q<Label>("flujo").text.Contains("Paso 1 de 4"),Is.True);
+            Assert.That(root.Query<Button>().ToList().Concat(WorkshopTestWindows.Properties.Query<Button>().ToList()).Concat(WorkshopTestWindows.Play.Query<Button>().ToList()).Count(b=>b.name=="jugar"),Is.EqualTo(1));
+            Assert.That(WorkshopTestWindows.Play.Q<Button>("jugar").parent,Is.EqualTo(WorkshopTestWindows.Play.Q("juego-estado")));
             Activate(root.Q<Button>("crear-jugador")); yield return null; yield return null;
-            Assert.That(root.Q("flujo")[2].ClassListContains("current"),Is.True);
-            Assert.That(Labels(root.Q<ScrollView>("propiedades")),Does.Contain("Este es el personaje que controla quien juega."));
+            Assert.That(root.Q<Label>("flujo").text.Contains("Paso 3 de 4"),Is.True);
+            Assert.That(Labels(WorkshopTestWindows.Properties.Q<ScrollView>("propiedades")),Does.Contain("Este es el personaje que controla quien juega."));
             Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList().Single().Q<Label>("marca-seleccion").text,Is.EqualTo("✓"));
             Selection.activeGameObject=null; yield return null;
-            Assert.That(root.Q("flujo")[1].ClassListContains("current"),Is.True);
+            Assert.That(root.Q<Label>("flujo").text.Contains("Paso 2 de 4"),Is.True);
         }
         [UnityTest] public IEnumerator PreflightReflectsMissingGoalAndUndoWithoutTechnicalLabels()
         {
-            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); yield return null;
+            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open(); yield return null;
             var root=window.rootVisualElement;
-            Assert.That(root.Q<Label>("preflight-title").text,Is.EqualTo("✓ ¡Todo listo para jugar!"));
+            Assert.That(WorkshopTestWindows.Play.Q<Label>("preflight-title").text,Is.EqualTo("✓ ¡Todo listo para jugar!"));
             var goal=SceneItemService.Entries().Single(e=>e.item.definition.kind==ItemKind.Goal).item;
             ItemService.Delete(goal); yield return null; yield return null;
-            Assert.That(root.Q<Label>("preflight-title").text,Is.EqualTo("TU JUEGO NECESITA ALGO"));
-            Assert.That(root.Q<Label>("preflight-help").text,Does.Contain("Agrega una Meta"));
-            Assert.That(Labels(root.Q<ScrollView>("validacion")),Does.Not.Contain("Cámara").And.Not.Contain("Sesión").And.Not.Contain("Marcador").And.Not.Contain("backend"));
+            Assert.That(WorkshopTestWindows.Play.Q<Label>("preflight-title").text,Is.EqualTo("TU JUEGO NECESITA ALGO"));
+            Assert.That(WorkshopTestWindows.Play.Q<Label>("preflight-help").text,Does.Contain("Agrega una Meta"));
+            Assert.That(Labels(WorkshopTestWindows.Play.Q<ScrollView>("validacion")),Does.Not.Contain("Cámara").And.Not.Contain("Sesión").And.Not.Contain("Marcador").And.Not.Contain("backend"));
             Undo.PerformUndo(); yield return null; yield return null;
-            Assert.That(root.Q<Label>("preflight-title").text,Does.Contain("Todo listo"));
+            Assert.That(WorkshopTestWindows.Play.Q<Label>("preflight-title").text,Does.Contain("Todo listo"));
         }
         [Test] public void EveryExistingPreflightFailureStillBlocksAndSuggestionsAreOptional()
         {
@@ -75,20 +75,20 @@ namespace CreaJuego.Starter.Tests
             Selection.activeGameObject=player.gameObject;
             var window=EditorWindow.GetWindow<CreaJuegoWindow>();
             foreach(var size in new[]{new Vector2(680,500),new Vector2(1100,760)}) {
-                window.position=new Rect(50,50,size.x,size.y); window.CreateGUI();
+                window.position=new Rect(50,50,size.x,size.y); window.CreateGUI(); WorkshopTestWindows.Open();
                 yield return null; yield return null;
                 var root=window.rootVisualElement;
                 foreach(var name in new[]{"catalogo","mi-juego","propiedades"}) {
-                    var panel=root.Q<ScrollView>(name);
+                    var owner=name=="propiedades"?WorkshopTestWindows.Properties:root; var panel=owner.Q<ScrollView>(name);
                     Assert.That(panel.resolvedStyle.height,Is.GreaterThan(30),name);
-                    Assert.That(panel.worldBound.xMax,Is.LessThanOrEqualTo(root.worldBound.xMax+1),name);
+                    Assert.That(panel.worldBound.xMax,Is.LessThanOrEqualTo(owner.worldBound.xMax+1),name);
                 }
-                Assert.That(root.Q<Button>("jugar").worldBound.yMax,Is.LessThanOrEqualTo(root.worldBound.yMax+1));
-                var field=root.Q<IntegerField>("propiedad-health");
+                Assert.That(WorkshopTestWindows.Play.Q<Button>("jugar").worldBound.yMax,Is.LessThanOrEqualTo(WorkshopTestWindows.Play.worldBound.yMax+1));
+                var field=WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-health");
                 field.Focus(); field.value=5; yield return null;
                 Assert.That(player.health,Is.EqualTo(5));
-                Assert.That(root.panel.focusController.focusedElement,Is.Not.Null);
-                Assert.That(root.Q<Button>("jugar").text,Is.EqualTo("▶ JUGAR"));
+                Assert.That(WorkshopTestWindows.Properties.panel.focusController.focusedElement,Is.Not.Null);
+                Assert.That(WorkshopTestWindows.Play.Q<Button>("jugar").text,Is.EqualTo("▶ JUGAR"));
             }
         }
     }

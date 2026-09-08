@@ -1,0 +1,2 @@
+# Preserve Unity-produced layout bytes, including original line endings.
+*.wlt -text

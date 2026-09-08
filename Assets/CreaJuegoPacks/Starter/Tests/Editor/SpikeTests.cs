@@ -18,7 +18,7 @@ namespace CreaJuego.Starter.Tests
     public sealed class SpikeTests
     {
         [SetUp] public void Setup() { if (!Application.isPlaying) EditorSceneManager.OpenScene(DemoBuilder.ScenePath); }
-        [TearDown] public void Cleanup() { if (!Application.isPlaying) { Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath); } }
+        [TearDown] public void Cleanup() { if (!Application.isPlaying) { WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath); } }
 
         private static IEnumerator Wait(float seconds) { float until = Time.realtimeSinceStartup + seconds; while (Time.realtimeSinceStartup < until) yield return null; }
         [UnityTearDown] public IEnumerator LeavePlay() { if (Application.isPlaying) yield return new ExitPlayMode(); }
@@ -52,15 +52,15 @@ namespace CreaJuego.Starter.Tests
         [UnityTest] public IEnumerator WindowShowsCatalogAndBindsEducationalSliders()
         {
             var window = EditorWindow.GetWindow<CreaJuegoWindow>();
-            window.CreateGUI();
+            window.CreateGUI(); WorkshopTestWindows.Open();
             var definition = ItemService.Catalog().Single(d => d.kind == ItemKind.Player);
             var item = Object.FindObjectsByType<GameItem>().Single(i => i.definition == definition);
             Selection.activeGameObject = item.gameObject;
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-jugador"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-meta"), Is.Not.Null);
-            Assert.That(window.rootVisualElement.Q<Button>("jugar").text, Is.EqualTo("▶ JUGAR"));
-            var sliders = window.rootVisualElement.Q<ScrollView>("propiedades").Query<Slider>().ToList().Where(s => s.label == "Velocidad" || s.label == "Fuerza de salto").ToList();
+            Assert.That(WorkshopTestWindows.Play.Q<Button>("jugar").text, Is.EqualTo("▶ JUGAR"));
+            var sliders = WorkshopTestWindows.Properties.Q<ScrollView>("propiedades").Query<Slider>().ToList().Where(s => s.label == "Velocidad" || s.label == "Fuerza de salto").ToList();
             Assert.That(sliders.Count, Is.EqualTo(2));
             sliders.Single(s => s.label == "Velocidad").value = 3;
             sliders.Single(s => s.label == "Fuerza de salto").value = 15;
