@@ -15,9 +15,10 @@ MonoBehaviour:
   id: meta
   displayName: Meta
   category: Objetos
-  description: Indica dónde termina el recorrido.
+  description: "Indica d\xF3nde termina el recorrido."
   learningHint: "Llega aqu\xED para completar el recorrido."
   icon: {fileID: 5879908866151352552, guid: 32b64b354f66c2e46aca92e648f1bc61, type: 3}
+  appearancePack: {fileID: 11400000, guid: c3ec06d8ac1135844b1939fe20f0e259, type: 2}
   prefab: {fileID: 9076860138798354513, guid: 862822d0a17fd01498f1a0bac63dafe7, type: 3}
   kind: 4
   order: 4

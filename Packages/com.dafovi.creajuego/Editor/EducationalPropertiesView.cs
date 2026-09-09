@@ -16,7 +16,7 @@ namespace CreaJuego.Editor
             var properties=this;
             properties.Unbind(); properties.Clear(); binding?.Dispose(); binding=null;
             properties.Add(Styled(new Label("Propiedades"),"section-title"));
-            var items=Selection.gameObjects.Select(g=>g.GetComponent<GameItem>()).ToArray();
+            var items=EducationalSelection.Items();
             if(items.Length==0 || items.Any(i=>i==null || i.definition==null || EditorUtility.IsPersistent(i)))
             {
                 properties.Add(Styled(new Label("Selecciona algo de Mi juego para cambiar sus propiedades."),"empty")); return;
@@ -34,6 +34,7 @@ namespace CreaJuego.Editor
             VisualElement groupPanel=null; string lastGroup=null;
             foreach(var descriptor in definition.properties)
             {
+                if(descriptor.path==nameof(GameItem.tint) && items.Any(i=>i.appearance!=null || i.customSprite!=null)) continue;
                 var p=binding.FindProperty(descriptor.path);
                 if(p==null){ properties.Add(new HelpBox("No está disponible: "+descriptor.label,HelpBoxMessageType.Warning)); continue; }
                 if(groupPanel==null || lastGroup!=descriptor.group)
@@ -78,9 +79,12 @@ namespace CreaJuego.Editor
                 }
                 groupPanel.Add(row);
             }
+            properties.Add(new AppearanceSelector(items));
             properties.Add(Styled(new Label(definition.learningHint),"context-help"));
             properties.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
         }
         public void Dispose() { this.Unbind(); binding?.Dispose(); binding=null; }
     }
 }
+
+

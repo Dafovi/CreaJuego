@@ -16,8 +16,9 @@ MonoBehaviour:
   displayName: Jugador
   category: Personaje
   description: Este es el personaje que controla quien juega.
-  learningHint: "Este es el personaje que controla quien juega. Mu\xE9velo con A/D o las flechas y salta con Espacio."
+  learningHint: "Mu\xE9vete con A/D o las flechas, salta con Espacio y golpea con X."
   icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
+  appearancePack: {fileID: 11400000, guid: c3ec06d8ac1135844b1939fe20f0e259, type: 2}
   prefab: {fileID: 8597619160083865053, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
   kind: 0
   order: 0
@@ -56,7 +57,25 @@ MonoBehaviour:
     group: Vida
     unit: 
     visibleWhen: 
-    help: Indica cuántos puntos de vida tiene el personaje. Los peligros le quitan puntos de vida. Si llegan a cero, termina la partida.
+    help: "Indica cu\xE1ntos puntos de vida tiene el personaje. Los peligros le quitan puntos de vida. Si llegan a cero, termina la partida."
     control: 1
     minimum: 1
     maximum: 10
+  - path: canAttack
+    label: Puede golpear
+    group: Ataque
+    unit: 
+    visibleWhen: 
+    help: Activa el golpe con X.
+    control: 2
+    minimum: 0
+    maximum: 10
+  - path: attackDamage
+    label: "Da\xF1o"
+    group: Ataque
+    unit: 
+    visibleWhen: canAttack
+    help: Puntos de vida que quita cada golpe al enemigo.
+    control: 1
+    minimum: 1
+    maximum: 5

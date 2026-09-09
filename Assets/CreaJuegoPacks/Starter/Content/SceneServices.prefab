@@ -429,7 +429,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Vida:"
+  m_Text: 'Vida:'
 --- !u!1 &7067836911538998795
 GameObject:
   m_ObjectHideFlags: 0
@@ -791,7 +791,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "CREAJUEGO  \xB7  A/D o flechas: moverte  \xB7  Espacio: saltar"
+  m_Text: "Mu\xE9vete con A/D o las flechas, salta con Espacio y golpea con X."
 --- !u!1 &9032044629094622423
 GameObject:
   m_ObjectHideFlags: 0

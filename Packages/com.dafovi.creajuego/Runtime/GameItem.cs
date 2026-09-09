@@ -7,9 +7,13 @@ namespace CreaJuego
     public sealed class GameItem : MonoBehaviour
     {
         public GameItemDefinition definition;
+        public AppearanceDefinition appearance;
+        public Sprite customSprite;
         [Range(.1f, 12)] public float speed = 2;
         [Range(1, 20)] public float jump = 10;
         public bool canJump = true;
+        public bool canAttack = true;
+        [Range(1,5)] public int attackDamage = 1;
         [Range(.5f, 10)] public float distance = 3;
         [Range(1, 10)] public int health = 3;
         [Range(1, 10)] public int damage = 1;
@@ -24,3 +28,5 @@ namespace CreaJuego
         void ApplyConfiguration();
     }
 }
+
+

@@ -76,7 +76,7 @@ namespace CreaJuego.Starter.Tests
             yield return Wait(.1f);
             Assert.That(player.GetComponent<HealthSystemAttribute>().health,Is.EqualTo(1));
             Assert.That(enemy!=null,Is.True);Assert.That(enemy.GetComponent<ModifyHealthAttribute>().destroyWhenActivated,Is.False);
-            body.position=new Vector2(-3,0);yield return Wait(.1f);body.position=enemy.transform.position;
+            body.position=new Vector2(-3,0);yield return Wait(PlayerDamageReceiver.GraceSeconds+.1f);body.position=enemy.transform.position;
             yield return Wait(.1f);
             var session=DemoSession.InScene(enemy.gameObject.scene);
             Assert.That(session.State,Is.EqualTo(GameSessionState.Lost));Assert.That(player==null,Is.True);
@@ -90,4 +90,5 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
+
 

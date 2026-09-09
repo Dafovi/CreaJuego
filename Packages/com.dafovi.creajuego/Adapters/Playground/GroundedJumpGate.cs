@@ -6,7 +6,7 @@ namespace CreaJuego.PlaygroundBackend
     // Runs before vendor Jump.Update. Ground support replaces the tag-based rearm contract.
     [DefaultExecutionOrder(-150)]
     [RequireComponent(typeof(GameItem), typeof(Rigidbody2D), typeof(Jump))]
-    public sealed class GroundedJumpGate : MonoBehaviour
+    public sealed class GroundedJumpGate : MonoBehaviour, IVisualMotionState
     {
         private GameItem item;
         private Rigidbody2D body;
@@ -14,6 +14,7 @@ namespace CreaJuego.PlaygroundBackend
         private DemoSession session;
         private readonly List<ContactPoint2D> contacts = new List<ContactPoint2D>();
         public bool Supported { get; private set; }
+        public bool IsSupported => Supported;
         private void Awake()
         {
             item = GetComponent<GameItem>(); body = GetComponent<Rigidbody2D>(); jump = GetComponent<Jump>();
@@ -30,4 +31,5 @@ namespace CreaJuego.PlaygroundBackend
         }
     }
 }
+
 

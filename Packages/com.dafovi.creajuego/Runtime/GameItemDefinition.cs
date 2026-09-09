@@ -30,6 +30,7 @@ namespace CreaJuego
         [TextArea] public string description;
         [TextArea] public string learningHint;
         public Sprite icon;
+        public ContentPackDefinition appearancePack;
         public GameObject prefab;
         public ItemKind kind;
         public int order;
@@ -38,3 +39,4 @@ namespace CreaJuego
         public EducationalProperty[] properties = Array.Empty<EducationalProperty>();
     }
 }
+

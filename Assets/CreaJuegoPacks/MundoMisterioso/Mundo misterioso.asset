@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a706aded0cf6554db9e24f336e5032e, type: 3}
+  m_Name: Mundo misterioso
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.ContentPackDefinition
+  id: mundo-misterioso
+  appearances:
+  - {fileID: 11400000, guid: f0893f0e958869845a34376b5c1f7ab5, type: 2}
+  - {fileID: 11400000, guid: e8c4f7cbc96f7a947a900757b7f36d5a, type: 2}
+  - {fileID: 11400000, guid: 03fb5ac70dac3e14590c456b3fe87645, type: 2}
+  - {fileID: 11400000, guid: 053d068b43fb1b04ca64550c7722f5eb, type: 2}
+  - {fileID: 11400000, guid: fb4642ce0f83c9943b4eec53e8446f40, type: 2}
+  - {fileID: 11400000, guid: 203078bf02aae854b873c60ce28650a7, type: 2}
+  - {fileID: 11400000, guid: f27c0189f73c53d4094824e4fca4c870, type: 2}
+  - {fileID: 11400000, guid: 2b3ac4e55fdf3ea4598cef7aa12a8c9b, type: 2}
+  - {fileID: 11400000, guid: 4d34b354dd6e8b940949a4a74d916200, type: 2}
+  - {fileID: 11400000, guid: a9068b445b4d18d4486c09350e8ef029, type: 2}
+  - {fileID: 11400000, guid: 08acf3cc7f8d2e840bbb99aefaa7abba, type: 2}
+  - {fileID: 11400000, guid: acd6bfff3ddb33247b099ae425a46c2b, type: 2}
+  - {fileID: 11400000, guid: 54cc1d7c00c5f7c4f8f6e89fc6fda08d, type: 2}
+  - {fileID: 11400000, guid: 2b823d9d75677b14dbc5d8c9d5298761, type: 2}
+  - {fileID: 11400000, guid: 685de7275227f72408e099b09b497109, type: 2}
+  - {fileID: 11400000, guid: 629ab25bcb1ff5948bf53731a29b1557, type: 2}
+  - {fileID: 11400000, guid: 7b0dbdb141e352440b9ec2b669501dce, type: 2}
+  - {fileID: 11400000, guid: 6f185f8724a17204bb39bba8855fa7df, type: 2}
+  - {fileID: 11400000, guid: cb11fe23d3b60c74e9465bd68edecdbe, type: 2}
+  - {fileID: 11400000, guid: 3f8ada2e04776ec4484dada2cf85dc45, type: 2}
+  - {fileID: 11400000, guid: 3149169204fcd4e47a2b527f60a862d9, type: 2}
+  - {fileID: 11400000, guid: 2bfeb24009a8b4745b6b99a3338af853, type: 2}
+  - {fileID: 11400000, guid: 2f544119ef16ed140990870230104e9a, type: 2}
+  - {fileID: 11400000, guid: f2ebe1286bf0c2d41a8149829eabf8a3, type: 2}
+  - {fileID: 11400000, guid: 6889a51c5c85eee4194baa35157ceed0, type: 2}
+  - {fileID: 11400000, guid: 6c8fbc954686f4b469affb57b6c87b67, type: 2}
+  - {fileID: 11400000, guid: e3b9fc5a022ed2d4bac78630f61fc2b9, type: 2}
+  - {fileID: 11400000, guid: 4bd32120d1e97ef489bb3d60a5a066e3, type: 2}
+  - {fileID: 11400000, guid: ee866e406bf15a84daebc46e5613776b, type: 2}
+  - {fileID: 11400000, guid: 3a21e44529db42e46a5eeff18f53db58, type: 2}
+  sceneServices: {fileID: 0}

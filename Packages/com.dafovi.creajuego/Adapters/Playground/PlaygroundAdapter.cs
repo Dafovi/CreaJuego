@@ -16,7 +16,7 @@ namespace CreaJuego.PlaygroundBackend
         {
             var item = GetComponent<GameItem>();
             var session = Application.isPlaying ? DemoSession.InScene(gameObject.scene) : null;
-            if (TryGetComponent<SpriteRenderer>(out var renderer)) renderer.color = item.tint;
+            var renderer=ItemVisual.Resolve(item); if(renderer!=null) renderer.color=ItemVisual.BaseColor(item);
             if (TryGetComponent<Move>(out var move)) { move.movementSource = WorkshopInput.ReadMovement; move.speed = item.speed / 20f; move.movementType = Enums.MovementType.OnlyHorizontal; }
             if (TryGetComponent<Jump>(out var jump)) { jump.jumpStrength = item.jump; jump.enabled = item.canJump; }
             if (TryGetComponent<CollectableAttribute>(out var prize))
@@ -27,16 +27,32 @@ namespace CreaJuego.PlaygroundBackend
             if (TryGetComponent<ModifyHealthAttribute>(out var hazard))
             {
                 hazard.healthChange = -item.damage; hazard.destroyWhenActivated = item.disappear;
-                if (Application.isPlaying) hazard.interactionAllowed = () => session != null && session.State == GameSessionState.Playing;
+                if (Application.isPlaying) hazard.interactionAllowed = () => GetComponent<PlaygroundContactDamage>()==null && session != null && session.State == GameSessionState.Playing;
             }
             if (TryGetComponent<HealthSystemAttribute>(out var health))
             {
                 health.health = item.health;
                 if (Application.isPlaying)
                 {
-                    health.modificationAllowed = () => session != null && session.State == GameSessionState.Playing;
-                    health.healthChanged = remaining => { if (item.definition.kind == ItemKind.Player) session?.ObserveHealth(remaining); };
+                    var receiver=GetComponent<PlayerDamageReceiver>();
+                    receiver?.Configure(()=>health.health,health.ModifyHealth,()=>session!=null && session.State==GameSessionState.Playing);
+                    health.modificationAllowed = () => session != null && session.State == GameSessionState.Playing && (receiver==null || receiver.CanReceive);
+                    health.healthChanged = remaining => { receiver?.HealthChanged(remaining); if(item.definition.kind==ItemKind.Player) session?.ObserveHealth(remaining); };
                 }
+            }
+            if(Application.isPlaying && TryGetComponent<PlayerAttack>(out var attack))
+            {
+                attack.pressed=WorkshopInput.AttackPressed;
+                attack.playing=()=>session!=null && session.State==GameSessionState.Playing;
+            }
+            if(Application.isPlaying && TryGetComponent<EnemyVitality>(out var vitality))
+            {
+                vitality.playing=()=>session!=null && session.State==GameSessionState.Playing;
+                vitality.defeated=()=> {
+                    if(TryGetComponent<Patrol>(out var movement)) movement.enabled=false;
+                    if(TryGetComponent<Rigidbody2D>(out var body)) body.simulated=false;
+                    foreach(var collider in GetComponents<Collider2D>()) collider.enabled=false;
+                };
             }
             if (TryGetComponent<Patrol>(out var patrol))
             {
@@ -48,7 +64,7 @@ namespace CreaJuego.PlaygroundBackend
         {
             var item = GetComponent<GameItem>();
             if (!isActiveAndEnabled || item.definition == null) return "Este elemento necesita un comportamiento activo.";
-            if (!TryGetComponent<SpriteRenderer>(out var sprite) || sprite.sprite == null || !sprite.enabled) return "Falta la apariencia de " + item.definition.displayName + ".";
+            var sprite=ItemVisual.Resolve(item); if (sprite == null || sprite.sprite == null || !sprite.enabled) return "Falta la apariencia de " + item.definition.displayName + ".";
             if (item.definition.kind != ItemKind.Decoration && (!TryGetComponent<Collider2D>(out var collider) || !collider.enabled))
                 return "La superficie de " + item.definition.displayName + " está incompleta.";
             switch (item.definition.kind)
@@ -79,4 +95,8 @@ namespace CreaJuego.PlaygroundBackend
         }
     }
 }
+
+
+
+
 

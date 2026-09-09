@@ -65,9 +65,9 @@ namespace CreaJuego.Editor
         private void MarkSelected()
         {
             if(gameItems==null) return;
-            var selected=Selection.gameObjects;
+            var selected=EducationalSelection.Items();
             gameItems.Query<Button>().ForEach(b=> {
-                bool chosen=b.userData is GameItem item && item!=null && selected.Contains(item.gameObject);
+                bool chosen=b.userData is GameItem item && item!=null && selected.Contains(item);
                 b.EnableInClassList("selected",chosen);
                 var marker=b.Q<Label>("marca-seleccion");
                 if(marker!=null) marker.text=chosen ? "✓" : "";
@@ -78,7 +78,7 @@ namespace CreaJuego.Editor
         {
             if(flow==null)return;
             flow.text=EditorApplication.isPlayingOrWillChangePlaymode ? "Paso 4 de 4 · Jugar" :
-                Selection.gameObjects.Any(g=>g.GetComponent<GameItem>()!=null) ? "Paso 3 de 4 · Personalizar" :
+                EducationalSelection.Items().Any(i=>i!=null) ? "Paso 3 de 4 · Personalizar" :
                 SceneItemService.Entries().Length>0 ? "Paso 2 de 4 · Seleccionar" : "Paso 1 de 4 · Añadir";
         }
         private void ObjectsChanged(ref ObjectChangeEventStream stream)
@@ -131,7 +131,7 @@ namespace CreaJuego.Editor
         {
             if(actions==null)return;
             MarkSelected();actions.Clear();
-            var items=Selection.gameObjects.Select(g=>g.GetComponent<GameItem>()).ToArray();
+            var items=EducationalSelection.Items();
             bool one=items.Length==1 && items[0]!=null && items[0].definition!=null && !EditorUtility.IsPersistent(items[0]);
             var item=one?items[0]:null;
             var duplicate=new Button(()=>RunAction(()=>ItemService.Duplicate(item))) {name="duplicar",text="Duplicar"};

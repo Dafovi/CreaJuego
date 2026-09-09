@@ -24,9 +24,9 @@ namespace CreaJuego.Starter.Tests
         [Test] public void WorkshopPublishesFiveP0AndValidatedEnemyWithDistinctIcons()
         {
             var catalog = ItemService.WorkshopCatalog();
-            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal }));
+            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy && d.kind != ItemKind.Decoration).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal }));
             Assert.That(catalog.All(d => d.icon != null), Is.True);
-            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(6));
+            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(7));
             Assert.That(ItemService.Catalog().Length, Is.EqualTo(8), "Experimental content is preserved");
         }
 
@@ -115,4 +115,5 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
+
 

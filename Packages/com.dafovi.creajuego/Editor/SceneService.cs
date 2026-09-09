@@ -58,7 +58,7 @@ namespace CreaJuego.Editor
             if (SceneObjects.All<MonoBehaviour>(scene).OfType<IWorkshopSession>().Any())
                 return; // Never overwrite or duplicate existing session infrastructure.
             if (SceneObjects.All<Canvas>(scene).Length > 0) throw new InvalidOperationException("Ya hay indicaciones en esta escena. Recupera su sesión o prepara una escena nueva.");
-            var packs = AssetDatabase.FindAssets("t:ContentPackDefinition").Select(g => AssetDatabase.LoadAssetAtPath<ContentPackDefinition>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
+            var packs = AssetDatabase.FindAssets("t:ContentPackDefinition").Select(g => AssetDatabase.LoadAssetAtPath<ContentPackDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(p => p.sceneServices != null).ToArray();
             if (packs.Length != 1 || packs[0].sceneServices == null) throw new InvalidOperationException("No está disponible la preparación del pack.");
             bool hasCamera = SceneObjects.All<Camera>(scene).Any(c => c.isActiveAndEnabled);
             Undo.IncrementCurrentGroup(); int group = Undo.GetCurrentGroup();
@@ -71,11 +71,13 @@ namespace CreaJuego.Editor
         public static string RuntimeHelp()
         {
             var session = SceneObjects.All<MonoBehaviour>(SceneManager.GetActiveScene()).OfType<IWorkshopSession>().FirstOrDefault();
-            if (session == null) return "A/D o flechas: moverte · Espacio: saltar.";
+            if (session == null) return "Muévete con A/D o las flechas, salta con Espacio y golpea con X.";
             return session.State == GameSessionState.Won ? "¡Tu recorrido puede completarse!" :
                 session.State == GameSessionState.Lost ? "Sin puntos de vida. Detén el juego para cambiar tu recorrido." :
-                "Haz clic en Juego. A/D o flechas: moverte · Espacio: saltar.";
+                "Haz clic en Juego. Muévete con A/D o las flechas, salta con Espacio y golpea con X.";
         }
     }
 }
+
+
 

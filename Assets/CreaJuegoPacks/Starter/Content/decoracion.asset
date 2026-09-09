@@ -15,13 +15,14 @@ MonoBehaviour:
   id: decoracion
   displayName: "Decoraci\xF3n"
   category: "Decoraci\xF3n"
-  description: Dale color a tu mundo.
+  description: "Decora tu mundo. No bloquea ni hace da\xF1o."
   learningHint: "No bloquea el paso ni hace da\xF1o."
   icon: {fileID: -2216631893085816980, guid: c996e091fec552e43a1fcceebc8f4899, type: 3}
+  appearancePack: {fileID: 11400000, guid: c3ec06d8ac1135844b1939fe20f0e259, type: 2}
   prefab: {fileID: 3665539657518204171, guid: 6e63118c433462144a52effb3d233065, type: 3}
   kind: 7
   order: 7
-  availableInWorkshop: 0
+  availableInWorkshop: 1
   allowMultiple: 1
   properties:
   - path: tint

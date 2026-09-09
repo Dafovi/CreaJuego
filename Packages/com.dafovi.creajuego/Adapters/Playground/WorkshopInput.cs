@@ -4,6 +4,7 @@ namespace CreaJuego.PlaygroundBackend
 {
     public static class WorkshopInput
     {
+        public static bool AttackPressed() => Keyboard.current!=null && Keyboard.current.xKey.wasPressedThisFrame;
         public static Vector2 ReadMovement()
         {
             var keys=Keyboard.current;
@@ -14,3 +15,4 @@ namespace CreaJuego.PlaygroundBackend
         }
     }
 }
+
