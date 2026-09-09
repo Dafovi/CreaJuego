@@ -1,5 +1,10 @@
 .creajuego {
     --cj-bg: #edf2f8;
+    --cj-hover: #eaf2ff;
+    --cj-pressed: #cfdef6;
+    --cj-soft: #f5f8ff;
+    --cj-selected: #d6e7ff;
+    --cj-info: #edf5ff;
     --cj-panel: #ffffff;
     --cj-text: #14264b;
     --cj-muted: #405574;
@@ -24,8 +29,8 @@
     border-radius: 5px; border-width: 1px; border-color: var(--cj-border);
     background-color: var(--cj-panel); color: var(--cj-text);
 }
-.creajuego Button:hover { background-color: #eaf2ff; border-color: var(--cj-accent); }
-.creajuego Button:active { background-color: #cfdef6; }
+.creajuego Button:hover { background-color: var(--cj-hover); border-color: var(--cj-accent); }
+.creajuego Button:active { background-color: var(--cj-pressed); }
 .creajuego Button:focus { border-color: var(--cj-accent); border-width: 2px; }
 .creajuego Button:disabled { opacity: 0.55; }
 .creajuego .flow { flex-direction: row; margin-bottom: 6px; }
@@ -51,7 +56,7 @@
 .creajuego .card {
     flex-direction: column; justify-content: center; align-items: center;
     width: 45%; flex-grow: 1; min-width: 85px; min-height: 82px;
-    margin: 3px; padding: 6px; background-color: #f5f8ff;
+    margin: 3px; padding: 6px; background-color: var(--cj-soft);
 }
 .creajuego .card .item-icon { width: 36px; height: 36px; margin: 0 0 5px 0; }
 .creajuego .card-title { font-size: 13px; -unity-font-style: bold; color: var(--cj-accent); white-space: normal; -unity-text-align: middle-center; }
@@ -61,12 +66,12 @@
 .creajuego .scene-item .item-icon { width: 21px; height: 21px; margin-right: 7px; }
 .creajuego .scene-item-name { flex-grow: 1; flex-shrink: 1; white-space: normal; }
 .creajuego .selection-mark { width: 18px; -unity-font-style: bold; }
-.creajuego .scene-item.selected { background-color: #d6e7ff; border-left-width: 3px; border-left-color: var(--cj-accent); -unity-font-style: bold; }
+.creajuego .scene-item.selected { background-color: var(--cj-selected); border-left-width: 3px; border-left-color: var(--cj-accent); -unity-font-style: bold; }
 .creajuego .hint { font-size: 12px; color: var(--cj-muted); white-space: normal; margin-top: 3px; }
 .creajuego .selection-heading {
     flex-direction: row; flex-wrap: wrap; align-items: center;
     padding: 12px; margin: 4px 3px 12px 0;
-    border-width: 1px; border-color: var(--cj-border); border-radius: 6px; background-color: #f5f8ff;
+    border-width: 1px; border-color: var(--cj-border); border-radius: 6px; background-color: var(--cj-soft);
 }
 .creajuego .selection-title { font-size: 19px; -unity-font-style: bold; white-space: normal; flex-shrink: 1; }
 .creajuego .selection-help { width: 100%; white-space: normal; color: var(--cj-muted); margin-top: 8px; }
@@ -76,7 +81,7 @@
 .creajuego .property .unity-base-field { flex-direction: column; align-items: stretch; margin-left: 0; margin-right: 0; }
 .creajuego .property .unity-base-field__label { min-width: 0; margin-bottom: 6px; white-space: normal; color: var(--cj-text); }
 .creajuego .property .unity-base-field__input { min-height: 28px; }
-.creajuego .property .unity-base-text-field__input { background-color: #ffffff; color: var(--cj-text); border-width: 1px; border-color: var(--cj-border); border-radius: 4px; }
+.creajuego .property .unity-base-text-field__input { background-color: var(--cj-panel); color: var(--cj-text); border-width: 1px; border-color: var(--cj-border); border-radius: 4px; }
 .creajuego .property .unity-base-text-field__input:focus { border-color: var(--cj-accent); border-width: 2px; }
 .creajuego .property .unity-toggle { flex-direction: row; }
 .creajuego .property .unity-toggle__input { flex-grow: 0; margin-left: 8px; }
@@ -91,7 +96,7 @@
 .creajuego .danger-action { color: var(--cj-danger); }
 .creajuego .empty { white-space: normal; color: var(--cj-muted); margin: 20px 8px; font-size: 16px; }
 .creajuego .empty-title { white-space: normal; color: var(--cj-text); font-size: 14px; margin-top: 8px; }
-.creajuego .context-help { white-space: normal; color: var(--cj-muted); background-color: #edf5ff; padding: 12px; border-left-width: 3px; border-left-color: var(--cj-accent); }
+.creajuego .context-help { white-space: normal; color: var(--cj-muted); background-color: var(--cj-info); padding: 12px; border-left-width: 3px; border-left-color: var(--cj-accent); }
 .creajuego .status { white-space: normal; color: var(--cj-muted); padding-top: 6px; font-size: 12px; }
 .creajuego .play-footer {
     flex-direction: row; align-items: center; flex-shrink: 0;
@@ -119,3 +124,27 @@
 .creajuego.playbar-window .play-footer { flex-grow: 1; min-height: 65px; margin-top: 0; }
 .creajuego.playbar-window .validation { max-height: none; }
 .creajuego.playbar-window .status { font-size: 11px; }
+.creajuego.dark {
+    --cj-bg: #171d27;
+    --cj-panel: #222b39;
+    --cj-text: #edf2fa;
+    --cj-muted: #afbdd1;
+    --cj-accent: #80b4ff;
+    --cj-border: #45556c;
+    --cj-success: #48c78a;
+    --cj-success-bg: #183b30;
+    --cj-warning: #f2c778;
+    --cj-warning-bg: #3b3020;
+    --cj-danger: #ff8c9c;
+    --cj-hover: #30445e;
+    --cj-pressed: #3b5779;
+    --cj-soft: #273344;
+    --cj-selected: #304d73;
+    --cj-info: #263b55;
+}
+.creajuego .theme-toggle { align-self: flex-end; margin-bottom: 5px; color: var(--cj-muted); font-size: 12px; }
+.creajuego .unity-base-field__label { color: var(--cj-text); }
+.creajuego .unity-base-text-field__input, .creajuego .unity-object-field__input { background-color: var(--cj-panel); color: var(--cj-text); }
+.creajuego.dark .primary { background-color: #08743f; border-color: #48c78a; color: #ffffff; }
+.creajuego.dark .primary:hover { background-color: #096136; }
+.creajuego .world-tools { margin-top: 5px; padding: 5px; background-color: var(--cj-panel); }

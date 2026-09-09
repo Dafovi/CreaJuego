@@ -13,6 +13,16 @@ MonoBehaviour:
   m_Name: Mundo misterioso
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.ContentPackDefinition
   id: mundo-misterioso
+  categories:
+  - {fileID: 11400000, guid: 70e48420dd79a2541bd1debe45589ef0, type: 2}
+  - {fileID: 11400000, guid: d2eabca871f2cc645863442106072393, type: 2}
+  - {fileID: 11400000, guid: d08949fc81bc74445aa3f7cee21fdee1, type: 2}
+  - {fileID: 11400000, guid: 3ec5f62b3317db8489a53bace83264c5, type: 2}
+  - {fileID: 11400000, guid: 3624469defe9aac4fab26cc3e816fc61, type: 2}
+  - {fileID: 11400000, guid: 6897fc62136fd8b43af01556c2fff7ea, type: 2}
+  - {fileID: 11400000, guid: 6244790326c94834ea5b1e96472d7989, type: 2}
+  - {fileID: 11400000, guid: 5a36fbbfc9ee8e34f85c050ce7978db7, type: 2}
+  - {fileID: 11400000, guid: 4af77314471ac17439900dc0d4fdde16, type: 2}
   appearances:
   - {fileID: 11400000, guid: f0893f0e958869845a34376b5c1f7ab5, type: 2}
   - {fileID: 11400000, guid: e8c4f7cbc96f7a947a900757b7f36d5a, type: 2}

@@ -26,6 +26,7 @@ namespace CreaJuego.Editor
             if (!CanCreate(definition)) throw new InvalidOperationException("Este taller usa un solo " + definition.displayName.ToLowerInvariant() + ". Selecciona el que ya está en la escena.");
             var source = definition.prefab.GetComponent<GameItem>();
             if (source == null || Backend(source) == null) throw new ArgumentException("Este elemento no tiene un comportamiento disponible.");
+            Undo.IncrementCurrentGroup(); int group=Undo.GetCurrentGroup();
             var go = (GameObject)PrefabUtility.InstantiatePrefab(definition.prefab, SceneManagerSetup());
             go.name = definition.displayName;
             go.transform.position = position;
@@ -36,6 +37,11 @@ namespace CreaJuego.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(go.transform);
             EditorSceneManager.MarkSceneDirty(go.scene);
             Selection.activeGameObject = go;
+            var category=definition.appearancePack?.CategoryFor(definition.kind);
+            var option=category?.options.FirstOrDefault(o=>o!=null && o.Preview!=null);
+            if(option!=null) ItemAppearance.ChooseOption(new[]{item},category,option.id);
+            if(definition.kind==ItemKind.Player && SceneObjects.All<WorkshopCameraRig>(go.scene).Length>0) WorldAuthoringService.EnsureCamera();
+            Undo.CollapseUndoOperations(group);
             return item;
         }
 
@@ -85,3 +91,5 @@ namespace CreaJuego.Editor
         private static UnityEngine.SceneManagement.Scene SceneManagerSetup() => UnityEngine.SceneManagement.SceneManager.GetActiveScene();
     }
 }
+
+

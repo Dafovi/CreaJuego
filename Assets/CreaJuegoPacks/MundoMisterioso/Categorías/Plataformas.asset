@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: Plataformas
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 1
+  options:
+  - id: tiny-dungeon-36
+    displayName: Piedra clara
+    sprite: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-37
+    displayName: Piedra antigua
+    sprite: {fileID: 6382969040213947563, guid: 67fef63a100a3f94a8188fc8a5f9fe40, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-38
+    displayName: Piedra oscura
+    sprite: {fileID: -3106639410894378149, guid: 2cb9865b1efaf5d48b0dd8d739737734, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0

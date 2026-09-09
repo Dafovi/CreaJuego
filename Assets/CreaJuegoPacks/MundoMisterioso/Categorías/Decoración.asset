@@ -1,0 +1,142 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: "Decoraci\xF3n"
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 7
+  options:
+  - id: tiny-dungeon-2072
+    displayName: Mesa
+    sprite: {fileID: 4553357440917884160, guid: 5c9d92145932c944890c003bf64d392c, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2073
+    displayName: Taburete
+    sprite: {fileID: -6440375357797358166, guid: 337380fca33f99a49976ecb3e925134c, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2074
+    displayName: Cuenco
+    sprite: {fileID: -3030066030375753366, guid: f055e43c80949ed42a4631ae740fefb6, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2065
+    displayName: "L\xE1pida"
+    sprite: {fileID: 5458929748159511102, guid: 8135a16f10171e84f94bb877a4e1c718, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2064
+    displayName: Estatua
+    sprite: {fileID: -8552771937101445899, guid: 75c6230882a9c39429a71258a1766524, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2089
+    displayName: Cofre cerrado
+    sprite: {fileID: 6004726093148896001, guid: 8a58f9204d34d264f9984583dde7492e, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2090
+    displayName: Cofre abierto
+    sprite: {fileID: -3393669804764342910, guid: 3581417627e28f544bd109f21694b536, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-2091
+    displayName: Cofre alto
+    sprite: {fileID: 8724667134466148687, guid: 60f3c3d9f2fd3fb4b93d222b33dabdbb, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3124
+    displayName: Hierba
+    sprite: {fileID: 8331473166331955290, guid: 76b89c28d72c1184eb07549382113e50, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3125
+    displayName: Planta alta
+    sprite: {fileID: -3648167944878087285, guid: 6eac7b5153c7a0446b7734685b3486e5, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3126
+    displayName: Pino
+    sprite: {fileID: -6671972720950672394, guid: dda806f58f71c1645967aced5365f475, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3127
+    displayName: Cactus
+    sprite: {fileID: 5935063931010466721, guid: c4a09745babb9f347af68c0010b78333, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3128
+    displayName: "Hongo peque\xF1o"
+    sprite: {fileID: 4051887602570988753, guid: 326cc9b6e071aea4fb4a80b51dd5ec18, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-3129
+    displayName: Hongo alto
+    sprite: {fileID: 186691536681101977, guid: 0ee4b6b65feff704694205ce355594a9, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0

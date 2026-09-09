@@ -35,7 +35,7 @@ namespace CreaJuego.Starter.Tests
             var created=Selection.activeGameObject.GetComponent<GameItem>();
             string technicalName=created.name;
             var list=root.Q<ScrollView>("mi-juego");
-            Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+1));
+            Assert.That(list.Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(before+1));
             Selection.activeGameObject=null;
             Activate(list.Query<Button>().ToList().Single(b=>ReferenceEquals(b.userData,created)));
             yield return null;
@@ -44,17 +44,17 @@ namespace CreaJuego.Starter.Tests
             Assert.That(root.Q<Button>("crear-plataforma").ClassListContains("selected"),Is.False);
             Activate(root.Q<Button>("duplicar"));
             yield return null; yield return null;
-            Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+2));
+            Assert.That(list.Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(before+2));
             Assert.That(created.name,Is.EqualTo(technicalName));
             Assert.That(SceneItemService.Entries().Select(e=>e.label).Distinct().Count(),Is.EqualTo(before+2));
             Undo.IncrementCurrentGroup();
             Activate(root.Q<Button>("eliminar"));
             yield return null; yield return null;
-            Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+1));
+            Assert.That(list.Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(before+1));
             Undo.PerformUndo(); yield return null;
-            Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+2));
+            Assert.That(list.Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(before+2));
             Undo.PerformRedo(); yield return null;
-            Assert.That(list.Query<Button>().ToList().Count,Is.EqualTo(before+1));
+            Assert.That(list.Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(before+1));
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             yield return null; yield return null;
             Assert.That(list.Query<Button>().ToList(),Is.Empty);
@@ -89,4 +89,5 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
+
 

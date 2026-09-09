@@ -13,8 +13,8 @@ namespace CreaJuego
         GameItem item;
         Vector3 previous;
         int state;
-        public static Color BaseColor(GameItem item) => item.appearance!=null || item.customSprite!=null ? Color.white : item.tint;
-        public int Facing => renderer!=null && (renderer.flipX ^ (item!=null && item.appearance!=null && item.appearance.flipX)) ? -1 : 1;
+        public static Color BaseColor(GameItem item) => item.SelectedAppearance!=null || item.customSprite!=null ? Color.white : item.tint;
+        public int Facing => renderer!=null && (renderer.flipX ^ (item!=null && item.SelectedAppearance!=null && item.SelectedAppearance.flipX)) ? -1 : 1;
         public static SpriteRenderer Resolve(GameItem item)
         {
             var visual=item.GetComponent<ItemVisual>();
@@ -25,7 +25,7 @@ namespace CreaJuego
         {
             if(item==null) item=GetComponent<GameItem>();
             if(item==null || renderer==null) return;
-            var appearance=item.appearance;
+            var appearance=item.SelectedAppearance;
             if(item.customSprite!=null) renderer.sprite=item.customSprite;
             else if(appearance!=null) renderer.sprite=appearance.sprite;
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
@@ -51,7 +51,7 @@ namespace CreaJuego
             float speed=(transform.position.x-previous.x)/Mathf.Max(Time.deltaTime,.0001f);
             previous=transform.position;
             bool character=item.definition.kind==ItemKind.Player || item.definition.kind==ItemKind.Enemy;
-            var appearance=item.appearance;
+            var appearance=item.SelectedAppearance;
             if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (appearance!=null && appearance.flipX);
             var profile=appearance!=null ? appearance.animationProfile : null;
             if(animator==null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController==null || profile==null) return;
@@ -64,5 +64,6 @@ namespace CreaJuego
         }
     }
 }
+
 
 

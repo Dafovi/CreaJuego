@@ -1,1 +1,1 @@
-{"name":"CreaJuego.Editor","references":["CreaJuego.Runtime"],"includePlatforms":["Editor"]}
+{"name":"CreaJuego.Editor","references":["CreaJuego.Runtime","CreaJuego.Cinemachine","Unity.Cinemachine"],"includePlatforms":["Editor"]}

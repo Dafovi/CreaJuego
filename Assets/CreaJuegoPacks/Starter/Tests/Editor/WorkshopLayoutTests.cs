@@ -58,9 +58,9 @@ namespace CreaJuego.Starter.Tests
             Assert.That(WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points"),Is.Null);
             int count=SceneItemService.Entries().Length;
             Undo.PerformUndo();yield return null;yield return null;
-            Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList().Count,Is.EqualTo(count+1));
+            Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(count+1));
             Undo.PerformRedo();yield return null;yield return null;
-            Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList().Count,Is.EqualTo(count));
+            Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList().Count(b=>b.userData is GameItem),Is.EqualTo(count));
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);yield return null;yield return null;
             Assert.That(root.Q<ScrollView>("mi-juego").Query<Button>().ToList(),Is.Empty);
             Assert.That(WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points"),Is.Null);
@@ -85,3 +85,4 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
+

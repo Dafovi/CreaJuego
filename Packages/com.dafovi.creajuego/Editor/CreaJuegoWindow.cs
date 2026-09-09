@@ -42,7 +42,7 @@ namespace CreaJuego.Editor
             root.Add(Styled(new Label("AÑADIR AL JUEGO"),"section-title"));
             root.Add(Styled(new Label("Elige algo para añadir a tu juego."),"hint"));
             catalog=Styled(new ScrollView {name="catalogo"},"catalog");root.Add(catalog);
-            root.Add(Styled(new Label("MI JUEGO"),"section-title"));
+            root.Add(new WorldToolsView()); root.Add(Styled(new Label("MI JUEGO"),"section-title"));
             gameItems=Styled(new ScrollView {name="mi-juego"},"game-items");root.Add(gameItems);
             actions=Styled(new VisualElement(),"actions");root.Add(actions);
             status=Styled(new Label(){name="estado"},"status");root.Add(status);
@@ -62,6 +62,14 @@ namespace CreaJuego.Editor
             catalog.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             MarkSelected();
         }
+        private void RefreshIcons()
+        {
+            var selected=EducationalSelection.Items().FirstOrDefault(i=>i!=null);
+            rootVisualElement.Query<Image>().ForEach(image=> {
+                if(image.userData is GameItem item && item!=null) image.sprite=WorkshopWindowStyle.Preview(item);
+                else if(image.userData is GameItemDefinition definition) image.sprite=selected!=null && selected.definition==definition ? WorkshopWindowStyle.Preview(selected) : WorkshopWindowStyle.Preview(definition);
+            });
+        }
         private void MarkSelected()
         {
             if(gameItems==null) return;
@@ -72,7 +80,7 @@ namespace CreaJuego.Editor
                 var marker=b.Q<Label>("marca-seleccion");
                 if(marker!=null) marker.text=chosen ? "✓" : "";
             });
-            RefreshFlow();
+            RefreshFlow(); RefreshIcons();
         }
         private void RefreshFlow()
         {
@@ -91,6 +99,7 @@ namespace CreaJuego.Editor
                     structure=true;
             }
             if(structure) RefreshSceneItems();
+            RefreshIcons();
         }
         private void UndoChanged() { RefreshSceneItems(); ShowSelection(); }
         private void SceneChanged(UnityEngine.SceneManagement.Scene previous, UnityEngine.SceneManagement.Scene next) { RefreshSceneItems(); ShowSelection(); }
@@ -103,10 +112,15 @@ namespace CreaJuego.Editor
             {
                 var item=entry.item;
                 var button=Styled(new Button(()=>SceneItemService.Select(item)){userData=item, tooltip="Seleccionar "+entry.label},"scene-item");
-                if(item.definition!=null) button.Add(Icon(item.definition));
+                if(item.definition!=null) button.Add(WorkshopWindowStyle.Icon(item));
                 button.Add(Styled(new Label(entry.label),"scene-item-name"));
                 button.Add(Styled(new Label("") {name="marca-seleccion"},"selection-mark"));
                 gameItems.Add(button);
+            }
+            foreach(var boundary in SceneObjects.All<InvisibleBoundary>(UnityEngine.SceneManagement.SceneManager.GetActiveScene()))
+            {
+                var target=boundary;
+                gameItems.Add(Styled(new Button(()=>Selection.activeGameObject=target.gameObject){text="▥ "+target.name,tooltip="Seleccionar límite invisible"},"scene-item"));
             }
             if(gameItems.childCount==0) {
                 gameItems.Add(Styled(new Label("Tu juego todavía está vacío."),"empty-title"));

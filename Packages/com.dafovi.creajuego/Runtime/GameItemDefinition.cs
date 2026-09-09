@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CreaJuego
 {
-    public enum ItemKind { Player, Platform, Prize, Hazard, Goal, MovingPlatform, Enemy, Decoration }
+    public enum ItemKind { Player, Platform, Prize, Hazard, Goal, MovingPlatform, Enemy, Decoration, Background }
     public enum EducationalControl { Float, Integer, Toggle, Text, Color }
 
     [Serializable]
@@ -39,4 +39,5 @@ namespace CreaJuego
         public EducationalProperty[] properties = Array.Empty<EducationalProperty>();
     }
 }
+
 

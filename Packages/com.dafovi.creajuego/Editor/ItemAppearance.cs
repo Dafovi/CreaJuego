@@ -20,13 +20,25 @@ namespace CreaJuego.Editor
                 foreach(var item in changes.Select(c=>c.currentValue.target).OfType<GameItem>().Distinct()) Apply(item,true);
             return changes;
         }
-        public static void Choose(GameItem[] items, AppearanceDefinition appearance, Sprite custom)
+        public static void Choose(GameItem[] items, AppearanceDefinition appearance, Sprite custom)=>ChooseInternal(items,appearance,null,null,custom);
+        public static void ChooseOption(GameItem[] items,AppearanceCategory category,string id)
+        {
+            if(category==null || category.Find(id)==null) throw new System.ArgumentException("La opción ya no está en esta lista.");
+            ChooseInternal(items,null,category,id,null);
+        }
+        public static void SetCustomSprite(GameItem[] items,Sprite sprite)
+        {
+            Undo.IncrementCurrentGroup(); int group=Undo.GetCurrentGroup();
+            foreach(var item in items) ChooseInternal(new[]{item},item.appearance,item.appearanceCategory,item.appearanceId,sprite);
+            Undo.CollapseUndoOperations(group);
+        }
+        private static void ChooseInternal(GameItem[] items, AppearanceDefinition appearance, AppearanceCategory category,string id,Sprite custom)
         {
             if(EditorApplication.isPlayingOrWillChangePlaymode) return;
             Undo.IncrementCurrentGroup(); int group=Undo.GetCurrentGroup(); Undo.SetCurrentGroupName("Cambiar apariencia");
             foreach(var item in items)
             {
-                if(appearance!=null && (item.definition==null || appearance.kind!=item.definition.kind)) continue;
+                if(item.definition==null || (appearance!=null && appearance.kind!=item.definition.kind) || (category!=null && category.kind!=item.definition.kind)) continue;
                 // Legacy objects are upgraded only on an explicit appearance change.
                 if(item.GetComponent<ItemVisual>()==null)
                 {
@@ -42,6 +54,8 @@ namespace CreaJuego.Editor
                 using(var data=new SerializedObject(item))
                 {
                     data.FindProperty(nameof(GameItem.appearance)).objectReferenceValue=appearance;
+                    data.FindProperty(nameof(GameItem.appearanceCategory)).objectReferenceValue=category;
+                    data.FindProperty(nameof(GameItem.appearanceId)).stringValue=id ?? "";
                     data.FindProperty(nameof(GameItem.customSprite)).objectReferenceValue=custom;
                     data.ApplyModifiedProperties();
                 }
@@ -70,6 +84,7 @@ namespace CreaJuego.Editor
         public static void RefreshScene() { foreach(var item in SceneObjects.All<GameItem>(SceneManager.GetActiveScene())) Apply(item,false); }
     }
 }
+
 
 
 

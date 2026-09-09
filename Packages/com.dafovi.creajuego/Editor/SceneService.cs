@@ -47,7 +47,7 @@ namespace CreaJuego.Editor
         {
             checks = Validate();
             if (checks.Any(c => !c.passed)) return false;
-            EditorApplication.EnterPlaymode(); return true;
+            WorldAuthoringService.EnsureCamera(); EditorApplication.EnterPlaymode(); return true;
         }
         [MenuItem("CreaJuego/Preparar escena")]
         public static void Prepare()
@@ -56,7 +56,7 @@ namespace CreaJuego.Editor
             var scene = SceneManager.GetActiveScene();
             if (PrefabStageUtility.GetCurrentPrefabStage() != null || SceneManager.sceneCount != 1) throw new InvalidOperationException("Abre una sola escena de taller.");
             if (SceneObjects.All<MonoBehaviour>(scene).OfType<IWorkshopSession>().Any())
-                return; // Never overwrite or duplicate existing session infrastructure.
+                { WorldAuthoringService.EnsureCamera(); return; } // Preserve existing session infrastructure.
             if (SceneObjects.All<Canvas>(scene).Length > 0) throw new InvalidOperationException("Ya hay indicaciones en esta escena. Recupera su sesión o prepara una escena nueva.");
             var packs = AssetDatabase.FindAssets("t:ContentPackDefinition").Select(g => AssetDatabase.LoadAssetAtPath<ContentPackDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(p => p.sceneServices != null).ToArray();
             if (packs.Length != 1 || packs[0].sceneServices == null) throw new InvalidOperationException("No está disponible la preparación del pack.");
@@ -66,7 +66,7 @@ namespace CreaJuego.Editor
             Undo.RegisterCreatedObjectUndo(root, "Preparar escena");
             if (hasCamera)
                 foreach (var camera in root.GetComponentsInChildren<Camera>()) Undo.DestroyObjectImmediate(camera.gameObject);
-            EditorSceneManager.MarkSceneDirty(scene); Undo.CollapseUndoOperations(group);
+            WorldAuthoringService.EnsureCamera(); EditorSceneManager.MarkSceneDirty(scene); Undo.CollapseUndoOperations(group);
         }
         public static string RuntimeHelp()
         {
@@ -78,6 +78,3 @@ namespace CreaJuego.Editor
         }
     }
 }
-
-
-

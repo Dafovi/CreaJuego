@@ -12,12 +12,12 @@ namespace CreaJuego.Editor
         [MenuItem("CreaJuego/Abrir propiedades")]
         public static void Open()=>GetWindow<CreaJuegoPropertiesWindow>("Propiedades");
         private void OnEnable() {
-            ObjectChangeEvents.changesPublished+=ObjectsChanged;Selection.selectionChanged+=Refresh;EditorApplication.hierarchyChanged+=HierarchyChanged;Undo.undoRedoPerformed+=Refresh;
+            EditorApplication.projectChanged+=Refresh;ObjectChangeEvents.changesPublished+=ObjectsChanged;Selection.selectionChanged+=Refresh;EditorApplication.hierarchyChanged+=HierarchyChanged;Undo.undoRedoPerformed+=Refresh;
             EditorSceneManager.activeSceneChangedInEditMode+=SceneChanged;
             EditorApplication.playModeStateChanged+=PlayChanged;
         }
         private void OnDisable() {
-            ObjectChangeEvents.changesPublished-=ObjectsChanged;Selection.selectionChanged-=Refresh;EditorApplication.hierarchyChanged-=HierarchyChanged;Undo.undoRedoPerformed-=Refresh;
+            EditorApplication.projectChanged-=Refresh;ObjectChangeEvents.changesPublished-=ObjectsChanged;Selection.selectionChanged-=Refresh;EditorApplication.hierarchyChanged-=HierarchyChanged;Undo.undoRedoPerformed-=Refresh;
             EditorSceneManager.activeSceneChangedInEditMode-=SceneChanged;
             EditorApplication.playModeStateChanged-=PlayChanged;view?.Dispose();view=null;
         }
@@ -25,7 +25,7 @@ namespace CreaJuego.Editor
             minSize=new Vector2(300,250);view?.Dispose();WorkshopWindowStyle.Apply(this);
             view=new EducationalPropertiesView();rootVisualElement.Add(view);Refresh();
         }
-        private static string SelectionStamp() => string.Join("|",EducationalSelection.Items().Select(i=>i==null ? "none" : i.GetEntityId().ToString()+":"+i.name+":"+(i.definition!=null ? i.definition.GetEntityId().ToString() : "none")+":"+(i.appearance!=null || i.customSprite!=null)));
+        private static string SelectionStamp() => string.Join("|",EducationalSelection.Items().Select(i=>i==null ? "none" : i.GetEntityId().ToString()+":"+i.name+":"+(i.definition!=null ? i.definition.GetEntityId().ToString() : "none")+":"+(i.SelectedAppearance!=null || i.customSprite!=null)));
         private void ObjectsChanged(ref ObjectChangeEventStream stream) => HierarchyChanged();
         private void HierarchyChanged() { if(shownSelection!=SelectionStamp()) Refresh(); }
         private void Refresh() { shownSelection=SelectionStamp(); view?.ShowSelection(); }
@@ -33,6 +33,8 @@ namespace CreaJuego.Editor
         private void PlayChanged(PlayModeStateChange state)=>Refresh();
     }
 }
+
+
 
 
 

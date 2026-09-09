@@ -16,6 +16,24 @@ namespace CreaJuego.Editor
             var properties=this;
             properties.Unbind(); properties.Clear(); binding?.Dispose(); binding=null;
             properties.Add(Styled(new Label("Propiedades"),"section-title"));
+            var boundary=Selection.activeGameObject!=null ? Selection.activeGameObject.GetComponent<InvisibleBoundary>() : null;
+            if(boundary!=null && !EditorUtility.IsPersistent(boundary)) {
+                properties.Add(new Label("LÍMITE INVISIBLE"));
+                properties.Add(new Label("Bloquea el paso, pero no aparece al jugar. Muévelo en Escena."){style={whiteSpace=WhiteSpace.Normal}});
+                binding=new SerializedObject(boundary.GetComponent<BoxCollider2D>());
+                foreach(var axis in new[]{"x","y"}) {
+                    var field=new FloatField(axis=="x" ? "Anchura" : "Altura");
+                    field.RegisterValueChangedCallback(evt=>{
+                        if(evt.newValue<.1f){evt.StopImmediatePropagation();field.value=.1f;}
+                    });
+                    field.BindProperty(binding.FindProperty("m_Size").FindPropertyRelative(axis));
+                    properties.Add(field);
+                }
+                properties.Add(new Button(()=>Undo.DestroyObjectImmediate(boundary.gameObject)){text="Eliminar límite"});
+                properties.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
+                return;
+            }
+            properties.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             var items=EducationalSelection.Items();
             if(items.Length==0 || items.Any(i=>i==null || i.definition==null || EditorUtility.IsPersistent(i)))
             {
@@ -26,7 +44,7 @@ namespace CreaJuego.Editor
             {
                 properties.Add(Styled(new Label("Selecciona elementos del mismo tipo para editarlos juntos."),"empty")); return;
             }
-            var heading=Styled(new VisualElement(),"selection-heading"); heading.Add(Icon(definition));
+            var heading=Styled(new VisualElement(),"selection-heading"); heading.Add(WorkshopWindowStyle.Icon(items[0]));
             heading.Add(Styled(new Label(items.Length>1 ? definition.displayName+" × "+items.Length : SceneItemService.Label(items[0])),"selection-title")); properties.Add(heading);
             heading.Add(Styled(new Label(definition.description),"selection-help"));
 
@@ -34,7 +52,7 @@ namespace CreaJuego.Editor
             VisualElement groupPanel=null; string lastGroup=null;
             foreach(var descriptor in definition.properties)
             {
-                if(descriptor.path==nameof(GameItem.tint) && items.Any(i=>i.appearance!=null || i.customSprite!=null)) continue;
+                if(descriptor.path==nameof(GameItem.tint) && items.Any(i=>i.SelectedAppearance!=null || i.customSprite!=null)) continue;
                 var p=binding.FindProperty(descriptor.path);
                 if(p==null){ properties.Add(new HelpBox("No está disponible: "+descriptor.label,HelpBoxMessageType.Warning)); continue; }
                 if(groupPanel==null || lastGroup!=descriptor.group)
@@ -86,5 +104,4 @@ namespace CreaJuego.Editor
         public void Dispose() { this.Unbind(); binding?.Dispose(); binding=null; }
     }
 }
-
 

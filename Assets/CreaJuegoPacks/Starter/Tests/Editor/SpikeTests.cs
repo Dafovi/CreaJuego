@@ -94,6 +94,8 @@ namespace CreaJuego.Starter.Tests
         [UnityTest] public IEnumerator RealPlaygroundMovementCollectDamageGoalAndPersistence()
         {
             var authoredPlayer = Object.FindObjectsByType<GameItem>().Single(i => i.definition.kind == ItemKind.Player);
+            // Isolate this interaction sequence from the freely authored enemy placement.
+            foreach(var enemy in Object.FindObjectsByType<GameItem>().Where(i=>i.definition.kind==ItemKind.Enemy)) enemy.transform.position=new Vector3(100,0,0);
             using (var serialized = new SerializedObject(authoredPlayer))
             {
                 serialized.FindProperty(nameof(GameItem.speed)).floatValue = 2;
@@ -227,12 +229,3 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
-
-
-
-
-
-
-
-
-

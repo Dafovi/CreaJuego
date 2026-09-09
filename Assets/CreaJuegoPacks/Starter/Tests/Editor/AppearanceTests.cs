@@ -26,7 +26,7 @@ namespace CreaJuego.Starter.Tests
         [Test] public void PreparedCustomUndoRedoPreservePhysics()
         {
             var item=Player(); var visual=item.GetComponent<ItemVisual>();
-            var original=item.appearance; var alternate=item.definition.appearancePack.appearances.First(a=>a.kind==ItemKind.Player && a!=original);
+            var original=item.definition.appearancePack.appearances.First(a=>a.kind==ItemKind.Player && a.controller!=null); ItemAppearance.Choose(new[]{item},original,null); Undo.ClearAll(); var alternate=item.definition.appearancePack.appearances.First(a=>a.kind==ItemKind.Player && a.controller==null);
             string physics=EditorJsonUtility.ToJson(item.GetComponent<Rigidbody2D>()), collision=EditorJsonUtility.ToJson(item.GetComponent<Collider2D>());
             var scale=item.transform.localScale;
             ItemAppearance.Choose(new[]{item},alternate,null); Undo.FlushUndoRecordObjects();
@@ -100,9 +100,3 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
-
-
-
-
-
-

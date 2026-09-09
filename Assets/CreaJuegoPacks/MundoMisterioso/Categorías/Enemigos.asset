@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: Enemigos
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 6
+  options:
+  - id: tiny-dungeon-120
+    displayName: "Murci\xE9lago"
+    sprite: {fileID: 6091706668691328248, guid: 161f6a4ee36994343a22e81b6260d161, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-121
+    displayName: Fantasma
+    sprite: {fileID: 911841031958816375, guid: 0ac71d47e18fc68438d7b06df83248fd, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-122
+    displayName: Escarabajo
+    sprite: {fileID: 5119971492981962814, guid: 5b8cb8281c4ea3a4aa83615253e05bf1, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+  - id: tiny-dungeon-123
+    displayName: Seta
+    sprite: {fileID: 6426566509724856983, guid: 1628c04a38c4d304ab69c53892bc4b88, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0

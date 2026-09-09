@@ -1,1 +1,13 @@
-{"name":"com.dafovi.creajuego","version":"0.1.0","displayName":"CreaJuego Lab","description":"Prototipo educativo 2D en español.","unity":"6000.6","author":{"name":"Dafovi"}}
+{
+  "name": "com.dafovi.creajuego",
+  "version": "0.1.0",
+  "displayName": "CreaJuego Lab",
+  "description": "Prototipo educativo 2D en español.",
+  "unity": "6000.6",
+  "author": {
+    "name": "Dafovi"
+  },
+  "dependencies": {
+    "com.unity.cinemachine": "6.6.0"
+  }
+}

@@ -19,6 +19,8 @@ namespace CreaJuego.Starter.Editor
         [MenuItem("CreaJuego/Contenido/Preparar Mundo misterioso")]
         public static void Run()
         {
+            var configured=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>(Root+"/Mundo misterioso.asset");
+            if(configured!=null && configured.categories.Length>0) { Debug.Log("Edita las listas de Categorías para ampliar este pack. Se conserva tu configuración."); return; }
             foreach(var path in Directory.GetFiles(Root+"/Art","*.png"))
             {
                 var importer=(TextureImporter)AssetImporter.GetAtPath(path);
@@ -92,5 +94,6 @@ namespace CreaJuego.Starter.Editor
         }
     }
 }
+
 
 

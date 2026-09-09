@@ -76,7 +76,7 @@ namespace CreaJuego.Starter.Tests
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
-            Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(prize.definition.icon));
+            Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(ItemVisual.Resolve(prize).sprite));
             var number = WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points");
             number.value = 500;
             yield return null;
@@ -115,5 +115,3 @@ namespace CreaJuego.Starter.Tests
         }
     }
 }
-
-
