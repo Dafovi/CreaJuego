@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 846ab1361bfcc884083592734aa52a69
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Enemies/Spikes.prefab
+  uploadId: 791982

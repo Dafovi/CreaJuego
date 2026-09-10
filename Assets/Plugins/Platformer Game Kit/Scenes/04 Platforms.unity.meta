@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c3bb107ea67e46a4986a7b6173763244
+labels:
+- Example
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Scenes/04 Platforms.unity
+  uploadId: 791982

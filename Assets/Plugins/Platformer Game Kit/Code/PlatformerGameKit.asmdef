@@ -1,0 +1,27 @@
+{
+  "name": "PlatformerGameKit",
+  "rootNamespace": "",
+  "references": [
+    "GUID:4c25c05f410a3a447a75c3b0909152ef",
+    "GUID:b804e349e88953c498b525738cf9a0c9",
+    "GUID:b2665e54e4314ae429d34fdeafc9f3e0",
+    "GUID:75469ad4d38634e559750d17036d5f7c"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "CREAJUEGO_ENABLE_PLATFORMER_GAME_KIT"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.unity.modules.physics",
+      "expression": "",
+      "define": "UNITY_PHYSICS_3D"
+    }
+  ],
+  "noEngineReferences": false
+}

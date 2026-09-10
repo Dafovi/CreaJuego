@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4986721052956924ebedec7551c09bd8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Code/Utilities/MixedValueFieldGUI.cs
+  uploadId: 791982

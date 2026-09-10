@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ad353b41917e64d4293111d941d1d54c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Art/Gino/Gino-Ledge-Hang.anim
+  uploadId: 791982

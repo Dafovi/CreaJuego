@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9ad93ac53b8896a42b4351d657f95f6f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Enemies/Gobbat.prefab
+  uploadId: 791982

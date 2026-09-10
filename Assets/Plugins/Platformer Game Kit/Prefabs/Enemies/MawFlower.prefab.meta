@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ca20752769ff2734d8b799072559a729
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Enemies/MawFlower.prefab
+  uploadId: 791982

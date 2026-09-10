@@ -97,6 +97,18 @@ namespace CreaJuego.Editor
                 }
                 groupPanel.Add(row);
             }
+            var appearancePanel=Styled(new VisualElement(),"property-group");
+            appearancePanel.Add(Styled(new Label("APARIENCIA"),"group-title"));
+            var scaleRow=Styled(new VisualElement { name="fila-"+nameof(GameItem.visualScale) },"property");
+            var scaleProperty=binding.FindProperty(nameof(GameItem.visualScale));
+            var scaleField=new Slider("Tamaño",.1f,5f){showInputField=true,name="propiedad-"+nameof(GameItem.visualScale),tooltip="Haz más grande o más pequeño sólo el dibujo."};
+            scaleField.BindProperty(scaleProperty);
+            scaleRow.TrackPropertyValue(scaleProperty,_=>{foreach(var item in items) ItemAppearance.Apply(item,true);});
+            scaleRow.Add(scaleField);
+            scaleRow.Add(Styled(new Label("×"),"unit"));
+            scaleRow.Add(Styled(new Label("1 mantiene el tamaño normal. No cambia las colisiones ni el movimiento."),"hint"));
+            appearancePanel.Add(scaleRow);
+            properties.Add(appearancePanel);
             properties.Add(new AppearanceSelector(items));
             properties.Add(Styled(new Label(definition.learningHint),"context-help"));
             properties.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);

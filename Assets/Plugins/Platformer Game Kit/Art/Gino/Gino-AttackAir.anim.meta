@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c208e2eda8c0d1c419fb606c0fc2d9f3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Art/Gino/Gino-AttackAir.anim
+  uploadId: 791982

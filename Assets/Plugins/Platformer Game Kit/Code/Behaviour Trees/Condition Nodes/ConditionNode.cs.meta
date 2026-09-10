@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 7622ebad89502294b9146bb69b35049b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Code/Behaviour Trees/Condition Nodes/ConditionNode.cs
+  uploadId: 791982

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: aad80096f92533242bf5d7e5d522ad34
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Enemies/Scarecrow.prefab
+  uploadId: 791982

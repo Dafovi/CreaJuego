@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c5c9e7b6f23953f4f940dec750f7561c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Destructible Block.prefab
+  uploadId: 791982

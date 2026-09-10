@@ -34,13 +34,13 @@ namespace CreaJuego
             else if(appearance!=null) renderer.sprite=appearance.sprite;
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
             renderer.color=BaseColor(item);
-            if(appearance!=null)
-            {
-                var size=geometrySource!=null ? geometrySource.size : Vector2.one;
-                renderer.transform.localScale=new Vector3(appearance.scale.x*size.x,appearance.scale.y*size.y,1);
-                renderer.transform.localPosition=appearance.offset;
-                renderer.flipX=appearance.flipX;
-            }
+            var visualAppearance=item.customSprite==null ? appearance : null;
+            var size=geometrySource!=null ? geometrySource.size : Vector2.one;
+            var sourceScale=visualAppearance!=null ? visualAppearance.scale : Vector2.one;
+            float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
+            renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
+            renderer.transform.localPosition=visualAppearance!=null ? visualAppearance.offset : Vector3.zero;
+            renderer.flipX=visualAppearance!=null && visualAppearance.flipX;
             if(animator!=null)
             {
                 var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2352738598901c9409da130e3c72bd9d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Art/Scarecrow/Scarecrow-Walk.anim
+  uploadId: 791982

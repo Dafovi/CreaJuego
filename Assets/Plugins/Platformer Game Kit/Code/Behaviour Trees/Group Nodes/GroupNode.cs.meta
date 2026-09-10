@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c785b3292dc1a434eb0267a1727410ab
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Code/Behaviour Trees/Group Nodes/GroupNode.cs
+  uploadId: 791982

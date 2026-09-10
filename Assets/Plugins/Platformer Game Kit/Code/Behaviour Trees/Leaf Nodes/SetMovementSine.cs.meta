@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 4745a47a38e841f42ac1b33468a67fe7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Code/Behaviour Trees/Leaf Nodes/SetMovementSine.cs
+  uploadId: 791982

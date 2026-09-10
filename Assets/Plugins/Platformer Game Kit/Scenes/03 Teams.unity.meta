@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a08782049605c994ea55bbb23ee10dce
+labels:
+- Example
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Scenes/03 Teams.unity
+  uploadId: 791982

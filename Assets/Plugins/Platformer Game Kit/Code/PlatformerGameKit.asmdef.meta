@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ee3d6b5b3bdf4644dba1ad9188713cad
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Code/PlatformerGameKit.asmdef
+  uploadId: 791982

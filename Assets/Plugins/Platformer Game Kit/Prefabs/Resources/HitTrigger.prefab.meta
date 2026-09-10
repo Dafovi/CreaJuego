@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 41d61777c1a3b0840a48672c66ca5489
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Resources/HitTrigger.prefab
+  uploadId: 791982

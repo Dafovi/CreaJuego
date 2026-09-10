@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 290cbba2081c70d419449b59f07715ee
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Next Example Trigger.prefab
+  uploadId: 791982

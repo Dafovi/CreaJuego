@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 71b00aaf77932d44093d441f7616d1bf
+labels:
+- Documentation
+- Example
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Documentation.URL
+  uploadId: 791982

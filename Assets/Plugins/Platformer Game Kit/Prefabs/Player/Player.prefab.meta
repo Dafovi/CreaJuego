@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c834f09a2e55de745ad37acf5b33d0e7
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 200756
+  packageName: Platformer Game Kit
+  packageVersion: 1.2.1
+  assetPath: Assets/Plugins/Platformer Game Kit/Prefabs/Player/Player.prefab
+  uploadId: 791982
