@@ -10,6 +10,10 @@ namespace CreaJuego
         Sprite sprite {get;}
         RuntimeAnimatorController controller {get;}
         AnimationProfile animationProfile {get;}
+        AnimationClip idleClip {get;}
+        AnimationClip moveClip {get;}
+        AnimationClip jumpClip {get;}
+        AnimationClip attackClip {get;}
         Vector2 scale {get;}
         Vector2 offset {get;}
         bool flipX {get;}
@@ -25,6 +29,11 @@ namespace CreaJuego
         public GameObject prefab;
         [InspectorName("Animación (opcional)")] public RuntimeAnimatorController controller;
         [InspectorName("Estados de animación (opcional)")] public AnimationProfile animationProfile;
+        [Header("Clips sencillos (opcional)")]
+        [InspectorName("Reposo")] public AnimationClip idleClip;
+        [InspectorName("Movimiento")] public AnimationClip moveClip;
+        [InspectorName("Salto / en el aire")] public AnimationClip jumpClip;
+        [InspectorName("Ataque")] public AnimationClip attackClip;
         [InspectorName("Escala")] public Vector2 scale=Vector2.one;
         [InspectorName("Desplazamiento")] public Vector2 offset;
         [InspectorName("Voltear horizontalmente")] public bool flipX;
@@ -40,10 +49,14 @@ namespace CreaJuego
                 return null;
             }
         }
-        public Sprite Preview=>sprite!=null ? sprite : ValidationError==null ? prefab.GetComponentInChildren<SpriteRenderer>(true).sprite : null;
+        public Sprite Preview=>sprite!=null ? sprite : ValidationError==null ? Array.Find(prefab.GetComponentsInChildren<SpriteRenderer>(true),r=>r.sprite!=null).sprite : null;
         Sprite IAppearanceData.sprite=>Preview;
         RuntimeAnimatorController IAppearanceData.controller=>controller!=null ? controller : sprite==null && prefab!=null ? prefab.GetComponentInChildren<Animator>(true)?.runtimeAnimatorController : null;
         AnimationProfile IAppearanceData.animationProfile=>animationProfile;
+        AnimationClip IAppearanceData.idleClip=>idleClip;
+        AnimationClip IAppearanceData.moveClip=>moveClip;
+        AnimationClip IAppearanceData.jumpClip=>jumpClip;
+        AnimationClip IAppearanceData.attackClip=>attackClip;
         Vector2 IAppearanceData.scale=>scale;
         Vector2 IAppearanceData.offset=>offset;
         bool IAppearanceData.flipX=>flipX;

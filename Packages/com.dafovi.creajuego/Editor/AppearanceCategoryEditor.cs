@@ -21,7 +21,7 @@ namespace CreaJuego.Editor
             root.TrackPropertyValue(kindProperty,p=>dropdown.SetValueWithoutNotify(labels[p.enumValueIndex]));
             root.Add(dropdown);
             root.Add(new PropertyField(serializedObject.FindProperty("options")));
-            root.Add(new HelpBox("Los prefabs son referencias visuales: no se copian sus scripts, físicas, materiales ni jerarquías. Para animaciones, el controlador debe animar el SpriteRenderer principal y el perfil debe indicar los estados. Ajusta Escala y Desplazamiento aquí.",HelpBoxMessageType.Info));
+            root.Add(new HelpBox("Los prefabs son referencias visuales: no se copian sus scripts, físicas, materiales ni jerarquías. Puedes asignar clips sencillos de reposo, movimiento, salto y ataque, o un Animator Controller y su perfil para casos avanzados. Ajusta Escala y Desplazamiento aquí.",HelpBoxMessageType.Info));
             var warnings=new VisualElement(); root.Add(warnings);
             void Validate() {
                 warnings.Clear();

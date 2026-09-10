@@ -60,14 +60,15 @@ namespace CreaJuego.Starter.Tests
         }
         [Test] public void SelectorShowsOnlyCompatibleThumbnailsAndCustomSpriteField()
         {
-            Selection.activeGameObject=Player().gameObject;
+            var player=Player(); Selection.activeGameObject=player.gameObject;
             var view=new EducationalPropertiesView();
             try
             {
                 view.ShowSelection();
                 var selector=UnityEngine.UIElements.UQueryExtensions.Q<AppearanceSelector>(view);
                 Assert.That(selector,Is.Not.Null);
-                Assert.That(UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Image>(selector).ToList().Count(image=>image.sprite!=null),Is.EqualTo(2));
+                int expected=player.definition.appearancePack.CategoryFor(ItemKind.Player).options.Count(a=>a.Preview!=null);
+                Assert.That(UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Image>(selector).ToList().Count(image=>image.sprite!=null),Is.EqualTo(expected));
                 Assert.That(UnityEngine.UIElements.UQueryExtensions.Q<UnityEditor.UIElements.ObjectField>(selector).objectType,Is.EqualTo(typeof(Sprite)));
             }
             finally { view.Dispose(); }

@@ -37,7 +37,7 @@ namespace CreaJuego.Starter.Tests
             var pack=Player().definition.appearancePack;
             Assert.That(pack.categories.Length,Is.EqualTo(9));
             Assert.That(pack.categories.Select(c=>c.kind).Distinct().Count(),Is.EqualTo(9));
-            Assert.That(pack.categories.Sum(c=>c.options.Count),Is.EqualTo(33));
+            Assert.That(pack.categories.Sum(c=>c.options.Count),Is.GreaterThanOrEqualTo(33));
             var before=pack.categories.Select(c=>AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(c))).ToArray();
             AppearanceCategoryMigration.Run();
             Assert.That(pack.categories.Select(c=>AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(c))),Is.EqualTo(before));

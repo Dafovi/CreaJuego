@@ -19,7 +19,8 @@ namespace CreaJuego
         {
             var item=GetComponent<GameItem>();
             if(!isActiveAndEnabled || item==null || !item.canAttack || playing==null || !playing() || Time.time<readyAt) return false;
-            readyAt=Time.time+Cooldown; activeUntil=Time.time+.12f; AttackCount++;
+            float visualDuration=item.SelectedAppearance?.attackClip!=null ? item.SelectedAppearance.attackClip.length : .12f;
+            readyAt=Time.time+Mathf.Max(Cooldown,visualDuration); activeUntil=Time.time+Mathf.Max(.12f,visualDuration); AttackCount++;
             var visual=GetComponent<ItemVisual>(); var sprite=ItemVisual.Resolve(item);
             int facing=visual!=null ? visual.Facing : sprite!=null && sprite.flipX ? -1 : 1;
             LastCenter=(Vector2)transform.position+Vector2.right*(.65f*facing);

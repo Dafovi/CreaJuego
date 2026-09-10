@@ -16,6 +16,10 @@ namespace CreaJuego
         Sprite IAppearanceData.sprite=>sprite;
         RuntimeAnimatorController IAppearanceData.controller=>controller;
         AnimationProfile IAppearanceData.animationProfile=>animationProfile;
+        AnimationClip IAppearanceData.idleClip=>null;
+        AnimationClip IAppearanceData.moveClip=>null;
+        AnimationClip IAppearanceData.jumpClip=>null;
+        AnimationClip IAppearanceData.attackClip=>null;
         Vector2 IAppearanceData.scale=>scale;
         Vector2 IAppearanceData.offset=>offset;
         bool IAppearanceData.flipX=>flipX;
