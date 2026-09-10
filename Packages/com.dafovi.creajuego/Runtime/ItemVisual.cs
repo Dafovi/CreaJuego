@@ -12,6 +12,7 @@ namespace CreaJuego
         public Animator animator;
         public SpriteRenderer geometrySource;
         IVisualMotionState support;
+        IVisualActionState action;
         GameItem item;
         Vector3 previous;
         int state;
@@ -23,7 +24,7 @@ namespace CreaJuego
             var visual=item.GetComponent<ItemVisual>();
             return visual != null && visual.renderer != null ? visual.renderer : item.GetComponent<SpriteRenderer>();
         }
-        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().FirstOrDefault(); }
+        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().OfType<IVisualActionState>().FirstOrDefault(); }
         void OnDestroy() { if(graph.IsValid()) graph.Destroy(); }
         public void Apply()
         {
@@ -35,7 +36,7 @@ namespace CreaJuego
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
             renderer.color=BaseColor(item);
             var visualAppearance=item.customSprite==null ? appearance : null;
-            var size=item.customSprite==null && geometrySource!=null ? geometrySource.size : Vector2.one;
+            var size=item.customSprite==null && geometrySource!=null && (appearance==null || !appearance.preserveAspect) ? geometrySource.size : Vector2.one;
             var sourceScale=visualAppearance!=null ? visualAppearance.scale : Vector2.one;
             float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
             renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
@@ -75,10 +76,10 @@ namespace CreaJuego
             bool character=item.definition.kind==ItemKind.Player || item.definition.kind==ItemKind.Enemy;
             var appearance=item.SelectedAppearance;
             if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (appearance!=null && appearance.flipX);
-            var attack=GetComponent<PlayerAttack>();
+            bool attacking=action!=null && action.IsVisuallyAttacking;
             if(item.customSprite==null && HasDirectClips(appearance))
             {
-                int next=attack!=null && attack.IsAttacking && appearance.attackClip!=null ? 4 :
+                int next=attacking && appearance.attackClip!=null ? 4 :
                     support!=null && !support.IsSupported && appearance.jumpClip!=null ? 3 :
                     Mathf.Abs(speed)>.05f && appearance.moveClip!=null ? 2 : 1;
                 var clip=next==4 ? appearance.attackClip : next==3 ? appearance.jumpClip : next==2 ? appearance.moveClip : appearance.idleClip;
@@ -88,7 +89,7 @@ namespace CreaJuego
             }
             var profile=appearance!=null ? appearance.animationProfile : null;
             if(animator==null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController==null || profile==null) return;
-            string named=attack!=null && attack.IsAttacking && !string.IsNullOrEmpty(profile.attack) && animator.HasState(0,Animator.StringToHash(profile.attack)) ? profile.attack :
+            string named=attacking && !string.IsNullOrEmpty(profile.attack) && animator.HasState(0,Animator.StringToHash(profile.attack)) ? profile.attack :
                 support!=null && !support.IsSupported ? profile.jump : Mathf.Abs(speed)>profile.movementThreshold ? profile.move : profile.idle;
             if(string.IsNullOrEmpty(named)) return;
             int hash=Animator.StringToHash(named);

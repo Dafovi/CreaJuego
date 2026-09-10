@@ -20,6 +20,10 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 9100000, guid: 8e4261b12edac8f48914c4208162c471, type: 2}
     animationProfile: {fileID: 11400000, guid: c2175bfa65bf0f148955a0ca153b3ed2, type: 2}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
@@ -29,6 +33,23 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
+    flipX: 0
+  - id: 5b84b5bdbf244cecb12b976bbf0aa6c7
+    displayName: Gino
+    sprite: {fileID: 0}
+    prefab: {fileID: 699189344859438840, guid: c834f09a2e55de745ad37acf5b33d0e7, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 3bea83b3ff097a74ba9b3330bdcbaa1d, type: 2}
+    moveClip: {fileID: 7400000, guid: 696020a22ba4b344481c7eda0cd4cc57, type: 2}
+    jumpClip: {fileID: 7400000, guid: 5cd4b86d3201ce34e9f656c044f6d128, type: 2}
+    attackClip: {fileID: 7400000, guid: 1b210e246753bfc449828d8b64f4d75b, type: 2}
+    scale: {x: 0.25, y: 0.25}
+    offset: {x: -0.18, y: -0.45}
     flipX: 0

@@ -4,8 +4,10 @@ namespace CreaJuego.PlaygroundBackend
 {
     // Vendor component remains configuration-compatible; this owns safe contact delivery.
     [DisallowMultipleComponent]
-    public sealed class PlaygroundContactDamage : MonoBehaviour
+    public sealed class PlaygroundContactDamage : MonoBehaviour, IVisualActionState
     {
+        float visualAttackUntil;
+        public bool IsVisuallyAttacking => Time.time < visualAttackUntil;
         void OnTriggerEnter2D(Collider2D other)=>Contact(other);
         void OnTriggerStay2D(Collider2D other)=>Contact(other);
         void OnCollisionEnter2D(Collision2D other)=>Contact(other.collider);
@@ -19,8 +21,14 @@ namespace CreaJuego.PlaygroundBackend
             var source=GetComponent<ModifyHealthAttribute>();
             if(source==null || !source.enabled) return;
             var receiver=other.GetComponentInParent<PlayerDamageReceiver>();
-            if(receiver!=null && receiver.TryReceive(-source.healthChange,transform.position) && source.destroyWhenActivated) Destroy(gameObject);
+            if(receiver!=null && receiver.TryReceive(-source.healthChange,transform.position))
+            {
+                var appearance=GetComponent<GameItem>()?.SelectedAppearance;
+                var clip=appearance?.attackClip;
+                float duration=clip!=null ? clip.length : .12f;
+                visualAttackUntil=Time.time+Mathf.Max(.12f,duration);
+                if(source.destroyWhenActivated) Destroy(gameObject);
+            }
         }
     }
 }
-

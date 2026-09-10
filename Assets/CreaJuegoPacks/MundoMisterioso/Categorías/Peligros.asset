@@ -20,6 +20,10 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
@@ -29,6 +33,23 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
+    flipX: 0
+  - id: platformer-kit-spikes
+    displayName: Pinchos del kit
+    sprite: {fileID: 0}
+    prefab: {fileID: 823722481985417378, guid: 846ab1361bfcc884083592734aa52a69, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.5, y: 0.5}
+    offset: {x: 0, y: -0.25}
     flipX: 0

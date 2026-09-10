@@ -4,13 +4,14 @@ using UnityEngine;
 namespace CreaJuego
 {
     [DisallowMultipleComponent]
-    public sealed class PlayerAttack : MonoBehaviour
+    public sealed class PlayerAttack : MonoBehaviour, IVisualActionState
     {
         public Transform attackPoint;
         public Func<bool> pressed, playing;
         public const float Cooldown=.35f;
         float readyAt, activeUntil;
         public bool IsAttacking => Time.time<activeUntil;
+        public bool IsVisuallyAttacking => IsAttacking;
         public int AttackCount { get; private set; }
         public Vector2 LastCenter { get; private set; }
         readonly HashSet<EnemyVitality> hit=new HashSet<EnemyVitality>();

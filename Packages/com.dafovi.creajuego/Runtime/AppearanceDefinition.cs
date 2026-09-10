@@ -23,6 +23,7 @@ namespace CreaJuego
         Vector2 IAppearanceData.scale=>scale;
         Vector2 IAppearanceData.offset=>offset;
         bool IAppearanceData.flipX=>flipX;
+        bool IAppearanceData.preserveAspect=>false;
     }
     public interface IVisualMotionState { bool IsSupported { get; } }
 }

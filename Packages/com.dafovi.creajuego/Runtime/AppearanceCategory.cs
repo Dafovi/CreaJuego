@@ -17,6 +17,7 @@ namespace CreaJuego
         Vector2 scale {get;}
         Vector2 offset {get;}
         bool flipX {get;}
+        bool preserveAspect {get;}
     }
     [Serializable]
     public sealed class AppearanceOption : IAppearanceData
@@ -60,6 +61,7 @@ namespace CreaJuego
         Vector2 IAppearanceData.scale=>scale;
         Vector2 IAppearanceData.offset=>offset;
         bool IAppearanceData.flipX=>flipX;
+        bool IAppearanceData.preserveAspect=>prefab!=null;
     }
     [CreateAssetMenu(menuName="CreaJuego/Lista de apariencias por categoría",fileName="Apariencias")]
     public sealed class AppearanceCategory : ScriptableObject

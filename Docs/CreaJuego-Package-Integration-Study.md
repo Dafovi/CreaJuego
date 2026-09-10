@@ -122,3 +122,20 @@ Validación:
 - Evidencia local: Docs/gino-final-tests.xml y Docs/gino-idempotent-tests.xml.
 - La escena principal no fue guardada ni reemplazada por la automatización.
 - Los archivos de Platformer Game Kit y NovaDevs siguen fuera de Git.
+## Enemigos de referencia integrados
+
+La receta **CreaJuego → Contenido → Integrar enemigos de Platformer Game Kit** registra cinco prefabs como fuentes visuales animadas:
+
+| Apariencia | Reposo | Movimiento | Ataque | Aire |
+|---|---|---|---|---|
+| Gobbat | Fly | Fly | Attack | — |
+| Gobbler | Idle | Walk | Attack | — |
+| Flor carnívora | Idle | Idle | Attack Right | — |
+| Naga | Idle | Walk | Attack | — |
+| Espantapájaros | Idle | Walk | Attack | Jump Loop |
+
+El prefab Spikes se registra en **Peligros** como Pinchos del kit. Las recetas conservan identificadores existentes cuando el prefab ya estaba agregado y eliminan sólo duplicados del mismo origen.
+
+CreaJuego sigue siendo dueño del patrullaje, daño por contacto, vida, colliders y física. Los prefabs externos aportan el sprite inicial y los clips. La escala y el desplazamiento se calculan a partir del collider educativo para conservar la proporción y alinear los pies. La señal visual de ataque usa un contrato Runtime común, por lo que ItemVisual no depende directamente de PlayerAttack ni del adapter de Playground.
+
+Validación específica: **2/2 pruebas pasan**, incluidos los cinco mapeos, bindings de clips, escala proporcional, patrullaje animado y ataque animado por contacto. No se generó ningún build standalone.

@@ -20,6 +20,10 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
@@ -29,6 +33,10 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
@@ -38,6 +46,10 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
@@ -47,6 +59,75 @@ MonoBehaviour:
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
+    flipX: 0
+  - id: platformer-kit-gobbat
+    displayName: Gobbat
+    sprite: {fileID: 0}
+    prefab: {fileID: 2240683968551890655, guid: 9ad93ac53b8896a42b4351d657f95f6f, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 6ffabe806e1b13a40b076d5768af2c59, type: 2}
+    moveClip: {fileID: 7400000, guid: 6ffabe806e1b13a40b076d5768af2c59, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 62a9de91f575c204c855d825c3890354, type: 2}
+    scale: {x: 0.35, y: 0.35}
+    offset: {x: -0.0109375, y: -0.21875}
+    flipX: 0
+  - id: platformer-kit-gobbler
+    displayName: Gobbler
+    sprite: {fileID: 0}
+    prefab: {fileID: 3428413880164911850, guid: a71e9ae109abf3a4180fb45d4d6ce175, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: c482f7ad61c9b044da69f01730a0f809, type: 2}
+    moveClip: {fileID: 7400000, guid: 616d115c3b574cd459107c369560b303, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 4fd622185a5b81f40b0b45c0e1500065, type: 2}
+    scale: {x: 0.35, y: 0.35}
+    offset: {x: -0.0328125, y: -0.35}
+    flipX: 0
+  - id: platformer-kit-mawflower
+    displayName: "Flor carn\xEDvora"
+    sprite: {fileID: 0}
+    prefab: {fileID: 4972895403844446895, guid: ca20752769ff2734d8b799072559a729, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 3b15f60824d13114990f7da3da601bc4, type: 2}
+    moveClip: {fileID: 7400000, guid: 3b15f60824d13114990f7da3da601bc4, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 529259630464def468652159fa82dd52, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: 0, y: -0.35}
+    flipX: 0
+  - id: platformer-kit-naga
+    displayName: Naga
+    sprite: {fileID: 0}
+    prefab: {fileID: 8253166829650983234, guid: 7664d86eb1b24ba459e3de4f7bf1640f, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: f4d6c6412b3aebe44b7b5863a10e1252, type: 2}
+    moveClip: {fileID: 7400000, guid: f8edbb01587b0f84c9ed5d34ba79774c, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: da984d5e731d0c14dbf023c3a56442f3, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: -0.16953124, y: -0.35}
+    flipX: 0
+  - id: platformer-kit-scarecrow
+    displayName: "Espantap\xE1jaros"
+    sprite: {fileID: 0}
+    prefab: {fileID: 2443884310665460745, guid: aad80096f92533242bf5d7e5d522ad34, type: 3}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 249c019e2adbc0843bee3a3a4e654d83, type: 2}
+    moveClip: {fileID: 7400000, guid: 2352738598901c9409da130e3c72bd9d, type: 2}
+    jumpClip: {fileID: 7400000, guid: ec5645794fe20eb44a73a4d04da3f1c2, type: 2}
+    attackClip: {fileID: 7400000, guid: f9a9837ca8dc90545b9b7a20f73abc33, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: -0.175, y: -0.35}
     flipX: 0
