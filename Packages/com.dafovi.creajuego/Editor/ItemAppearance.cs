@@ -40,17 +40,7 @@ namespace CreaJuego.Editor
             {
                 if(item.definition==null || (appearance!=null && appearance.kind!=item.definition.kind) || (category!=null && category.kind!=item.definition.kind)) continue;
                 // Legacy objects are upgraded only on an explicit appearance change.
-                if(item.GetComponent<ItemVisual>()==null)
-                {
-                    var child=new GameObject("Visual"); Undo.RegisterCreatedObjectUndo(child,"Crear apariencia");
-                    Undo.SetTransformParent(child.transform,item.transform,"Crear apariencia"); child.transform.localPosition=Vector3.zero;
-                    var visual=Undo.AddComponent<ItemVisual>(item.gameObject);
-                    visual.renderer=Undo.AddComponent<SpriteRenderer>(child);
-                    visual.animator=Undo.AddComponent<Animator>(child);
-                    var legacy=item.GetComponent<SpriteRenderer>();
-                    visual.geometrySource=legacy;
-                    if(legacy!=null) { visual.renderer.sprite=legacy.sprite; visual.renderer.sortingLayerID=legacy.sortingLayerID; visual.renderer.sortingOrder=legacy.sortingOrder; Undo.RecordObject(legacy,"Cambiar apariencia"); legacy.enabled=false; }
-                }
+                EnsureVisual(item);
                 using(var data=new SerializedObject(item))
                 {
                     data.FindProperty(nameof(GameItem.appearance)).objectReferenceValue=appearance;
@@ -62,6 +52,23 @@ namespace CreaJuego.Editor
                 Apply(item,true);
             }
             Undo.CollapseUndoOperations(group);
+        }
+        internal static ItemVisual EnsureVisual(GameItem item)
+        {
+            var existing=item.GetComponent<ItemVisual>();
+            if(existing!=null) return existing;
+            var child=new GameObject("Visual"); Undo.RegisterCreatedObjectUndo(child,"Crear apariencia");
+            Undo.SetTransformParent(child.transform,item.transform,"Crear apariencia"); child.transform.localPosition=Vector3.zero;
+            var visual=Undo.AddComponent<ItemVisual>(item.gameObject);
+            visual.renderer=Undo.AddComponent<SpriteRenderer>(child);
+            visual.animator=Undo.AddComponent<Animator>(child);
+            var legacy=item.GetComponent<SpriteRenderer>();
+            visual.geometrySource=legacy;
+            if(legacy!=null) {
+                visual.renderer.sprite=legacy.sprite; visual.renderer.sortingLayerID=legacy.sortingLayerID; visual.renderer.sortingOrder=legacy.sortingOrder;
+                Undo.RecordObject(legacy,"Cambiar apariencia"); legacy.enabled=false;
+            }
+            return visual;
         }
         public static void Apply(GameItem item,bool recordUndo)
         {

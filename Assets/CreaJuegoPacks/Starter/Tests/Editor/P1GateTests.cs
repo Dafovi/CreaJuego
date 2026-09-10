@@ -49,7 +49,8 @@ namespace CreaJuego.Starter.Tests
             Directory.CreateDirectory("Docs");
             File.WriteAllText("Docs/P1-platform-gate.txt","Round trip/ranges/relative duplication: PASS\nPassenger max separation: "+peakPassengerError.ToString("F2",System.Globalization.CultureInfo.InvariantCulture)+"\nWorkshop ready: "+passengerReady);
             Debug.Log("P1_PLATFORM_PASSENGER_READY="+passengerReady+" separation="+peakPassengerError);
-            Assert.That(ItemService.WorkshopCatalog().Any(d=>d.kind==ItemKind.MovingPlatform),Is.False,"Keep hidden pending passenger transport");
+            Assert.That(passengerReady,Is.True,"The character must travel with the moving platform");
+            Assert.That(ItemService.WorkshopCatalog().Any(d=>d.kind==ItemKind.MovingPlatform),Is.True);
             yield return new ExitPlayMode();
         }
         [UnityTest] public IEnumerator EnemyPatrolContactDefeatAndRelativeCopy()

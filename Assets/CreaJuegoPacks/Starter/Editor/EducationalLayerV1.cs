@@ -17,7 +17,7 @@ namespace CreaJuego.Starter
                 string backup = ".spike/educational-v1-before/" + definition.id + ".asset";
                 Directory.CreateDirectory(Path.GetDirectoryName(backup));
                 if (!File.Exists(backup)) File.Copy(path, backup);
-                definition.availableInWorkshop = definition.kind != ItemKind.MovingPlatform && definition.kind != ItemKind.Enemy && definition.kind != ItemKind.Decoration;
+                definition.availableInWorkshop = true;
                 definition.allowMultiple = definition.kind != ItemKind.Player;
                 definition.icon = MakeIcon(definition);
                 switch (definition.kind)

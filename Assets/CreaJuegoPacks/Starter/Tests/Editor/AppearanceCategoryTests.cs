@@ -107,6 +107,16 @@ namespace CreaJuego.Starter.Tests
             var copy=ItemService.Duplicate(item);
             Assert.That(copy.appearanceId,Is.EqualTo(item.appearanceId));
         }
+        [Test] public void MovingPlatformIsPublishedWithThreePresetAppearances()
+        {
+            var definition=ItemService.WorkshopCatalog().Single(d=>d.kind==ItemKind.MovingPlatform);
+            var list=definition.appearancePack.CategoryFor(ItemKind.MovingPlatform);
+            Assert.That(list,Is.Not.Null);
+            Assert.That(list.options.Count,Is.EqualTo(3));
+            var item=ItemService.Create(definition,Vector3.zero);
+            Assert.That(item.appearanceCategory,Is.EqualTo(list));
+            Assert.That(item.SelectedAppearance,Is.EqualTo(list.options[0]));
+        }
         [UnityTest] public IEnumerator InlineAppearanceSurvivesPlayAndUsesOriginalMovement()
         {
             ItemAppearance.ChooseOption(new[]{Player()},category,category.options[0].id);

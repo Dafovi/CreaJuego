@@ -21,12 +21,12 @@ namespace CreaJuego.Starter.Tests
             WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
         }
 
-        [Test] public void WorkshopPublishesFiveP0AndValidatedEnemyWithDistinctIcons()
+        [Test] public void WorkshopPublishesAllValidatedElementsWithDistinctIcons()
         {
             var catalog = ItemService.WorkshopCatalog();
-            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy && d.kind != ItemKind.Decoration).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal }));
+            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy && d.kind != ItemKind.Decoration).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal, ItemKind.MovingPlatform }));
             Assert.That(catalog.All(d => d.icon != null), Is.True);
-            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(7));
+            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(catalog.Length));
             Assert.That(ItemService.Catalog().Length, Is.EqualTo(8), "Experimental content is preserved");
         }
 
@@ -74,7 +74,7 @@ namespace CreaJuego.Starter.Tests
             var prize = Object.FindObjectsByType<GameItem>().First(i => i.definition.kind == ItemKind.Prize);
             Selection.activeGameObject = prize.gameObject;
             yield return null;
-            Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Null);
+            Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(ItemVisual.Resolve(prize).sprite));
             var number = WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points");
@@ -91,6 +91,32 @@ namespace CreaJuego.Starter.Tests
             Assert.That(window.rootVisualElement.Q<Button>("duplicar").enabledSelf, Is.False);
         }
 
+        [UnityTest] public IEnumerator VisualSizeWorksForCustomImagesWithoutChangingPhysicsAndSupportsUndo()
+        {
+            var moving=Object.FindObjectsByType<GameItem>().Single(i=>i.definition.kind==ItemKind.MovingPlatform);
+            var custom=Object.FindObjectsByType<GameItem>().Single(i=>i.definition.kind==ItemKind.Player).SelectedAppearance.sprite;
+            ItemAppearance.SetCustomSprite(new[]{moving},custom);
+            var rootScale=moving.transform.localScale;
+            var colliderSize=moving.GetComponent<BoxCollider2D>().size;
+            var visual=moving.GetComponent<ItemVisual>();
+            Selection.activeGameObject=moving.gameObject;
+            var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI(); WorkshopTestWindows.Open();
+            yield return null;
+            var size=WorkshopTestWindows.Properties.Q<Slider>("propiedad-visualScale");
+            Assert.That(size,Is.Not.Null);
+            size.value=.25f;
+            yield return null; yield return null;
+            Assert.That(moving.visualScale,Is.EqualTo(.25f).Within(.001f));
+            Assert.That(visual.renderer.transform.localScale.x,Is.EqualTo(.25f).Within(.001f));
+            Assert.That(visual.renderer.transform.localScale.y,Is.EqualTo(.25f).Within(.001f));
+            Assert.That(moving.transform.localScale,Is.EqualTo(rootScale));
+            Assert.That(moving.GetComponent<BoxCollider2D>().size,Is.EqualTo(colliderSize));
+            Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
+            yield return null; yield return null;
+            Assert.That(moving.visualScale,Is.EqualTo(1).Within(.001f));
+            Assert.That(moving.transform.localScale,Is.EqualTo(rootScale));
+            Assert.That(moving.GetComponent<BoxCollider2D>().size,Is.EqualTo(colliderSize));
+        }
         [UnityTest] public IEnumerator DescriptorBooleanVisibilityUpdatesWhenToggleChanges()
         {
             var hazard = Object.FindObjectsByType<GameItem>().Single(i => i.definition.kind == ItemKind.Hazard);

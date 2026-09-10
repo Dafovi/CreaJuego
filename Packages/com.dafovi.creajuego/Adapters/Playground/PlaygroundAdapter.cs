@@ -54,6 +54,8 @@ namespace CreaJuego.PlaygroundBackend
                     foreach(var collider in GetComponents<Collider2D>()) collider.enabled=false;
                 };
             }
+            if (Application.isPlaying && item.definition.kind == ItemKind.MovingPlatform && !TryGetComponent<MovingPlatformPassengerCarrier>(out _))
+                gameObject.AddComponent<MovingPlatformPassengerCarrier>();
             if (TryGetComponent<Patrol>(out var patrol))
             {
                 patrol.speed = item.speed;

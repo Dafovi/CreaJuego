@@ -58,9 +58,14 @@ namespace CreaJuego.Editor
             if (!source.definition.allowMultiple) throw new InvalidOperationException("Este taller usa un solo personaje.");
             if (!PrefabUtility.IsPartOfPrefabInstance(source))
                 throw new InvalidOperationException("Este elemento no se puede duplicar desde el catálogo.");
-            // Workshop duplication preserves prefab overrides; structural technical edits need Unity's own tools.
-            if (PrefabUtility.GetAddedComponents(source.gameObject).Count > 0 || PrefabUtility.GetRemovedComponents(source.gameObject).Count > 0 ||
-                PrefabUtility.GetAddedGameObjects(source.gameObject).Count > 0 || PrefabUtility.GetRemovedGameObjects(source.gameObject).Count > 0)
+            // The Visual child is a CreaJuego-authored upgrade for old prefabs, so it is safe to recreate.
+            var addedComponents=PrefabUtility.GetAddedComponents(source.gameObject);
+            var addedObjects=PrefabUtility.GetAddedGameObjects(source.gameObject);
+            bool onlyEducationalVisual=addedComponents.All(a=>a.instanceComponent is ItemVisual) &&
+                addedObjects.All(a=>a.instanceGameObject!=null && a.instanceGameObject.name=="Visual" &&
+                    a.instanceGameObject.transform.parent==source.transform &&
+                    a.instanceGameObject.GetComponents<Component>().All(c=>c is Transform || c is SpriteRenderer || c is Animator));
+            if (!onlyEducationalVisual || PrefabUtility.GetRemovedComponents(source.gameObject).Count > 0 || PrefabUtility.GetRemovedGameObjects(source.gameObject).Count > 0)
                 throw new InvalidOperationException("Este elemento tiene cambios avanzados. Duplícalo desde la vista Escena.");
             Undo.IncrementCurrentGroup(); int group = Undo.GetCurrentGroup();
             var prefab = PrefabUtility.GetCorrespondingObjectFromSource(source.gameObject);
@@ -73,9 +78,12 @@ namespace CreaJuego.Editor
             PrefabUtility.RecordPrefabInstancePropertyModifications(go.transform);
             PrefabUtility.RecordPrefabInstancePropertyModifications(go);
             EditorSceneManager.MarkSceneDirty(go.scene);
+            var item=go.GetComponent<GameItem>();
+            if(source.GetComponent<ItemVisual>()!=null && item.GetComponent<ItemVisual>()==null) ItemAppearance.EnsureVisual(item);
+            ItemAppearance.Apply(item,true);
             Selection.activeGameObject = go;
             Undo.CollapseUndoOperations(group);
-            return go.GetComponent<GameItem>();
+            return item;
         }
 
         public static string Delete(GameItem item)

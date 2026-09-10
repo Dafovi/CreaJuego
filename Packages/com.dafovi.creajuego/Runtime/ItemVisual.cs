@@ -35,7 +35,7 @@ namespace CreaJuego
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
             renderer.color=BaseColor(item);
             var visualAppearance=item.customSprite==null ? appearance : null;
-            var size=geometrySource!=null ? geometrySource.size : Vector2.one;
+            var size=item.customSprite==null && geometrySource!=null ? geometrySource.size : Vector2.one;
             var sourceScale=visualAppearance!=null ? visualAppearance.scale : Vector2.one;
             float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
             renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);

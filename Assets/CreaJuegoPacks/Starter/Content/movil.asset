@@ -18,11 +18,11 @@ MonoBehaviour:
   description: Viaja de un lado al otro.
   learningHint: "Distancia indica cu\xE1nto recorre hacia la derecha y regresa."
   icon: {fileID: 5107635191121498741, guid: 19dffec840a98bc4bbcccf1f30018eef, type: 3}
-  appearancePack: {fileID: 0}
+  appearancePack: {fileID: 11400000, guid: c3ec06d8ac1135844b1939fe20f0e259, type: 2}
   prefab: {fileID: 7690727540751170571, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
   kind: 5
   order: 5
-  availableInWorkshop: 0
+  availableInWorkshop: 1
   allowMultiple: 1
   properties:
   - path: speed

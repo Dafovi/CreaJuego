@@ -84,7 +84,7 @@ namespace CreaJuego.Starter.Tests
             var player=ItemService.WorkshopCatalog().Single(d=>d.kind==ItemKind.Player);
             Assert.That(player.properties.Single(p=>p.path=="health").label,Is.EqualTo("Puntos de vida"));
             Assert.That(player.learningHint,Does.Contain("A/D"));
-            Assert.That(ItemService.WorkshopCatalog().Length,Is.EqualTo(7));
+            Assert.That(ItemService.WorkshopCatalog().Length,Is.EqualTo(8));
             Assert.That(SceneObjects.All<UnityEngine.UI.Text>(UnityEngine.SceneManagement.SceneManager.GetActiveScene()).Any(t=>t.text.Contains("Resistencia")),Is.False);
         }
     }
