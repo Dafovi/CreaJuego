@@ -1,4 +1,5 @@
 using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -42,9 +43,20 @@ namespace CreaJuego.Editor
             }
             custom.showMixedValue=items.Any(i=>i.customSprite!=items[0].customSprite);
             custom.RegisterValueChangedCallback(e=>{ItemAppearance.SetCustomSprite(items,e.newValue as Sprite);Refresh();}); Add(custom);
+            var chooseFile=new Button(()=> {
+                var path=EditorUtility.OpenFilePanel("Elegir imagen",string.Empty,"png,jpg,jpeg");
+                if(string.IsNullOrWhiteSpace(path)) return;
+                try {
+                    var imported=WorkshopImageImportService.ImportAndAssign(path,items);
+                    custom.SetValueWithoutNotify(imported); custom.showMixedValue=false; Refresh();
+                } catch(System.Exception error) {
+                    EditorUtility.DisplayDialog("Elegir imagen",error.Message,"Entendido");
+                }
+            }) {text="Elegir imagen del computador…",name="elegir-imagen-computador"};
+            Add(chooseFile);
             if(items.Any(i=>i.appearanceCategory!=null && i.SelectedAppearance==null))
                 Add(new HelpBox("La opción elegida ya no está en la lista. Elige otra apariencia.",HelpBoxMessageType.Warning));
-            Add(new Label("La imagen cambia. Las reglas y la superficie se conservan."){style={whiteSpace=WhiteSpace.Normal}});
+            Add(new Label("La imagen cambia. Las reglas, el movimiento y la superficie se conservan."){style={whiteSpace=WhiteSpace.Normal}});
         }
     }
 }

@@ -12,7 +12,7 @@ namespace CreaJuego.Editor
         private ScrollView validation;
         private VisualElement footer;
         private Button play,prepare;
-        private Label status;
+        private Label status,identity;
         [MenuItem("CreaJuego/Abrir barra de juego")]
         public static void Open()=>GetWindow<CreaJuegoPlayBarWindow>("Jugar");
         private static T Styled<T>(T element,string style) where T:VisualElement=>WorkshopWindowStyle.Styled(element,style);
@@ -28,11 +28,12 @@ namespace CreaJuego.Editor
             EditorSceneManager.activeSceneChangedInEditMode-=SceneChanged;
             EditorApplication.playModeStateChanged-=PlayChanged;ObjectChangeEvents.changesPublished-=ObjectsChanged;
         }
-        private void SceneChanged(Scene a,Scene b)=>RefreshPreflight();
+        private void SceneChanged(Scene a,Scene b){RefreshIdentity();RefreshPreflight();}
         private void ObjectsChanged(ref ObjectChangeEventStream stream)=>RefreshPreflight();
         public void CreateGUI() {
             minSize=new Vector2(420,160);WorkshopWindowStyle.Apply(this);
             rootVisualElement.AddToClassList("playbar-window");
+            identity=Styled(new Label(){name="identidad-juego"},"hint"); rootVisualElement.Add(identity);
             footer=Styled(new VisualElement {name="juego-estado"},"play-footer");
             validation=Styled(new ScrollView {name="validacion"},"validation");
             play=Styled(new Button(TogglePlay){name="jugar",text="▶ JUGAR"},"primary");
@@ -41,7 +42,7 @@ namespace CreaJuego.Editor
             rootVisualElement.Add(prepare);
             status=Styled(new Label(){name="estado"},"status");rootVisualElement.Add(status);
             status.schedule.Execute(()=>{if(EditorApplication.isPlaying)status.text=SceneService.RuntimeHelp();}).Every(250);
-            PlayChanged(default);
+            PlayChanged(default); RefreshIdentity();
         }        private void RefreshPreflight()
         {
             if(validation==null || EditorApplication.isPlayingOrWillChangePlaymode) return;
@@ -87,7 +88,12 @@ namespace CreaJuego.Editor
             } else RefreshPreflight();
             status.text=playing?"Haz clic en Juego para jugar tu recorrido.":"Los cambios se hacen antes de jugar. Ctrl+Z deshace tu último cambio.";
         }
+        private void RefreshIdentity()
+        {
+            if(identity==null)return;
+            var metadata=WorkshopGameService.Metadata(SceneManager.GetActiveScene());
+            identity.text=metadata==null || string.IsNullOrWhiteSpace(metadata.DisplayName) ? "" : metadata.DisplayName;
+            identity.style.display=string.IsNullOrWhiteSpace(identity.text)?DisplayStyle.None:DisplayStyle.Flex;
+        }
     }
 }
-
-

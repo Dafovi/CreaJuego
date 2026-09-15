@@ -12,7 +12,7 @@ namespace CreaJuego.Starter.Tests
 {
     public sealed class VisualDirectionTests
     {
-        [SetUp] public void Setup()=>EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
+        [SetUp] public void Setup(){EditorSceneManager.OpenScene(DemoBuilder.ScenePath);SceneService.Prepare();}
         [TearDown] public void Cleanup() {
             foreach(var w in Resources.FindObjectsOfTypeAll<CreaJuegoWindow>()) w.Close();
             WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath);

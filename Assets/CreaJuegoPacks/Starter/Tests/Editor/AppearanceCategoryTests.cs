@@ -21,8 +21,9 @@ namespace CreaJuego.Starter.Tests
             EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
             if(!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets","CategoryTestData");
             category=ScriptableObject.CreateInstance<AppearanceCategory>(); category.kind=ItemKind.Player;
-            category.options.Add(new AppearanceOption{displayName="Uno",sprite=Player().appearance.sprite});
-            category.options.Add(new AppearanceOption{displayName="Dos",sprite=Player().definition.appearancePack.appearances.First(a=>a.kind==ItemKind.Player && a.sprite!=Player().appearance.sprite).sprite});
+            var sprites=Player().definition.appearancePack.CategoryFor(ItemKind.Player).options.Where(o=>o!=null && o.Preview!=null).Select(o=>o.Preview).Distinct().Take(2).ToArray();
+            category.options.Add(new AppearanceOption{displayName="Uno",sprite=sprites[0]});
+            category.options.Add(new AppearanceOption{displayName="Dos",sprite=sprites[1]});
             category.EnsureIds(); AssetDatabase.CreateAsset(category,Folder+"/Jugador.asset");
         }
         [TearDown] public void Cleanup()
@@ -57,11 +58,11 @@ namespace CreaJuego.Starter.Tests
         }
         [Test] public void InlineChoiceAndCustomSpritePreserveUndoAndPhysics()
         {
-            var player=Player(); var old=player.appearance;
+            var player=Player(); var old=player.appearance; var oldCategory=player.appearanceCategory; var oldId=player.appearanceId;
             var body=EditorJsonUtility.ToJson(player.GetComponent<Rigidbody2D>());
             var collider=EditorJsonUtility.ToJson(player.GetComponent<Collider2D>());
             ItemAppearance.ChooseOption(new[]{player},category,category.options[0].id); Undo.FlushUndoRecordObjects();
-            Undo.PerformUndo(); Assert.That(player.appearance,Is.EqualTo(old)); Assert.That(player.appearanceCategory,Is.Null);
+            Undo.PerformUndo(); Assert.That(player.appearance,Is.EqualTo(old)); Assert.That(player.appearanceCategory,Is.EqualTo(oldCategory)); Assert.That(player.appearanceId,Is.EqualTo(oldId));
             Undo.PerformRedo(); Assert.That(player.SelectedAppearance.id,Is.EqualTo(category.options[0].id));
             ItemAppearance.SetCustomSprite(new[]{player},category.options[1].sprite);
             ItemAppearance.SetCustomSprite(new[]{player},null);

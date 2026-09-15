@@ -22,10 +22,15 @@ namespace CreaJuego.Editor
             var items = SceneObjects.All<GameItem>(scene);
             var active = items.Where(i => i.gameObject.activeInHierarchy && i.enabled && i.definition != null).ToArray();
             var sessions = SceneObjects.All<MonoBehaviour>(scene).OfType<IWorkshopSession>().ToArray();
+            var players = active.Where(i => i.definition.kind == ItemKind.Player).ToArray();
+            var surfaces = active.Where(i => i.definition.kind == ItemKind.Platform || i.definition.kind == ItemKind.MovingPlatform).ToArray();
             var checks = new List<SceneCheck>
             {
                 new SceneCheck("Una escena de taller", SceneManager.sceneCount == 1 && PrefabStageUtility.GetCurrentPrefabStage() == null, "Abre una sola escena para jugar este taller."),
-                new SceneCheck("Personaje", active.Count(i => i.definition.kind == ItemKind.Player) == 1 && items.Count(i => i.definition != null && i.definition.kind == ItemKind.Player) == 1, "Tu juego necesita exactamente un personaje activo."),
+                new SceneCheck("Personaje", players.Length == 1 && items.Count(i => i.definition != null && i.definition.kind == ItemKind.Player) == 1, "Tu juego necesita exactamente un personaje activo."),
+                new SceneCheck("Superficie", surfaces.Length > 0, "Agrega al menos una Plataforma para construir el recorrido."),
+                new SceneCheck("Inicio seguro", players.Length == 1 && PlayerSafetyService.HasSupportingSurface(players[0]), "Coloca al Jugador encima de una Plataforma antes de jugar."),
+                new SceneCheck("Recuperación de caída", players.Length == 1 && players[0].GetComponent<PlayerFallRecovery>() != null, "Pulsa Preparar escena para que el Jugador pueda volver si cae."),
                 new SceneCheck("Cámara", SceneObjects.All<Camera>(scene).Any(c => c.isActiveAndEnabled), "Prepara la escena para poder ver el juego."),
                 new SceneCheck("Sesión", sessions.Length == 1, "Prepara la escena para controlar el inicio y el final."),
                 new SceneCheck("Marcador", sessions.Length == 1 && sessions[0].ConfigurationError() == null, sessions.Length == 1 ? sessions[0].ConfigurationError() ?? "Puntos y puntos de vida preparados." : "Prepara el marcador de puntos y puntos de vida."),
@@ -56,7 +61,7 @@ namespace CreaJuego.Editor
             var scene = SceneManager.GetActiveScene();
             if (PrefabStageUtility.GetCurrentPrefabStage() != null || SceneManager.sceneCount != 1) throw new InvalidOperationException("Abre una sola escena de taller.");
             if (SceneObjects.All<MonoBehaviour>(scene).OfType<IWorkshopSession>().Any())
-                { WorldAuthoringService.EnsureCamera(); return; } // Preserve existing session infrastructure.
+                { PlayerSafetyService.EnsureRecovery(scene); WorldAuthoringService.EnsureCamera(); return; } // Preserve existing session infrastructure.
             if (SceneObjects.All<Canvas>(scene).Length > 0) throw new InvalidOperationException("Ya hay indicaciones en esta escena. Recupera su sesión o prepara una escena nueva.");
             var packs = AssetDatabase.FindAssets("t:ContentPackDefinition").Select(g => AssetDatabase.LoadAssetAtPath<ContentPackDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(p => p.sceneServices != null).ToArray();
             if (packs.Length != 1 || packs[0].sceneServices == null) throw new InvalidOperationException("No está disponible la preparación del pack.");
@@ -66,7 +71,7 @@ namespace CreaJuego.Editor
             Undo.RegisterCreatedObjectUndo(root, "Preparar escena");
             if (hasCamera)
                 foreach (var camera in root.GetComponentsInChildren<Camera>()) Undo.DestroyObjectImmediate(camera.gameObject);
-            WorldAuthoringService.EnsureCamera(); EditorSceneManager.MarkSceneDirty(scene); Undo.CollapseUndoOperations(group);
+            PlayerSafetyService.EnsureRecovery(scene); WorldAuthoringService.EnsureCamera(); EditorSceneManager.MarkSceneDirty(scene); Undo.CollapseUndoOperations(group);
         }
         public static string RuntimeHelp()
         {

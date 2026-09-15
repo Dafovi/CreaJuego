@@ -2,6 +2,8 @@
 
 Prototipo educativo 2D en español, **Unity 6000.6.0f1**.
 
+Consulta el [estado actual del proyecto](Docs/CreaJuego-Estado-Actual.md) y la [guía de operación del piloto de 3 horas](Docs/Piloto-3-Horas-Operacion.md).
+
 1. Abre esta carpeta en Unity Hub con esa versión.
 2. Abre `Assets/CreaJuegoPacks/Starter/Demo/CreaJuegoPlaygroundDemo.unity`.
 3. Menú **CreaJuego > Abrir taller**.

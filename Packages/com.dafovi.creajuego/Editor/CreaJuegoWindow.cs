@@ -52,13 +52,24 @@ namespace CreaJuego.Editor
             if(catalog==null) return;
             catalog.Clear();
             var cards=Styled(new VisualElement(),"creation-grid");
-            foreach(var definition in ItemService.WorkshopCatalog()) {
+            foreach(var definition in ItemService.PilotCatalog()) {
                 var button=Styled(new Button(()=>CreateItem(definition)){name="crear-"+definition.id,tooltip=definition.category+" · "+definition.description},"card");
                 button.Add(Icon(definition));
                 button.Add(Styled(new Label("+ "+definition.displayName),"card-title"));
                 cards.Add(button);
             }
             catalog.Add(cards);
+            var extras=ItemService.ExtraCatalog();
+            if(extras.Length>0) {
+                catalog.Add(Styled(new Label("EXTRAS"),"section-title"));
+                catalog.Add(Styled(new Label("Opciones para ampliar el recorrido cuando lo básico ya funciona."),"hint"));
+                var extraCards=Styled(new VisualElement(),"creation-grid");
+                foreach(var definition in extras) {
+                    var button=Styled(new Button(()=>CreateItem(definition)){name="crear-"+definition.id,tooltip=definition.category+" · "+definition.description},"card");
+                    button.Add(Icon(definition)); button.Add(Styled(new Label("+ "+definition.displayName),"card-title")); extraCards.Add(button);
+                }
+                catalog.Add(extraCards);
+            }
             catalog.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             MarkSelected();
         }

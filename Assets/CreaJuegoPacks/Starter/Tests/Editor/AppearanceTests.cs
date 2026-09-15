@@ -49,9 +49,10 @@ namespace CreaJuego.Starter.Tests
         [Test] public void LegacyFallbackAndExplicitUpgradeAreUndoable()
         {
             var player=Player(); var root=new GameObject("Antiguo"); var item=root.AddComponent<GameItem>(); item.definition=player.definition;
-            var renderer=root.AddComponent<SpriteRenderer>(); renderer.sprite=player.appearance.sprite;
+            var legacy=player.definition.appearancePack.appearances.First(a=>a.kind==ItemKind.Player);
+            var renderer=root.AddComponent<SpriteRenderer>(); renderer.sprite=legacy.sprite;
             Assert.That(ItemVisual.Resolve(item),Is.EqualTo(renderer));
-            ItemAppearance.Choose(new[]{item},player.appearance,null); Undo.FlushUndoRecordObjects(); Assert.That(renderer.enabled,Is.False);
+            ItemAppearance.Choose(new[]{item},legacy,null); Undo.FlushUndoRecordObjects(); Assert.That(renderer.enabled,Is.False);
             Undo.PerformUndo(); Assert.That(item.GetComponent<ItemVisual>(),Is.Null); Assert.That(renderer.enabled,Is.True);
             var custom=player.definition.appearancePack.appearances.Last(a=>a.kind==ItemKind.Player).sprite;
             ItemAppearance.Choose(new[]{item},null,custom); Assert.That(ItemVisual.Resolve(item).sprite,Is.EqualTo(custom));
@@ -70,6 +71,7 @@ namespace CreaJuego.Starter.Tests
                 int expected=player.definition.appearancePack.CategoryFor(ItemKind.Player).options.Count(a=>a.Preview!=null);
                 Assert.That(UnityEngine.UIElements.UQueryExtensions.Query<UnityEngine.UIElements.Image>(selector).ToList().Count(image=>image.sprite!=null),Is.EqualTo(expected));
                 Assert.That(UnityEngine.UIElements.UQueryExtensions.Q<UnityEditor.UIElements.ObjectField>(selector).objectType,Is.EqualTo(typeof(Sprite)));
+                Assert.That(UnityEngine.UIElements.UQueryExtensions.Q<UnityEngine.UIElements.Button>(selector,"elegir-imagen-computador"),Is.Not.Null);
             }
             finally { view.Dispose(); }
         }
@@ -91,7 +93,7 @@ namespace CreaJuego.Starter.Tests
             yield return new EnterPlayMode();
             var item=Player(); var visual=item.GetComponent<ItemVisual>();
             var profile=ScriptableObject.CreateInstance<AnimationProfile>(); profile.idle="Missing"; profile.move="Missing"; profile.jump="Missing";
-            var appearance=Object.Instantiate(item.appearance); appearance.animationProfile=profile; item.appearance=appearance; visual.Apply();
+            var appearance=ScriptableObject.CreateInstance<AppearanceDefinition>(); appearance.kind=ItemKind.Player; appearance.sprite=ItemVisual.Resolve(item).sprite; appearance.animationProfile=profile; item.appearanceCategory=null; item.appearance=appearance; visual.Apply();
             yield return null;
             Object.Destroy(visual.animator); yield return null;
             var originalScale=item.transform.localScale; var originalRotation=item.transform.rotation;

@@ -28,6 +28,7 @@ namespace CreaJuego.Starter.Tests
         }
         [UnityTearDown] public IEnumerator LeavePlay(){if(Application.isPlaying) yield return new ExitPlayMode();}
         static GameItem Player()=>Object.FindObjectsByType<GameItem>().First(i=>i.definition.kind==ItemKind.Player);
+        static Sprite PlayerSprite()=>ItemVisual.Resolve(Player()).sprite;
         public static void PrepareDemoCamera() {
             EditorSceneManager.OpenScene(DemoBuilder.ScenePath);
             WorldAuthoringService.EnsureCamera();
@@ -35,7 +36,7 @@ namespace CreaJuego.Starter.Tests
         }
         [Test] public void BackgroundIsUniqueReplacementAndRemovalSupportUndo()
         {
-            var sprite=Player().appearance.sprite;
+            var sprite=PlayerSprite();
             var first=WorldAuthoringService.SetBackground(sprite);
             Undo.FlushUndoRecordObjects(); Undo.IncrementCurrentGroup();
             var alternate=Player().definition.appearancePack.appearances.First(a=>a.sprite!=sprite).sprite;
@@ -53,7 +54,7 @@ namespace CreaJuego.Starter.Tests
         }
         [Test] public void BackgroundCoversCameraAndWorldObjectsPersist()
         {
-            var background=WorldAuthoringService.SetBackground(Player().appearance.sprite);
+            var background=WorldAuthoringService.SetBackground(PlayerSprite());
             var camera=background.output; camera.aspect=16f/9;
             camera.transform.position+=Vector3.right*20; background.Fit();
             var bounds=background.GetComponent<SpriteRenderer>().bounds;
@@ -105,7 +106,7 @@ namespace CreaJuego.Starter.Tests
         {
             var window=EditorWindow.GetWindow<CreaJuegoWindow>(); window.CreateGUI();
             var player=Player(); Selection.activeGameObject=player.gameObject;
-            var sprite=player.definition.appearancePack.appearances.First(a=>a.sprite!=player.appearance.sprite).sprite;
+            var sprite=player.definition.appearancePack.CategoryFor(ItemKind.Player).options.First(a=>a.Preview!=ItemVisual.Resolve(player).sprite && a.Preview!=null).Preview;
             try {
                 ItemAppearance.Choose(new[]{player},null,sprite);
                 yield return null; yield return null;

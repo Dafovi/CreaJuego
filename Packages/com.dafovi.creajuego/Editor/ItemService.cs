@@ -15,6 +15,8 @@ namespace CreaJuego.Editor
         public static IItemBackend Backend(GameItem item) => item.GetComponents<MonoBehaviour>().OfType<IItemBackend>().SingleOrDefault();
 
         public static GameItemDefinition[] WorkshopCatalog() => Catalog().Where(d => d.availableInWorkshop).ToArray();
+        public static GameItemDefinition[] PilotCatalog() => WorkshopCatalog().Where(d => d.kind != ItemKind.MovingPlatform).ToArray();
+        public static GameItemDefinition[] ExtraCatalog() => WorkshopCatalog().Where(d => d.kind == ItemKind.MovingPlatform).ToArray();
 
         public static bool CanCreate(GameItemDefinition definition) => definition != null && (definition.allowMultiple ||
             !SceneManagerSetup().GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<GameItem>(true)).Any(i => i.definition == definition));
@@ -40,7 +42,13 @@ namespace CreaJuego.Editor
             var category=definition.appearancePack?.CategoryFor(definition.kind);
             var option=category?.options.FirstOrDefault(o=>o!=null && o.Preview!=null);
             if(option!=null) ItemAppearance.ChooseOption(new[]{item},category,option.id);
-            if(definition.kind==ItemKind.Player && SceneObjects.All<WorkshopCameraRig>(go.scene).Length>0) WorldAuthoringService.EnsureCamera();
+            if(definition.kind==ItemKind.Player) {
+                var recovery=go.GetComponent<PlayerFallRecovery>();
+                if(recovery==null) recovery=Undo.AddComponent<PlayerFallRecovery>(go);
+                recovery.CaptureCurrentPosition();
+                PrefabUtility.RecordPrefabInstancePropertyModifications(recovery);
+                if(SceneObjects.All<WorkshopCameraRig>(go.scene).Length>0) WorldAuthoringService.EnsureCamera();
+            }
             Undo.CollapseUndoOperations(group);
             return item;
         }

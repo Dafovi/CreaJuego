@@ -21,7 +21,7 @@ namespace CreaJuego.Starter.Tests
     {
         private sealed class ResultCounter { public int count; public void Observe(GameSessionState state) { count++; } }
         private const string SavedScene = "Assets/CreaJuegoV1PersistenceTest.unity";
-        [SetUp] public void Setup() { if (!Application.isPlaying) EditorSceneManager.OpenScene(DemoBuilder.ScenePath); }
+        [SetUp] public void Setup() { if (!Application.isPlaying) { EditorSceneManager.OpenScene(DemoBuilder.ScenePath); SceneService.Prepare(); } }
         [TearDown] public void Cleanup()
         {
             if (Application.isPlaying) return;

@@ -20,7 +20,7 @@ namespace CreaJuego.Editor
                 .Where(i=>i.enabled && i.gameObject.activeInHierarchy && i.definition!=null).ToArray();
             bool Passed(string label)=>source.Any(c=>c.label==label && c.passed);
             result.checks.Add(new Check {text="Jugador",passed=Passed("Personaje")});
-            result.checks.Add(new Check {text="Plataforma",passed=active.Any(i=>i.definition.kind==ItemKind.Platform),optional=true});
+            result.checks.Add(new Check {text="Plataforma",passed=Passed("Superficie")});
             result.checks.Add(new Check {text="Algo con qué interactuar",passed=active.Any(i=>i.definition.kind==ItemKind.Prize || i.definition.kind==ItemKind.Hazard || i.definition.kind==ItemKind.Enemy),optional=true});
             result.checks.Add(new Check {text="Meta",passed=Passed("Meta")});
             var missing=source.Where(c=>!c.passed).ToArray();
@@ -29,6 +29,9 @@ namespace CreaJuego.Editor
                 switch(check.label) {
                     case "Personaje": messages.Add("Añade un Jugador. Tu juego necesita un solo personaje activo."); break;
                     case "Meta": messages.Add("Agrega una Meta para indicar dónde termina tu juego."); break;
+                    case "Superficie": messages.Add("Añade una Plataforma para construir el recorrido."); break;
+                    case "Inicio seguro": messages.Add("Coloca al Jugador encima de una Plataforma antes de jugar."); break;
+                    case "Recuperación de caída": messages.Add("Pulsa Preparar escena para proteger al Jugador si cae."); break;
                     case "Una escena de taller": messages.Add("Abre un solo juego para trabajar en el taller."); break;
                     case "Elementos completos": messages.Add("Hay un elemento incompleto. Vuelve a añadirlo o pide ayuda a quien guía el taller."); break;
                     default:
