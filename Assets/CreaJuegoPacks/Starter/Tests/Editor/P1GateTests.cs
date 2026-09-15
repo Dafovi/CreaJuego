@@ -18,7 +18,7 @@ namespace CreaJuego.Starter.Tests
         [TearDown] public void Cleanup() { if(!Application.isPlaying){Undo.ClearAll();EditorSceneManager.OpenScene(DemoBuilder.ScenePath);} }
         [UnityTearDown] public IEnumerator Leave() {if(Application.isPlaying)yield return new ExitPlayMode();}
         private static IEnumerator Wait(float seconds){float until=Time.realtimeSinceStartup+seconds;while(Time.realtimeSinceStartup<until)yield return null;}
-        private static GameItem Create(ItemKind kind,Vector3 p)=>ItemService.Create(ItemService.Catalog().Single(d=>d.kind==kind),p);
+        private static GameItem Create(ItemKind kind,Vector3 p)=>ItemService.Create(ItemService.Catalog().Single(d=>d.kind==kind && d.id!="piso"),p);
         private static GameItem Named(string name)=>Object.FindObjectsByType<GameItem>().Single(i=>i.name==name);
         [UnityTest] public IEnumerator PatrolExtremesRelativeDuplicationAndPassengerDiagnostic()
         {

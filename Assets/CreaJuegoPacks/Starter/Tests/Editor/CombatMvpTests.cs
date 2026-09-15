@@ -22,7 +22,7 @@ namespace CreaJuego.Starter.Tests
         [TearDown] public void Cleanup() { if(!Application.isPlaying) { WorkshopTestWindows.Close(); Undo.ClearAll(); EditorSceneManager.OpenScene(DemoBuilder.ScenePath); } }
         [UnityTearDown] public IEnumerator LeavePlay() { if(Application.isPlaying) yield return new ExitPlayMode(); }
         static GameItem Item(ItemKind kind)=>Object.FindObjectsByType<GameItem>().First(i=>i.definition.kind==kind);
-        static GameItem Create(ItemKind kind,Vector3 point)=>ItemService.Create(ItemService.Catalog().Single(d=>d.kind==kind),point);
+        static GameItem Create(ItemKind kind,Vector3 point)=>ItemService.Create(ItemService.Catalog().Single(d=>d.kind==kind && d.id!="piso"),point);
         static IEnumerator Wait(float seconds) { float end=Time.realtimeSinceStartup+seconds; while(Time.realtimeSinceStartup<end) yield return null; }
         [UnityTest] public IEnumerator PropertiesFollowRootsVisualChildrenComponentsAndUndo()
         {

@@ -7,7 +7,9 @@ Fecha de revisión: 14 de septiembre de 2026. Versión objetivo y validada: **Un
 - Tres ventanas UI Toolkit en español alrededor del SceneView: Elementos, Propiedades y Jugar.
 - Tema claro y oscuro compartido, layout de taller y GameView 16:9.
 - Catálogo principal: Jugador, Plataforma, Premio, Peligro, Enemigo, Meta y Decoración.
-- Plataforma móvil publicada como **Extra** y límites invisibles desde Escenario.
+- Plataforma móvil y **Piso largo** publicados como **Extra**; límites invisibles desde Escenario.
+- Escenario admite fondos del computador y los guarda dentro del juego.
+- SceneView muestra gizmos educativos para recorridos, interacciones, caída y límites.
 - Apariencias por categoría, prefabs animados del Platformer Game Kit e importación amigable de PNG/JPG por juego.
 - Backend educativo desacoplado de la vista. Unity Playground 1.8.0 adaptado sigue resolviendo movimiento, salto, patrulla, puntuación, salud, triggers y parte de la UI de sesión.
 - Cinemachine sigue al Jugador.

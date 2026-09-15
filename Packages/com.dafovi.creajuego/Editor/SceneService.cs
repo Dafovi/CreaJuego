@@ -54,7 +54,7 @@ namespace CreaJuego.Editor
             if (checks.Any(c => !c.passed)) return false;
             WorldAuthoringService.EnsureCamera(); EditorApplication.EnterPlaymode(); return true;
         }
-        [MenuItem("CreaJuego/Preparar escena")]
+
         public static void Prepare()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Detén el juego antes de preparar.");

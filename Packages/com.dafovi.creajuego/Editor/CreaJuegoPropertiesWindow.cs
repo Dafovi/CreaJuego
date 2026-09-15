@@ -9,7 +9,7 @@ namespace CreaJuego.Editor
     {
         private EducationalPropertiesView view;
         private string shownSelection;
-        [MenuItem("CreaJuego/Abrir propiedades")]
+        [MenuItem("CreaJuego/Ventanas/Abrir propiedades")]
         public static void Open()=>GetWindow<CreaJuegoPropertiesWindow>("Propiedades");
         private void OnEnable() {
             EditorApplication.projectChanged+=Refresh;ObjectChangeEvents.changesPublished+=ObjectsChanged;Selection.selectionChanged+=Refresh;EditorApplication.hierarchyChanged+=HierarchyChanged;Undo.undoRedoPerformed+=Refresh;

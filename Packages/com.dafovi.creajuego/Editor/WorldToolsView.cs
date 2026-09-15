@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 namespace CreaJuego.Editor
 {
     public sealed class WorldToolsView : Foldout
@@ -27,6 +28,7 @@ namespace CreaJuego.Editor
             RegisterCallback<AttachToPanelEvent>(_=>{EditorApplication.projectChanged+=RefreshChoices;RefreshChoices();});
             RegisterCallback<DetachFromPanelEvent>(_=>EditorApplication.projectChanged-=RefreshChoices);
             sprite.RegisterValueChangedCallback(evt=>Run(()=>WorldAuthoringService.SetBackground(evt.newValue as Sprite)));
+            Add(new Button(ChooseBackgroundFromComputer){text="Elegir imagen del computador…",name="elegir-fondo-computador"});
             Add(new Button(()=>Run(()=>WorldAuthoringService.SetBackground(null))){text="Quitar fondo"});
             Add(new Button(()=>Run(()=>WorldAuthoringService.AddBoundary(SceneView.lastActiveSceneView!=null ? SceneView.lastActiveSceneView.pivot : Vector3.zero))){text="Añadir límite invisible",name="crear-limite"});
             Add(new Label("Mueve los límites en Escena y ajusta su tamaño en Propiedades."){style={whiteSpace=WhiteSpace.Normal}});
@@ -42,6 +44,12 @@ namespace CreaJuego.Editor
                 EditorApplication.hierarchyChanged-=Refresh;
                 EditorApplication.playModeStateChanged-=PlayChanged;
             });
+        }
+        private void ChooseBackgroundFromComputer()
+        {
+            var path=EditorUtility.OpenFilePanel("Elegir imagen para el fondo",string.Empty,"png,jpg,jpeg");
+            if(string.IsNullOrWhiteSpace(path)) return;
+            Run(()=>WorldAuthoringService.SetBackground(WorkshopImageImportService.Import(path,SceneManager.GetActiveScene())));
         }
         private void Run(Action action)
         {

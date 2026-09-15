@@ -228,7 +228,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItem
   definition: {fileID: 11400000, guid: 39582a0e1dc2a9c4097999242837b541, type: 2}
   appearance: {fileID: 11400000, guid: 08acf3cc7f8d2e840bbb99aefaa7abba, type: 2}
+  appearanceCategory: {fileID: 0}
+  appearanceId: 
   customSprite: {fileID: 0}
+  visualScale: 1
   speed: 1
   jump: 10
   canJump: 1

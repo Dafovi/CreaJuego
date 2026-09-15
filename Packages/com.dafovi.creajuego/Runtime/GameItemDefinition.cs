@@ -35,6 +35,7 @@ namespace CreaJuego
         public ItemKind kind;
         public int order;
         public bool availableInWorkshop = true;
+        public bool extraInWorkshop;
         public bool allowMultiple = true;
         public EducationalProperty[] properties = Array.Empty<EducationalProperty>();
     }

@@ -25,7 +25,7 @@ namespace CreaJuego.Starter.Tests
         [Test] public void CatalogHasUniqueIdsAndValidEducationalBindings()
         {
             var catalog = ItemService.Catalog();
-            Assert.That(catalog.Length, Is.EqualTo(8));
+            Assert.That(catalog.Length, Is.EqualTo(9));
             Assert.That(catalog.Select(d => d.id).Distinct().Count(), Is.EqualTo(catalog.Length));
             foreach (var d in catalog)
             {

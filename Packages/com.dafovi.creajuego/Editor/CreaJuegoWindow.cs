@@ -10,13 +10,13 @@ namespace CreaJuego.Editor
         private ScrollView catalog,gameItems;
         private VisualElement actions;
         private Label status,flow;
-        [MenuItem("CreaJuego/Abrir taller")]
+        [MenuItem("CreaJuego/Ventanas/Abrir taller")]
         public static void Open() {
             GetWindow<SceneView>();
             CreaJuegoPropertiesWindow.Open();CreaJuegoPlayBarWindow.Open();
             GetWindow<CreaJuegoWindow>("CreaJuego").Focus();
         }
-        [MenuItem("CreaJuego/Abrir elementos")]
+        [MenuItem("CreaJuego/Ventanas/Abrir elementos")]
         public static void OpenElements()=>GetWindow<CreaJuegoWindow>("CreaJuego");
         private void OnEnable() {
             Selection.selectionChanged+=ShowSelection;Undo.undoRedoPerformed+=UndoChanged;

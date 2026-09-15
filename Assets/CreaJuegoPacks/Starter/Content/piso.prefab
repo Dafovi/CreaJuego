@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 0.45, z: 1}
+  m_LocalScale: {x: 8, y: 0.45, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 182052816144744296}
@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 7677876646782104858}
   - component: {fileID: 5023903483241572821}
   m_Layer: 0
-  m_Name: plataforma
+  m_Name: piso
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -206,7 +206,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
-  m_Size: {x: 3, y: 0.45}
+  m_Size: {x: 8, y: 0.45}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -224,12 +224,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c4bad0441404a74da8770d8139d61ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItem
-  definition: {fileID: 11400000, guid: f07b3ddcccec4da47b8e9699584191a3, type: 2}
+  definition: {fileID: 11400000, guid: e34f982a57b34ae698c5a0fdf0d12aec, type: 2}
   appearance: {fileID: 11400000, guid: 03fb5ac70dac3e14590c456b3fe87645, type: 2}
   appearanceCategory: {fileID: 0}
   appearanceId: 
   customSprite: {fileID: 0}
   visualScale: 1
+  stretchVisualToSurface: 1
   speed: 1
   jump: 10
   canJump: 1
@@ -281,12 +282,12 @@ BoxCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 1, y: 1}
-    newSize: {x: 3, y: 0.45}
+    newSize: {x: 8, y: 0.45}
     adaptiveTilingThreshold: 0.5
     drawMode: 1
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3, y: 0.45}
+  m_Size: {x: 8, y: 0.45}
   m_EdgeRadius: 0
 --- !u!114 &7677876646782104858
 MonoBehaviour:

@@ -11,7 +11,7 @@ namespace CreaJuego.Editor
         private TextField gameName, teamName;
         private Label message;
 
-        [MenuItem("CreaJuego/Nuevo juego", false, 1)]
+
         public static void Open()
         {
             var window = GetWindow<NewWorkshopGameWindow>(true, "Nuevo juego");

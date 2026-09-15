@@ -25,7 +25,7 @@ ItemService y SceneItemService siguen creando/duplicando/eliminando/seleccionand
 
 ## Decisión del preflight
 Se eligió una tercera ventana porque permite una franja horizontal bajo el SceneView y evita comprimir mensajes y un CTA ancho dentro del catálogo de 280 px. Tiene un solo propietario de Jugar; el catálogo y Propiedades no incluyen copias.
-Abrir taller abre las tres. La barra puede cerrarse o abrirse por separado desde el menú; si se cierra, se recupera con Abrir barra de juego o Abrir taller.
+**CreaJuego → Ventanas → Abrir taller** abre las tres. La barra puede cerrarse o abrirse por separado desde el submenú Ventanas; si se cierra, se recupera con Abrir barra de juego o Abrir taller.
 Se reutilizan SceneService y WorkshopPresentation. No se cambian bloqueos ni reglas. Plataforma/interacción siguen siendo sugerencias donde antes no eran requisitos.
 
 ## Menús

@@ -23,6 +23,7 @@ MonoBehaviour:
   kind: 5
   order: 5
   availableInWorkshop: 1
+  extraInWorkshop: 1
   allowMultiple: 1
   properties:
   - path: speed

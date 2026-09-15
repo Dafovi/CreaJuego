@@ -20,7 +20,7 @@ namespace CreaJuego.Starter
         public const string Root = "Assets/CreaJuegoPacks/Starter";
         public const string ScenePath = Root + "/Demo/CreaJuegoPlaygroundDemo.unity";
 
-        [MenuItem("CreaJuego/Preparar demo")]
+        [MenuItem("CreaJuego/Contenido/Preparar demo")]
         public static void Prepare()
         {
             if (Application.isPlaying) return;

@@ -7,7 +7,7 @@ Validación en Editor, sin generar ejecutables ni ejecutar BuildPipeline.BuildPl
 
 1. **Modo oscuro**: interruptor en cada una de las tres ventanas. Cambia todas inmediatamente, sin reconstruir sus controles enlazados. Preferencia local persistente en EditorPrefs; el modo claro sigue disponible.
 2. **Miniaturas reales**: catálogo, Mi juego y encabezado de Propiedades muestran el sprite personalizado o apariencia elegida; en el catálogo se usa el del elemento seleccionado cuando corresponde. Sin selección se utiliza la apariencia del contenido predeterminado. El icono antiguo queda como último respaldo.
-3. **Escenario → Fondo**: selecciona un Sprite (también se puede arrastrar desde Project). Cambiarlo reemplaza el fondo existente. Quitar fondo admite Undo. La herramienta incluye objetos inactivos al buscar y rechaza varios fondos manualmente duplicados en lugar de borrarlos. Se escala uniformemente para cubrir la cámara: puede recortarse si su proporción es diferente; acompaña a la cámara, sin paralaje ni colisiones.
+3. **Escenario → Fondo**: selecciona un Sprite, arrástralo desde Project o usa **Elegir imagen del computador…**. La imagen externa se copia a la carpeta **Imagenes** del juego y se importa como Sprite. Cambiarlo reemplaza el fondo existente. Quitar fondo admite Undo. La herramienta incluye objetos inactivos al buscar y rechaza varios fondos manualmente duplicados en lugar de borrarlos. Se escala uniformemente para cubrir la cámara: puede recortarse si su proporción es diferente; acompaña a la cámara, sin paralaje ni colisiones.
 4. **Encuadre**: línea azul alrededor del área de cámara y sombreado exterior en SceneView 2D. El sombreado no captura el ratón: se puede seguir colocando contenido fuera del encuadre. En perspectiva se dibuja sólo el contorno. Configurar editor activa SceneView 2D.
 5. **Configurar editor**: conserva el layout manual y establece Game a 1280 × 720, proporción 16:9. Usa PlayModeWindow.SetCustomRenderingResolution, API pública. No modifica el archivo .wlt.
 6. **Escenario → Añadir límite invisible**: crea una pared sin imagen, en el centro de trabajo de SceneView. Aparece en Mi juego. Seleccionarla permite editar Anchura y Altura desde Propiedades; moverla se hace con SceneView. Se puede usar para lados, suelo o techo. El dibujo rosa sólo existe en Editor. Crear, cambiar tamaño y eliminar admite Undo.
@@ -66,3 +66,13 @@ Abrir CreaJuego y alternar Modo oscuro desde cada ventana. Seleccionar un person
 - El paquete Cinemachine emite avisos de un asmref de ejemplo HDRP sin destino y clases parciales de su Editor durante la recarga; no son errores de compilación de CreaJuego y no se parchea el paquete.
 - Pendiente revisión visual con una persona en el Editor y ajuste fino del espacio de las ventanas pequeñas.
 
+
+## Piso largo y guías visuales
+
+La sección **Extra** ofrece **Piso largo**, una superficie de ocho unidades para construir tramos extensos con menos objetos. Conserva la física de Plataforma y estira su imagen sobre la superficie; el control **Tamaño visual** sigue escalando ambos ejes uniformemente.
+
+SceneView muestra guías públicas mediante DrawGizmo y Handles: recorrido y distancia de Enemigo/Plataforma móvil, zona de interacción del elemento seleccionado, línea de recuperación de caída del Jugador y volumen de los límites invisibles. Son ayudas de Editor; no alteran física, serialización ni el juego en Play Mode.
+
+## Menú del Editor
+
+El menú principal deja **CreaJuego → Configurar editor** como la acción directa. Las ventanas están agrupadas en **CreaJuego → Ventanas**, y las operaciones restantes continúan bajo **Contenido** y **Facilitador**.

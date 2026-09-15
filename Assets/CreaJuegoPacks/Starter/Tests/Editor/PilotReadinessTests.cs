@@ -156,12 +156,57 @@ namespace CreaJuego.Starter.Tests
         }
 
         [Test]
-        public void PilotCatalogContainsSevenMainItemsAndMovingPlatformAsExtra()
+        public void PilotCatalogContainsSevenMainItemsAndWorkshopExtras()
         {
             Assert.That(ItemService.PilotCatalog().Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Enemy, ItemKind.Goal, ItemKind.Decoration }));
-            Assert.That(ItemService.ExtraCatalog().Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.MovingPlatform }));
+            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "movil", "piso" }));
         }
 
+        [Test]
+        public void BackgroundCanUseAnImageImportedFromComputer()
+        {
+            WorkshopGameService.CreateNew("Fondo", "Prueba Automatica");
+            var source = Path.Combine(Path.GetTempPath(), "CreaJuegoPilotBackground.png");
+            var texture = new Texture2D(8, 4);
+            texture.SetPixels(Enumerable.Repeat(Color.cyan, 32).ToArray());
+            texture.Apply();
+            File.WriteAllBytes(source, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            try
+            {
+                var imported = WorkshopImageImportService.Import(source, SceneManager.GetActiveScene());
+                var background = WorldAuthoringService.SetBackground(imported);
+                Assert.That(background.GetComponent<SpriteRenderer>().sprite, Is.EqualTo(imported));
+                Assert.That(AssetDatabase.GetAssetPath(imported), Does.StartWith(TestRoot + "/Imagenes/"));
+                var tools = new WorldToolsView();
+                Assert.That(tools.Q<Button>("elegir-fondo-computador"), Is.Not.Null);
+            }
+            finally { File.Delete(source); }
+        }
+
+        [Test]
+        public void LongFloorIsAnExtraWithWidePhysicsAndStretchableVisual()
+        {
+            var definition = ItemService.ExtraCatalog().Single(d => d.id == "piso");
+            var floor = ItemService.Create(definition, Vector3.zero);
+            Assert.That(floor.definition.kind, Is.EqualTo(ItemKind.Platform));
+            Assert.That(floor.stretchVisualToSurface, Is.True);
+            Assert.That(floor.GetComponent<BoxCollider2D>().size.x, Is.GreaterThanOrEqualTo(8));
+            Assert.That(floor.transform.localScale, Is.EqualTo(Vector3.one));
+        }
+
+        [Test]
+        public void EducationalGizmosDescribeMovementAndInteractions()
+        {
+            var moving = ItemService.Create(ItemService.ExtraCatalog().Single(d => d.id == "movil"), new Vector3(2, 3, 0));
+            moving.distance = 6;
+            Assert.That(EducationalGizmos.TryGetMovementPath(moving, out var start, out var end), Is.True);
+            Assert.That(start, Is.EqualTo(new Vector3(2, 3, 0)).Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(end, Is.EqualTo(new Vector3(8, 3, 0)).Using(Vector3ComparerWithEqualsOperator.Instance));
+            Assert.That(EducationalGizmos.InteractionLabel(moving), Is.EqualTo("Superficie móvil"));
+            var hazard = ItemService.Create(Definition(ItemKind.Hazard), Vector3.zero);
+            Assert.That(EducationalGizmos.InteractionLabel(hazard), Is.EqualTo("Hace daño"));
+        }
         [Test]
         public void FacilitatorReturnMovesOnlyPlayerAndSupportsUndo()
         {
@@ -200,6 +245,6 @@ namespace CreaJuego.Starter.Tests
             finally { playBar.Close(); }
         }
 
-        private static GameItemDefinition Definition(ItemKind kind) => ItemService.WorkshopCatalog().Single(d => d.kind == kind);
+        private static GameItemDefinition Definition(ItemKind kind) => ItemService.PilotCatalog().Single(d => d.kind == kind);
     }
 }

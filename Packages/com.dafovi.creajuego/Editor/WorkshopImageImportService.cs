@@ -11,13 +11,21 @@ namespace CreaJuego.Editor
         public static Sprite ImportAndAssign(string sourcePath, GameItem[] items)
         {
             if (items == null || items.Length == 0) throw new ArgumentException("Selecciona un elemento antes de elegir una imagen.");
-            if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath)) throw new FileNotFoundException("No se encontró la imagen elegida.", sourcePath);
-            var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
-            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg") throw new ArgumentException("Elige una imagen PNG o JPG.");
             foreach (var item in items)
                 if (item == null || item.gameObject.scene != SceneManager.GetActiveScene()) throw new ArgumentException("La selección no pertenece al juego abierto.");
 
-            var folder = WorkshopGameService.ImagesFolder(SceneManager.GetActiveScene());
+            var sprite = Import(sourcePath, SceneManager.GetActiveScene());
+            ItemAppearance.SetCustomSprite(items, sprite);
+            return sprite;
+        }
+
+        public static Sprite Import(string sourcePath, Scene scene)
+        {
+            if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath)) throw new FileNotFoundException("No se encontró la imagen elegida.", sourcePath);
+            var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
+            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg") throw new ArgumentException("Elige una imagen PNG o JPG.");
+
+            var folder = WorkshopGameService.ImagesFolder(scene);
             Directory.CreateDirectory(WorkshopGameService.AbsolutePath(folder));
             var fileName = Sanitize(Path.GetFileNameWithoutExtension(sourcePath));
             var assetPath = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + fileName + extension);
@@ -32,10 +40,8 @@ namespace CreaJuego.Editor
             importer.SaveAndReimport();
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
             if (sprite == null) throw new InvalidOperationException("Unity no pudo convertir la imagen en una apariencia 2D.");
-            ItemAppearance.SetCustomSprite(items, sprite);
             return sprite;
         }
-
         private static string Sanitize(string name)
         {
             foreach (var character in Path.GetInvalidFileNameChars()) name = name.Replace(character, '_');

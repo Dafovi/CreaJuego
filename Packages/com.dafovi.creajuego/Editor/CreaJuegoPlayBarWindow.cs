@@ -13,7 +13,7 @@ namespace CreaJuego.Editor
         private VisualElement footer;
         private Button play,prepare;
         private Label status,identity;
-        [MenuItem("CreaJuego/Abrir barra de juego")]
+        [MenuItem("CreaJuego/Ventanas/Abrir barra de juego")]
         public static void Open()=>GetWindow<CreaJuegoPlayBarWindow>("Jugar");
         private static T Styled<T>(T element,string style) where T:VisualElement=>WorkshopWindowStyle.Styled(element,style);
         private void OnEnable() {

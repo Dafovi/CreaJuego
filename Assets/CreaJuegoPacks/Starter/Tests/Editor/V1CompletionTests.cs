@@ -31,7 +31,7 @@ namespace CreaJuego.Starter.Tests
         [UnityTearDown] public IEnumerator LeavePlay() { if (Application.isPlaying) yield return new ExitPlayMode(); }
         private static IEnumerator Wait(float seconds) { float until = Time.realtimeSinceStartup + seconds; while (Time.realtimeSinceStartup < until) yield return null; }
         private static GameItem Item(ItemKind kind) => Object.FindObjectsByType<GameItem>().First(i => i.definition.kind == kind);
-        private static GameItem Create(ItemKind kind, Vector3 point) => ItemService.Create(ItemService.Catalog().Single(d => d.kind == kind), point);
+        private static GameItem Create(ItemKind kind, Vector3 point) => ItemService.Create(ItemService.Catalog().Single(d => d.kind == kind && d.id != "piso"), point);
         private static void Empty() { EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single); SceneService.Prepare(); }
         private static Keyboard Keyboard()
         {

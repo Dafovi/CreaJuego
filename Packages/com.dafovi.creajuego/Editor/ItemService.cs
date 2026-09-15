@@ -15,8 +15,8 @@ namespace CreaJuego.Editor
         public static IItemBackend Backend(GameItem item) => item.GetComponents<MonoBehaviour>().OfType<IItemBackend>().SingleOrDefault();
 
         public static GameItemDefinition[] WorkshopCatalog() => Catalog().Where(d => d.availableInWorkshop).ToArray();
-        public static GameItemDefinition[] PilotCatalog() => WorkshopCatalog().Where(d => d.kind != ItemKind.MovingPlatform).ToArray();
-        public static GameItemDefinition[] ExtraCatalog() => WorkshopCatalog().Where(d => d.kind == ItemKind.MovingPlatform).ToArray();
+        public static GameItemDefinition[] PilotCatalog() => WorkshopCatalog().Where(d => !d.extraInWorkshop).ToArray();
+        public static GameItemDefinition[] ExtraCatalog() => WorkshopCatalog().Where(d => d.extraInWorkshop).ToArray();
 
         public static bool CanCreate(GameItemDefinition definition) => definition != null && (definition.allowMultiple ||
             !SceneManagerSetup().GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<GameItem>(true)).Any(i => i.definition == definition));

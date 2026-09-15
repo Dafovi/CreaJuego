@@ -24,10 +24,11 @@ namespace CreaJuego.Starter.Tests
         [Test] public void WorkshopPublishesAllValidatedElementsWithDistinctIcons()
         {
             var catalog = ItemService.WorkshopCatalog();
-            Assert.That(catalog.Where(d => d.kind != ItemKind.Enemy && d.kind != ItemKind.Decoration).Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Goal, ItemKind.MovingPlatform }));
+            Assert.That(ItemService.PilotCatalog().Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Enemy, ItemKind.Goal, ItemKind.Decoration }));
+            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "movil", "piso" }));
             Assert.That(catalog.All(d => d.icon != null), Is.True);
-            Assert.That(catalog.Select(d => d.icon).Distinct().Count(), Is.EqualTo(catalog.Length));
-            Assert.That(ItemService.Catalog().Length, Is.EqualTo(8), "Experimental content is preserved");
+            Assert.That(ItemService.PilotCatalog().Select(d => d.icon).Distinct().Count(), Is.EqualTo(ItemService.PilotCatalog().Length));
+            Assert.That(ItemService.Catalog().Length, Is.EqualTo(9), "Experimental content is preserved");
         }
 
         [Test] public void SinglePlayerAndAssetEditingAreGuarded()
@@ -75,6 +76,7 @@ namespace CreaJuego.Starter.Tests
             Selection.activeGameObject = prize.gameObject;
             yield return null;
             Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Not.Null);
+            Assert.That(window.rootVisualElement.Q<Button>("crear-piso"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(ItemVisual.Resolve(prize).sprite));
             var number = WorkshopTestWindows.Properties.Q<IntegerField>("propiedad-points");

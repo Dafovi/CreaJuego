@@ -179,9 +179,25 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3500519506722977941, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3500519506722977941, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 3500519506722977941, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.18
+      objectReference: {fileID: 0}
+    - target: {fileID: 3500519506722977941, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.45
+      objectReference: {fileID: 0}
     - target: {fileID: 5633906084538955323, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5633906084538955323, guid: bf55122b9ad8dff419bdb677241b327c, type: 3}
       propertyPath: m_Controller
@@ -416,7 +432,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 0.4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 300010452}
@@ -470,7 +486,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 3251871555124654486, guid: b6b6796d98449dc45aee8ed13d24e44f, type: 3}
+  m_Sprite: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -634,9 +650,17 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 374993041635198794, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
+      propertyPath: appearanceId
+      value: tiny-dungeon-36
+      objectReference: {fileID: 0}
+    - target: {fileID: 374993041635198794, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
       propertyPath: customSprite
       value: 
-      objectReference: {fileID: 3251871555124654486, guid: b6b6796d98449dc45aee8ed13d24e44f, type: 3}
+      objectReference: {fileID: 0}
+    - target: {fileID: 374993041635198794, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
+      propertyPath: appearanceCategory
+      value: 
+      objectReference: {fileID: 11400000, guid: 6897fc62136fd8b43af01556c2fff7ea, type: 2}
     - target: {fileID: 6954871156161428296, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -760,6 +784,14 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: -1844213531876117813, guid: cf085cdee8f14c7448335afddec4f2fe, type: 3}
+    - target: {fileID: 8545141176538251075, guid: a8e26b2a41720f344af8b89469e1b65e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8545141176538251075, guid: a8e26b2a41720f344af8b89469e1b65e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
