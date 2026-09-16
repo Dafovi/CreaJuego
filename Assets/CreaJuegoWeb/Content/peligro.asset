@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: peligro
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: peligro
+  displayName: Peligro
+  category: Objetos
+  description: Quita puntos de vida al personaje.
+  learningHint: Al tocar este peligro, el personaje pierde puntos de vida.
+  icon: {fileID: 6020323851609522334, guid: 8650b6909be4ee74da5743ad8dcc0171, type: 3}
+  appearancePack: {fileID: 0}
+  prefab: {fileID: 8319791712475564666, guid: 03314d453739ab84b87c513ab96a0ba3, type: 3}
+  kind: 3
+  order: 3
+  availableInWorkshop: 1
+  extraInWorkshop: 0
+  allowMultiple: 1
+  properties:
+  - path: damage
+    label: "Da\xF1o al personaje"
+    group: "Da\xF1o"
+    unit: 
+    visibleWhen: 
+    help: Vida que pierde al entrar en contacto.
+    control: 1
+    minimum: 1
+    maximum: 10
+  - path: disappear
+    label: "Desaparecer despu\xE9s del contacto"
+    group: "Da\xF1o"
+    unit: 
+    visibleWhen: 
+    help: "Si est\xE1 activado, el peligro desaparece despu\xE9s de hacer da\xF1o."
+    control: 2
+    minimum: 0
+    maximum: 10

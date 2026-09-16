@@ -1,0 +1,1 @@
+{"name":"CreaJuego.Web.Editor","references":["CreaJuego.Runtime","CreaJuego.RuntimeAuthoring"],"includePlatforms":["Editor"]}

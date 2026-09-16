@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: jugador
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: jugador
+  displayName: Jugador
+  category: Personaje
+  description: Este es el personaje que controla quien juega.
+  learningHint: "Mu\xE9vete con A/D o las flechas, salta con Espacio y golpea con X."
+  icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
+  appearancePack: {fileID: 0}
+  prefab: {fileID: 5341704120442342252, guid: d54c9d38e573c484b893d35ff6af2b5e, type: 3}
+  kind: 0
+  order: 0
+  availableInWorkshop: 1
+  extraInWorkshop: 0
+  allowMultiple: 0
+  properties:
+  - path: speed
+    label: Velocidad
+    group: Movimiento
+    unit: 
+    visibleWhen: 
+    help: "Controla qu\xE9 tan r\xE1pido se mueve el personaje."
+    control: 0
+    minimum: 0.2
+    maximum: 5
+  - path: jump
+    label: Fuerza de salto
+    group: Salto
+    unit: 
+    visibleWhen: canJump
+    help: "Controla qu\xE9 tan alto puede saltar el personaje."
+    control: 0
+    minimum: 5
+    maximum: 18
+  - path: canJump
+    label: Puede saltar
+    group: Salto
+    unit: 
+    visibleWhen: 
+    help: "Desact\xEDvalo si quieres que el personaje s\xF3lo pueda caminar."
+    control: 2
+    minimum: 0
+    maximum: 10
+  - path: health
+    label: Puntos de vida
+    group: Vida
+    unit: 
+    visibleWhen: 
+    help: "Indica cu\xE1ntos puntos de vida tiene el personaje. Los peligros le quitan puntos de vida. Si llegan a cero, termina la partida."
+    control: 1
+    minimum: 1
+    maximum: 10
+  - path: canAttack
+    label: Puede golpear
+    group: Ataque
+    unit: 
+    visibleWhen: 
+    help: Activa el golpe con X.
+    control: 2
+    minimum: 0
+    maximum: 10
+  - path: attackDamage
+    label: "Da\xF1o"
+    group: Ataque
+    unit: 
+    visibleWhen: canAttack
+    help: Puntos de vida que quita cada golpe al enemigo.
+    control: 1
+    minimum: 1
+    maximum: 5

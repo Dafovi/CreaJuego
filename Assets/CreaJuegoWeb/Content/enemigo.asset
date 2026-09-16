@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: enemigo
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: enemigo
+  displayName: Enemigo
+  category: Retos
+  description: "Se mueve por un tramo y hace da\xF1o al tocarlo."
+  learningHint: Va y vuelve por un tramo. Puedes evitarlo o golpearlo con X.
+  icon: {fileID: -1092110371768519499, guid: 04ce8474e899c4247b7082ff21a6db2e, type: 3}
+  appearancePack: {fileID: 0}
+  prefab: {fileID: 1193659942177817768, guid: c6b9df37219b6cd418ea3185980607f5, type: 3}
+  kind: 6
+  order: 6
+  availableInWorkshop: 1
+  extraInWorkshop: 0
+  allowMultiple: 1
+  properties:
+  - path: speed
+    label: Velocidad
+    group: Movimiento
+    unit: 
+    visibleWhen: 
+    help: Ajusta velocidad y prueba el resultado.
+    control: 0
+    minimum: 0.2
+    maximum: 3
+  - path: distance
+    label: Distancia de recorrido
+    group: Movimiento
+    unit: 
+    visibleWhen: 
+    help: Va hacia la derecha y vuelve. Su recorrido debe quedar libre.
+    control: 0
+    minimum: 0.5
+    maximum: 6
+  - path: damage
+    label: "Da\xF1o al personaje"
+    group: Contacto
+    unit: 
+    visibleWhen: 
+    help: "Cantidad de da\xF1o."
+    control: 1
+    minimum: 1
+    maximum: 10
+  - path: health
+    label: Puntos de vida
+    group: Vida
+    unit: 
+    visibleWhen: 
+    help: "Cu\xE1ntos puntos de vida tiene antes de desaparecer en esta partida."
+    control: 1
+    minimum: 1
+    maximum: 5
