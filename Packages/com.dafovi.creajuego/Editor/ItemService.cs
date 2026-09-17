@@ -10,7 +10,7 @@ namespace CreaJuego.Editor
     {
         public static GameItemDefinition[] Catalog() => AssetDatabase.FindAssets("t:GameItemDefinition")
             .Select(id => AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(id)))
-            .Where(d => d != null).OrderBy(d => d.order).ThenBy(d => d.displayName).ToArray();
+            .Where(d => d != null && !d.runtimeOnly).OrderBy(d => d.order).ThenBy(d => d.displayName).ToArray();
 
         public static IItemBackend Backend(GameItem item) => item.GetComponents<MonoBehaviour>().OfType<IItemBackend>().SingleOrDefault();
 

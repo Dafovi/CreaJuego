@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a706aded0cf6554db9e24f336e5032e, type: 3}
+  m_Name: WebAppearances
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.ContentPackDefinition
+  id: web-parity-1
+  categories:
+  - {fileID: 11400000, guid: 30356d3b4d2ece241a9c44be48acf897, type: 2}
+  - {fileID: 11400000, guid: b10522f6d895ece4eae52573a9b9f8b7, type: 2}
+  - {fileID: 11400000, guid: e9f0d5cb2c273b64ab7baa5ad2f4d4b5, type: 2}
+  - {fileID: 11400000, guid: aa228d6fef28d494899a387486e71cf2, type: 2}
+  - {fileID: 11400000, guid: df74212af0618214a90514087e71f5f2, type: 2}
+  - {fileID: 11400000, guid: 80a3568d8c4cddb43b133e8d4fba6324, type: 2}
+  - {fileID: 11400000, guid: 1eb2b789938a9c942943fc8cff4e212f, type: 2}
+  appearances: []
+  sceneServices: {fileID: 0}

@@ -1,0 +1,142 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: Enemy
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 6
+  options:
+  - id: tiny-dungeon-120
+    displayName: "Murci\xE9lago"
+    sprite: {fileID: 6091706668691328248, guid: 161f6a4ee36994343a22e81b6260d161, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: tiny-dungeon-121
+    displayName: Fantasma
+    sprite: {fileID: 911841031958816375, guid: 0ac71d47e18fc68438d7b06df83248fd, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: tiny-dungeon-122
+    displayName: Escarabajo
+    sprite: {fileID: 5119971492981962814, guid: 5b8cb8281c4ea3a4aa83615253e05bf1, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: tiny-dungeon-123
+    displayName: Seta
+    sprite: {fileID: 6426566509724856983, guid: 1628c04a38c4d304ab69c53892bc4b88, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: platformer-kit-gobbat
+    displayName: Gobbat
+    sprite: {fileID: 21300638, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 6ffabe806e1b13a40b076d5768af2c59, type: 2}
+    moveClip: {fileID: 7400000, guid: 6ffabe806e1b13a40b076d5768af2c59, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 62a9de91f575c204c855d825c3890354, type: 2}
+    scale: {x: 0.35, y: 0.35}
+    offset: {x: -0.0109375, y: -0.21875}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
+  - id: platformer-kit-gobbler
+    displayName: Gobbler
+    sprite: {fileID: 21300736, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: c482f7ad61c9b044da69f01730a0f809, type: 2}
+    moveClip: {fileID: 7400000, guid: 616d115c3b574cd459107c369560b303, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 4fd622185a5b81f40b0b45c0e1500065, type: 2}
+    scale: {x: 0.35, y: 0.35}
+    offset: {x: -0.0328125, y: -0.35}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
+  - id: platformer-kit-mawflower
+    displayName: "Flor carn\xEDvora"
+    sprite: {fileID: 21300658, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 3b15f60824d13114990f7da3da601bc4, type: 2}
+    moveClip: {fileID: 7400000, guid: 3b15f60824d13114990f7da3da601bc4, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: 529259630464def468652159fa82dd52, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: 0, y: -0.35}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
+  - id: platformer-kit-naga
+    displayName: Naga
+    sprite: {fileID: 21300700, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: f4d6c6412b3aebe44b7b5863a10e1252, type: 2}
+    moveClip: {fileID: 7400000, guid: f8edbb01587b0f84c9ed5d34ba79774c, type: 2}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 7400000, guid: da984d5e731d0c14dbf023c3a56442f3, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: -0.16953124, y: -0.35}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
+  - id: platformer-kit-scarecrow
+    displayName: "Espantap\xE1jaros"
+    sprite: {fileID: 21300758, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 249c019e2adbc0843bee3a3a4e654d83, type: 2}
+    moveClip: {fileID: 7400000, guid: 2352738598901c9409da130e3c72bd9d, type: 2}
+    jumpClip: {fileID: 7400000, guid: ec5645794fe20eb44a73a4d04da3f1c2, type: 2}
+    attackClip: {fileID: 7400000, guid: f9a9837ca8dc90545b9b7a20f73abc33, type: 2}
+    scale: {x: 0.175, y: 0.175}
+    offset: {x: -0.175, y: -0.35}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

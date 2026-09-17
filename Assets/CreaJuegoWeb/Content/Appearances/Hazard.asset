@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: Hazard
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 3
+  options:
+  - id: tiny-dungeon-103
+    displayName: Pinchos
+    sprite: {fileID: 8287658600207992586, guid: cc9ff4f18998b204b93fbc036cf26fe5, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: tiny-dungeon-104
+    displayName: Trampa roja
+    sprite: {fileID: 4150331129290082555, guid: 602a8d48247efaf408d28ffb89f4c48a, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: platformer-kit-spikes
+    displayName: Pinchos del kit
+    sprite: {fileID: -3898733301400247492, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.5, y: 0.5}
+    offset: {x: 0, y: -0.25}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

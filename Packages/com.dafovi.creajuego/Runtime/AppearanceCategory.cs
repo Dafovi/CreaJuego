@@ -38,6 +38,7 @@ namespace CreaJuego
         [InspectorName("Escala")] public Vector2 scale=Vector2.one;
         [InspectorName("Desplazamiento")] public Vector2 offset;
         [InspectorName("Voltear horizontalmente")] public bool flipX;
+        [HideInInspector] public bool preserveAspectWithoutPrefab;
         string IAppearanceData.id=>id;
         string IAppearanceData.displayName=>displayName;
         public string ValidationError {
@@ -61,7 +62,7 @@ namespace CreaJuego
         Vector2 IAppearanceData.scale=>scale;
         Vector2 IAppearanceData.offset=>offset;
         bool IAppearanceData.flipX=>flipX;
-        bool IAppearanceData.preserveAspect=>prefab!=null;
+        bool IAppearanceData.preserveAspect=>prefab!=null || preserveAspectWithoutPrefab;
     }
     [CreateAssetMenu(menuName="CreaJuego/Lista de apariencias por categoría",fileName="Apariencias")]
     public sealed class AppearanceCategory : ScriptableObject

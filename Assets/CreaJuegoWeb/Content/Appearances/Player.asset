@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e5500da8e465574192f0861fcd5abf1, type: 3}
+  m_Name: Player
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
+  kind: 0
+  options:
+  - id: tiny-dungeon-84
+    displayName: Brujita
+    sprite: {fileID: 9157969803310431562, guid: edd1f4593624b394ba0be8afe3bda95d, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 9100000, guid: 8e4261b12edac8f48914c4208162c471, type: 2}
+    animationProfile: {fileID: 11400000, guid: c2175bfa65bf0f148955a0ca153b3ed2, type: 2}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: tiny-dungeon-85
+    displayName: Exploradora
+    sprite: {fileID: 1426666553488855073, guid: d5bc2e2eb3f931c4e85084979793765a, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: 5b84b5bdbf244cecb12b976bbf0aa6c7
+    displayName: Gino
+    sprite: {fileID: 21300718, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 7400000, guid: 3bea83b3ff097a74ba9b3330bdcbaa1d, type: 2}
+    moveClip: {fileID: 7400000, guid: 696020a22ba4b344481c7eda0cd4cc57, type: 2}
+    jumpClip: {fileID: 7400000, guid: 5cd4b86d3201ce34e9f656c044f6d128, type: 2}
+    attackClip: {fileID: 7400000, guid: 1b210e246753bfc449828d8b64f4d75b, type: 2}
+    scale: {x: 0.25, y: 0.25}
+    offset: {x: -0.1796875, y: -0.453125}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

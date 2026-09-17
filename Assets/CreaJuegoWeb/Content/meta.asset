@@ -22,6 +22,7 @@ MonoBehaviour:
   prefab: {fileID: 4368396013753989669, guid: b286aa67be22bd84fa5091e9b66a8c47, type: 3}
   kind: 4
   order: 4
+  runtimeOnly: 1
   availableInWorkshop: 1
   extraInWorkshop: 0
   allowMultiple: 1

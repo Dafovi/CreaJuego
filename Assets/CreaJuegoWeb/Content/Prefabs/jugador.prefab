@@ -168,6 +168,7 @@ GameObject:
   - component: {fileID: 5998749050248434492}
   - component: {fileID: 719059828273439981}
   - component: {fileID: 674548315032179962}
+  - component: {fileID: 822690558835781202}
   m_Layer: 0
   m_Name: jugador
   m_TagString: Player
@@ -480,3 +481,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.PlayerAttack
   attackPoint: {fileID: 7345111859880352828}
+--- !u!114 &822690558835781202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341704120442342252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c47bbcaeb6994ab881a13b8fc423fca1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.PlayerFallRecovery
+  safePosition: {x: 0, y: 0, z: 0}
+  hasSafePosition: 0
+  fallDistance: 12

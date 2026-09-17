@@ -202,3 +202,7 @@ Chrome/Edge modernos de escritorio con WebAssembly, WebGL 2, IndexedDB, teclado 
 5. Añadir exportar/importar `.creajuego` como recuperación portable.
 6. Probar persistencia tras cerrar navegador, reiniciar equipo y cambiar sesión.
 7. Diseñar una UI runtime accesible a partir del flujo validado.
+
+## Continuación: Runtime Parity 1
+
+El resultado histórico de este spike se conserva. La siguiente iteración añadió cámara Cinemachine, ancho de plataformas, handles, snap, límites, recovery y apariencias runtime-safe. Consulta [CreaJuego-WebGL-Parity-1.md](CreaJuego-WebGL-Parity-1.md).

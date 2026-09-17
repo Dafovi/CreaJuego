@@ -1,1 +1,1 @@
-{"name":"CreaJuego.Web.Tests","references":["CreaJuego.Runtime","CreaJuego.RuntimeAuthoring","CreaJuego.Web.Editor"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"],"defineConstraints":["UNITY_INCLUDE_TESTS"]}
+{"name":"CreaJuego.Web.Tests","references":["CreaJuego.Runtime","CreaJuego.Cinemachine","CreaJuego.RuntimeAuthoring","CreaJuego.Web.Editor","Unity.Cinemachine"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"],"defineConstraints":["UNITY_INCLUDE_TESTS"]}

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90dcd2bbb6790774da9369faf4bdbe30, type: 3}
+  m_Name: WebRuntimePack
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeContentPack
+  id: web-parity-1
+  definitions:
+  - {fileID: 11400000, guid: 08faacc5ddd29db48bf61c75d9f1de6b, type: 2}
+  - {fileID: 11400000, guid: d61cdb87fa9a6a24fb100fbeffed5e62, type: 2}
+  - {fileID: 11400000, guid: ccdb17a8f33ba7848b84bf57768d4e69, type: 2}
+  - {fileID: 11400000, guid: 24a3683785aed4e4e895c83fdc61bfe1, type: 2}
+  - {fileID: 11400000, guid: 95c772236e2f15640bbe5091af51e928, type: 2}
+  - {fileID: 11400000, guid: 11058175c0aafe94080ecb09bea1d436, type: 2}
+  - {fileID: 11400000, guid: 86ee675dee6e103499f6a0aa8ac97576, type: 2}
+  preparedAppearances: {fileID: 11400000, guid: 9c4a3b595052fb548b261541e19b8af8, type: 2}
+  defaults:
+  - kind: 0
+    appearanceId: tiny-dungeon-84
+  - kind: 1
+    appearanceId: tiny-dungeon-36
+  - kind: 2
+    appearanceId: tiny-dungeon-115
+  - kind: 3
+    appearanceId: tiny-dungeon-103
+  - kind: 4
+    appearanceId: tiny-dungeon-21
+  - kind: 6
+    appearanceId: tiny-dungeon-120
+  - kind: 7
+    appearanceId: tiny-dungeon-2072
+  sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}

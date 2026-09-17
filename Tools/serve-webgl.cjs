@@ -2,7 +2,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const root = path.resolve(__dirname, "..", "Builds", "WebGLSpike");
+const buildName = process.argv[2] || "WebGLParity1";
+const root = path.resolve(__dirname, "..", "Builds", buildName);
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -35,5 +36,5 @@ http.createServer((request, response) => {
     response.end(data);
   });
 }).listen(8000, "127.0.0.1", () => {
-  console.log("CreaJuego WebGL: http://127.0.0.1:8000/");
+  console.log(`CreaJuego ${buildName}: http://127.0.0.1:8000/`);
 });

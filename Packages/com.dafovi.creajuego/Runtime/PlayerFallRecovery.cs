@@ -11,7 +11,13 @@ namespace CreaJuego
 
         public Vector3 SafePosition => safePosition;
         public bool HasSafePosition => hasSafePosition;
-        public float FallLimit => safePosition.y - fallDistance;
+        public float FallLimit => useWorldLimit ? worldLimit : safePosition.y - fallDistance;
+        private bool useWorldLimit;
+        private float worldLimit;
+        public void ConfigureWorldLimit(Vector3 initialPosition, float lowerLimit)
+        {
+            safePosition = initialPosition; hasSafePosition = true; worldLimit = lowerLimit; useWorldLimit = true;
+        }
 
         private void Awake() => CaptureCurrentPosition();
 
