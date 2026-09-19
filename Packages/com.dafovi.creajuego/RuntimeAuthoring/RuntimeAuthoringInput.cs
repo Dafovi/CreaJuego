@@ -17,18 +17,18 @@ namespace CreaJuego.Web
         void Update()
         {
             bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||Mouse.current==null||View==null)return;
-            var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=EventSystem.current!=null&&EventSystem.current.IsPointerOverGameObject();
-            if(mouse.leftButton.wasPressedThisFrame&&!overUI)
+            var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
+            if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
                 if(TryBeginResize(screen)){changed=false;return;}
-                var hit=Physics2D.OverlapPoint(world);var item=controller.Selection.Select(hit!=null?hit.gameObject:null);
+                var hit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());var item=controller.Selection.Select(hit!=null?hit.GetComponent<RuntimeAuthoredItem>()?.instanceId:null);
                 if(item!=null){dragging=true;changed=false;offset=item.transform.position-world;last=item.transform.position;}else{panning=true;last=world;}
             }
             if(mouse.leftButton.isPressed&&resizing)Resize(world.x);
             else if(mouse.leftButton.isPressed&&dragging){var before=controller.Selection.SelectedItem.transform.position;controller.MoveSelected(world+offset,false);changed|=(before-controller.Selection.SelectedItem.transform.position).sqrMagnitude>.0001f;}
             else if(mouse.leftButton.isPressed&&panning){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
             if(mouse.leftButton.wasReleasedThisFrame){if((dragging||resizing)&&changed)controller.CommitEdit();dragging=panning=resizing=changed=false;}
-            var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.1f)View.orthographicSize=Mathf.Clamp(View.orthographicSize-wheel*.005f,2,30);
+            var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,30);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
             if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();UpdateSelectionVisuals();
         }
@@ -64,4 +64,12 @@ namespace CreaJuego.Web
         static Bounds ItemBounds(GameItem item){var collider=item.GetComponent<Collider2D>();if(collider!=null)return collider.bounds;var renderer=ItemVisual.Resolve(item);return renderer!=null?renderer.bounds:new Bounds(item.transform.position,Vector3.one);}
     }
     public sealed class RuntimeResizeHandle:MonoBehaviour{}
+    public static class RuntimePointerContext
+    {
+        public const float ZoomSensitivity=.12f;
+        static readonly System.Collections.Generic.List<RaycastResult> Hits=new System.Collections.Generic.List<RaycastResult>();
+        public static bool IsPointerOverBlockingUI(Vector2 position){if(EventSystem.current==null)return false;Hits.Clear();EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=position},Hits);return Hits.Count>0;}
+        public static float NormalizeWheel(float delta)=>Mathf.Abs(delta)>=10?delta/120f:delta;
+        public static float Zoom(float current,float delta,float minimum,float maximum)=>Mathf.Clamp(current*Mathf.Exp(-NormalizeWheel(delta)*ZoomSensitivity),minimum,maximum);
+    }
 }

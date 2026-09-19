@@ -26,7 +26,7 @@ namespace CreaJuego.Web
         readonly List<UnityEngine.Object> imageAssets=new List<UnityEngine.Object>();
         Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage;bool dirty;float saveAt;
 
-        void Awake(){storage=new FileProjectStorage();if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();NewProject(false);}
+        void Awake(){storage=new FileProjectStorage();if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);NewProject(false);}
         void Start(){if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
         void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveNow();}
         void OnDestroy(){ReleaseImages();}
@@ -126,10 +126,10 @@ namespace CreaJuego.Web
 
         public void Rebuild(string selectId=null)
         {
-            if(buildRoot==null)return;buildRoot.gameObject.SetActive(false);Selection.Clear();ReleaseImages();for(int i=buildRoot.childCount-1;i>=0;i--){buildRoot.GetChild(i).gameObject.SetActive(false);DestroySafe(buildRoot.GetChild(i).gameObject);}
+            if(buildRoot==null)return;Selection.Bind(ResolveAuthoredItem);selectId??=Selection.SelectedInstanceId;buildRoot.gameObject.SetActive(false);ReleaseImages();for(int i=buildRoot.childCount-1;i>=0;i--){buildRoot.GetChild(i).gameObject.SetActive(false);DestroySafe(buildRoot.GetChild(i).gameObject);}
             GameItem selected=null;foreach(var data in Project.objects){var item=InstantiateItem(data,buildRoot,true);var marker=item.gameObject.AddComponent<RuntimeAuthoredItem>();marker.instanceId=data.instanceId;if(data.instanceId==selectId)selected=item;}
             buildRoot.gameObject.SetActive(true);foreach(var behaviour in buildRoot.GetComponentsInChildren<MonoBehaviour>())if(!(behaviour is GameItem)&&!(behaviour is ItemVisual)&&!(behaviour is RuntimeAuthoredItem))behaviour.enabled=false;foreach(var body in buildRoot.GetComponentsInChildren<Rigidbody2D>())body.simulated=false;
-            if(selected!=null)Selection.Select(selected.gameObject);ProjectChanged?.Invoke();ui?.Refresh();
+            Selection.Select(selected!=null?selectId:null);
         }
         GameItem InstantiateItem(RuntimeItemData data,Transform parent,bool authoring)
         {
@@ -150,7 +150,8 @@ namespace CreaJuego.Web
         public void FrameSelected(){if(Selection.SelectedItem!=null)Frame(ItemBounds(Selection.SelectedItem));}
         void Frame(Bounds bounds){if(buildCamera==null)return;var aspect=Mathf.Max(.1f,buildCamera.pixelWidth/(float)Mathf.Max(1,buildCamera.pixelHeight));buildCamera.transform.position=new Vector3(bounds.center.x,bounds.center.y,-10);buildCamera.orthographicSize=Mathf.Max(2,Mathf.Max(bounds.extents.y,bounds.extents.x/aspect)*1.25f);}
         static Bounds ItemBounds(GameItem item){var collider=item.GetComponent<Collider2D>();if(collider!=null)return collider.bounds;var renderer=ItemVisual.Resolve(item);return renderer!=null?renderer.bounds:new Bounds(item.transform.position,Vector3.one);}
-        public string SelectedId()=>Selection.SelectedItem!=null?Selection.SelectedItem.GetComponent<RuntimeAuthoredItem>()?.instanceId:null;
+        GameItem ResolveAuthoredItem(string instanceId)=>buildRoot==null?null:buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).FirstOrDefault(m=>m.instanceId==instanceId)?.GetComponent<GameItem>();
+        public string SelectedId()=>Selection.SelectedInstanceId;
         public RuntimeItemData SelectedData(){var id=SelectedId();return id==null?null:Project.objects.FirstOrDefault(o=>o.instanceId==id);}
         void Changed(bool notify=true){MarkDirty();if(notify)ProjectChanged?.Invoke();ui?.Refresh();}
         void MarkDirty(){dirty=true;saveAt=Time.unscaledTime+1;ui?.SetSaveState("Guardando…");}

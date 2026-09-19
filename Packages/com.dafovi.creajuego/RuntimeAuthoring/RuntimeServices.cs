@@ -7,10 +7,50 @@ namespace CreaJuego.Web
 {
     public sealed class RuntimeSelectionService
     {
+        Func<string,GameItem> resolver;
         public GameItem SelectedItem{get;private set;}
+        public string SelectedInstanceId{get;private set;}
         public event Action<GameItem> SelectionChanged;
-        public GameItem Select(GameObject hit){var next=hit!=null?hit.GetComponentInParent<GameItem>():null;if(next==SelectedItem)return next;SelectedItem=next;SelectionChanged?.Invoke(next);return next;}
-        public void Clear()=>Select(null);
+        public void Bind(Func<string,GameItem> itemResolver)=>resolver=itemResolver;
+        public GameItem Select(string instanceId)
+        {
+            var next=string.IsNullOrEmpty(instanceId)?null:resolver?.Invoke(instanceId);
+            if(next==null)instanceId=null;
+            if(next==SelectedItem&&instanceId==SelectedInstanceId)return next;
+            SelectedItem=next;SelectedInstanceId=instanceId;SelectionChanged?.Invoke(next);return next;
+        }
+        public GameItem Select(GameObject hit)
+        {
+            var item=hit!=null?hit.GetComponentInParent<GameItem>():null;
+            var marker=item!=null?item.GetComponent<RuntimeAuthoredItem>():null;
+            var instanceId=marker?.instanceId;
+            if(item==SelectedItem&&instanceId==SelectedInstanceId)return item;
+            SelectedItem=item;SelectedInstanceId=instanceId;SelectionChanged?.Invoke(item);return item;
+        }
+        public void Clear()=>Select((string)null);
+    }
+
+    public static class RuntimeAuthoringHitTest
+    {
+        sealed class Candidate{public GameItem item;public int layer,order;public float area,distance;public bool selected;}
+        public static GameItem Pick(Vector2 point,IEnumerable<GameItem> items,string selectedId=null)
+        {
+            var candidates=new List<Candidate>();
+            foreach(var item in items.Where(i=>i!=null&&i.gameObject.activeInHierarchy))
+            {
+                var marker=item.GetComponent<RuntimeAuthoredItem>();if(marker==null)continue;
+                var renderers=item.GetComponentsInChildren<SpriteRenderer>(false);bool visualHit=false;Bounds bounds=default;int layer=int.MinValue,order=int.MinValue;
+                foreach(var renderer in renderers)
+                {
+                    if(!renderer.enabled||renderer.sprite==null||!renderer.bounds.Contains(point))continue;
+                    if(!visualHit){bounds=renderer.bounds;visualHit=true;}else bounds.Encapsulate(renderer.bounds);
+                    int value=SortingLayer.GetLayerValueFromID(renderer.sortingLayerID);if(value>layer||(value==layer&&renderer.sortingOrder>order)){layer=value;order=renderer.sortingOrder;}
+                }
+                if(!visualHit){var collider=item.GetComponentInChildren<Collider2D>();if(collider==null||!collider.bounds.Contains(point))continue;bounds=collider.bounds;layer=-1;order=-1;}
+                candidates.Add(new Candidate{item=item,layer=layer,order=order,area=Mathf.Max(.0001f,bounds.size.x*bounds.size.y),distance=((Vector2)item.transform.position-point).sqrMagnitude,selected=marker.instanceId==selectedId});
+            }
+            return candidates.OrderByDescending(v=>v.layer).ThenByDescending(v=>v.order).ThenBy(v=>v.area).ThenByDescending(v=>v.selected).ThenBy(v=>v.distance).Select(v=>v.item).FirstOrDefault();
+        }
     }
     public sealed class RuntimeHistory
     {

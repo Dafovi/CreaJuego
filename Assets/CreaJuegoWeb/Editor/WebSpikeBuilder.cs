@@ -63,6 +63,13 @@ namespace CreaJuego.Web.Editor
             var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{ScenePath},locationPathName="Builds/WebGLParity1",target=BuildTarget.WebGL,options=BuildOptions.None});
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("WebGL Parity 1 falló: "+report.summary.result);Debug.Log("CREAJUEGO_WEB_PARITY_BUILD_READY "+report.summary.totalSize);
         }
+        [MenuItem("CreaJuego/Web/Generar WebGL Regression Fix")]
+        public static void BuildWebGLRegressionFix()
+        {
+            Prepare();PlayerSettings.WebGL.compressionFormat=WebGLCompressionFormat.Gzip;PlayerSettings.WebGL.decompressionFallback=true;PlayerSettings.WebGL.initialMemorySize=128;PlayerSettings.defaultScreenWidth=1280;PlayerSettings.defaultScreenHeight=720;
+            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{ScenePath},locationPathName="Builds/WebGLRegressionFix",target=BuildTarget.WebGL,options=BuildOptions.None});
+            if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new Exception("WebGL Regression Fix falló: "+report.summary.result);Debug.Log("CREAJUEGO_WEB_REGRESSION_BUILD_READY "+report.summary.totalSize);
+        }
         public static void BuildWebGL()=>BuildWebGLParity1();
     }
 }

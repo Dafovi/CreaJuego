@@ -166,3 +166,6 @@ Web ya ofrece cámara de autoría 2D, selección, movimiento, ancho con handles,
 ## Siguiente sprint recomendado
 
 Piloto técnico en los equipos LabCo: navegador visible, sesión de 60 minutos, teclado/audio, carga fría/caliente e IndexedDB tras reiniciar. En paralelo, añadir export/import `.creajuego`, feedback de carga/error de imágenes y pulido accesible del selector sin ampliar todavía el género ni la lógica visual.
+## Hotfix posterior
+
+Las regresiones de lista, Propiedades, selección y rueda detectadas en revisión humana se corrigieron y validaron en [CreaJuego-WebGL-Regression-Fix.md](CreaJuego-WebGL-Regression-Fix.md).
