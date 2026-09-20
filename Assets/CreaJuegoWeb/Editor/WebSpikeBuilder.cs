@@ -15,11 +15,12 @@ namespace CreaJuego.Web.Editor
         public static void Prepare()
         {
             var pack=EnsureRuntimePack();var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
-            var root=new GameObject("CreaJuego Web",typeof(RuntimeAuthoringController),typeof(RuntimeAuthoringInput),typeof(RuntimeAuthoringUI),typeof(RuntimePerformanceProbe),typeof(RuntimeGameplayCamera));
+            var root=new GameObject("CreaJuego Web",typeof(RuntimeAuthoringController),typeof(RuntimeAuthoringInput),typeof(RuntimeAuthoringUI));
             var controller=root.GetComponent<RuntimeAuthoringController>();controller.ui=root.GetComponent<RuntimeAuthoringUI>();controller.contentPack=pack;controller.definitions=pack.definitions;controller.sceneServicesPrefab=pack.sceneServices;
             controller.buildRoot=new GameObject("Runtime Authoring Root").transform;
             controller.buildCamera=MakeCamera("Cámara de construcción",new Vector3(0,1,-10),new Color(.04f,.06f,.1f));controller.buildCamera.rect=new Rect(230f/1280f,45f/720f,770f/1280f,615f/720f);controller.buildCamera.gameObject.AddComponent<AudioListener>();
             controller.gameCamera=MakeCamera("Cámara de juego",new Vector3(0,0,-10),new Color(.16f,.24f,.36f));controller.gameCamera.enabled=false;var gameListener=controller.gameCamera.gameObject.AddComponent<AudioListener>();gameListener.enabled=false;
+            controller.ui.PrepareEditableLayout();controller.PrepareEditableScene();EditorUtility.SetDirty(controller);EditorUtility.SetDirty(controller.ui);EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene,ScenePath);EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_PARITY_SCENE_READY");
         }
         static RuntimeContentPack EnsureRuntimePack()
@@ -31,19 +32,45 @@ namespace CreaJuego.Web.Editor
             var preparedPack=LoadOrCreate<ContentPackDefinition>(ContentDirectory+"/WebAppearances.asset");preparedPack.id="web-parity-1";preparedPack.categories=categories;preparedPack.appearances=Array.Empty<AppearanceDefinition>();preparedPack.sceneServices=null;EditorUtility.SetDirty(preparedPack);
             var defaults=sources.Select(source=>
             {
-                var category=Array.Find(categories,c=>c.kind==source.kind);var sourceAppearance=source.prefab.GetComponent<GameItem>()?.SelectedAppearance;var option=category?.options.FirstOrDefault(o=>sourceAppearance!=null&&o.Preview==sourceAppearance.sprite)??category?.options.FirstOrDefault();return new RuntimeAppearanceDefault{kind=source.kind,appearanceId=option?.id??""};
+                var category=Array.Find(categories,c=>c.kind==source.kind);var option=PreferredDefault(category,source);return new RuntimeAppearanceDefault{kind=source.kind,appearanceId=option?.id??""};
             }).GroupBy(d=>d.kind).Select(g=>g.First()).ToArray();
             var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;EditorUtility.SetDirty(runtime);return runtime;
         }
+        static AppearanceOption PreferredDefault(AppearanceCategory category,GameItemDefinition source)
+        {
+            if(category==null)return null;
+            if(source.kind==ItemKind.Player){var gino=category.options.FirstOrDefault(o=>o!=null&&(o.id=="platformer-kit-gino"||o.idleClip!=null&&o.idleClip.name=="Gino-Idle"));if(gino!=null)return gino;}
+            if(source.kind==ItemKind.Enemy){var scarecrow=category.Find("platformer-kit-scarecrow");if(scarecrow!=null)return scarecrow;}
+            var sourceAppearance=source.prefab.GetComponent<GameItem>()?.SelectedAppearance;return category.options.FirstOrDefault(o=>sourceAppearance!=null&&o.Preview==sourceAppearance.sprite)??category.options.FirstOrDefault();
+        }
         static GameItemDefinition PrepareDefinition(GameItemDefinition source)
         {
+            var preparedDefault=source.appearancePack?.CategoryFor(source.kind)?.Default;
             var safePrefabPath=$"{ContentDirectory}/Prefabs/{source.id}.prefab";var contents=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source.prefab));
-            try{var item=contents.GetComponent<GameItem>();if(item!=null){item.definition=null;item.appearanceCategory=null;if(source.kind==ItemKind.Player&&item.GetComponent<PlayerFallRecovery>()==null)item.gameObject.AddComponent<PlayerFallRecovery>();}PrefabUtility.SaveAsPrefabAsset(contents,safePrefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
-            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{source.id}.asset");EditorUtility.CopySerialized(source,target);target.runtimeOnly=true;target.appearancePack=null;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(safePrefabPath);EditorUtility.SetDirty(target);return target;
+            try
+            {
+                var item=contents.GetComponent<GameItem>();
+                if(item!=null)
+                {
+                    item.definition=null;item.appearanceCategory=null;item.appearanceId="";
+                    var visual=item.GetComponent<ItemVisual>();
+                    if(preparedDefault!=null&&visual!=null&&visual.renderer!=null)
+                    {
+                        visual.renderer.sprite=preparedDefault.Preview;visual.renderer.color=Color.white;
+                        visual.renderer.transform.localScale=new Vector3(preparedDefault.scale.x,preparedDefault.scale.y,1);
+                        visual.renderer.transform.localPosition=preparedDefault.offset;visual.renderer.flipX=preparedDefault.flipX;
+                        if(visual.geometrySource!=null&&visual.geometrySource!=visual.renderer)visual.geometrySource.enabled=false;
+                    }
+                    if(source.kind==ItemKind.Player&&item.GetComponent<PlayerFallRecovery>()==null)item.gameObject.AddComponent<PlayerFallRecovery>();
+                }
+                PrefabUtility.SaveAsPrefabAsset(contents,safePrefabPath);
+            }
+            finally{PrefabUtility.UnloadPrefabContents(contents);}
+            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{source.id}.asset");EditorUtility.CopySerialized(source,target);target.runtimeOnly=true;target.appearancePack=null;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(safePrefabPath);if(preparedDefault?.Preview!=null)target.icon=preparedDefault.Preview;EditorUtility.SetDirty(target);return target;
         }
         static AppearanceCategory PrepareCategory(AppearanceCategory source,ItemKind kind)
         {
-            if(source==null)return null;var target=LoadOrCreate<AppearanceCategory>($"{ContentDirectory}/Appearances/{kind}.asset");target.kind=kind;target.options.Clear();
+            if(source==null)return null;var target=LoadOrCreate<AppearanceCategory>($"{ContentDirectory}/Appearances/{kind}.asset");target.kind=kind;target.defaultAppearanceId=source.defaultAppearanceId;target.options.Clear();
             foreach(var original in source.options.Where(o=>o!=null&&o.Preview!=null))
             {
                 var data=(IAppearanceData)original;target.options.Add(new AppearanceOption{id=original.id,displayName=original.displayName,sprite=data.sprite,controller=data.controller,animationProfile=data.animationProfile,idleClip=data.idleClip,moveClip=data.moveClip,jumpClip=data.jumpClip,attackClip=data.attackClip,scale=data.scale,offset=data.offset,flipX=data.flipX,preserveAspectWithoutPrefab=data.preserveAspect});

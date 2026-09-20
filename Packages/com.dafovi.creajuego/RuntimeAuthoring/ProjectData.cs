@@ -24,7 +24,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=2;
+        public int schemaVersion=3;
         public string projectName="Mi juego", teamName="Mi equipo";
         public bool alignAutomatically=true;
         public RuntimeLevelSize levelSize=RuntimeLevelSize.Medium;
@@ -43,6 +43,7 @@ namespace CreaJuego.Web
         public string message="¡Llegaste a la meta!";
         public Color tint=Color.white;
         public string appearanceId, customImageBase64;
+        public bool appearanceChosen;
         public RuntimeItemData Clone()=>JsonUtility.FromJson<RuntimeItemData>(JsonUtility.ToJson(this));
         public static RuntimeItemData From(GameItem item,string definitionId=null)
         {
@@ -78,11 +79,13 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>2)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
-            if(!json.Contains("\"schemaVersion\"")){data.schemaVersion=2;data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
+            if(data.schemaVersion>3)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
+            if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
             if(data.bounds==null)data.bounds=RuntimeLevelBounds.For(data.levelSize);
             if(data.objects==null)data.objects=new List<RuntimeItemData>();
-            foreach(var item in data.objects){if(item.platformWidth<=0)item.platformWidth=3;if(item.scale==Vector3.zero)item.scale=Vector3.one;}
+            foreach(var item in data.objects){if(item.platformWidth<=0)item.platformWidth=3;if(item.scale==Vector3.zero)item.scale=Vector3.one;if(migrateFormerDefaults&&(item.definitionId=="jugador"&&item.appearanceId=="tiny-dungeon-84"||item.definitionId=="enemigo"&&item.appearanceId=="tiny-dungeon-120"))item.appearanceChosen=false;}
+            data.schemaVersion=3;
             return data;
         }
     }

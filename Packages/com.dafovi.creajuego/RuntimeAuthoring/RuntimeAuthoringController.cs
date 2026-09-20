@@ -15,6 +15,7 @@ namespace CreaJuego.Web
         public Camera buildCamera,gameCamera;
         public Transform buildRoot;
         public RuntimeAuthoringUI ui;
+        [SerializeField] CreaJuegoProjectData editableSceneProject;
         public CreaJuegoProjectData Project{get;private set;}=new CreaJuegoProjectData();
         public AuthoringMode Mode{get;private set;}=AuthoringMode.Build;
         public RuntimeSelectionService Selection{get;}=new RuntimeSelectionService();
@@ -26,11 +27,35 @@ namespace CreaJuego.Web
         readonly List<UnityEngine.Object> imageAssets=new List<UnityEngine.Object>();
         Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage;bool dirty;float saveAt;
 
-        void Awake(){storage=new FileProjectStorage();if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);NewProject(false);}
+        void Awake()
+        {
+            storage=new FileProjectStorage();if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
+            if(editableSceneProject!=null){Project=CloneProject(editableSceneProject);EnsureDefaultAppearances(Project);History.Reset(Project);}else NewProject(false);
+        }
         void Start(){if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
         void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveNow();}
         void OnDestroy(){ReleaseImages();}
         public GameItemDefinition Find(string id)=>contentPack!=null?contentPack.Find(id):definitions.FirstOrDefault(d=>d!=null&&d.id==id);
+        public bool HasEditableScene=>editableSceneProject!=null&&buildRoot!=null&&buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length>0;
+        public void PrepareEditableScene()
+        {
+            if(buildRoot==null)buildRoot=new GameObject("Runtime Authoring Root").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
+            NewProject(false);editableSceneProject=ReadEditableSceneProject()??CloneProject(Project);
+        }
+        public CreaJuegoProjectData ReadEditableSceneProject()
+        {
+            if(editableSceneProject==null||buildRoot==null)return null;var markers=buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true);if(markers.Length==0)return null;
+            var data=CloneProject(editableSceneProject);data.objects.Clear();
+            foreach(var marker in markers)
+            {
+                var item=marker.GetComponent<GameItem>();if(item==null||item.definition==null)continue;var authored=RuntimeItemData.From(item,item.definition.id);authored.instanceId=marker.instanceId;
+                if(item.definition.kind==ItemKind.Platform){var box=item.GetComponent<BoxCollider2D>();if(box!=null)authored.platformWidth=box.size.x;}
+                data.objects.Add(authored);
+            }
+            return data.objects.Count==0?null:data;
+        }
+        public bool CaptureEditableScene(bool allowRemoval=false){var data=ReadEditableSceneProject();if(data==null)return false;if(!allowRemoval&&editableSceneProject!=null&&data.objects.Count<editableSceneProject.objects.Count)return false;editableSceneProject=data;return true;}
+        static CreaJuegoProjectData CloneProject(CreaJuegoProjectData value)=>ProjectSerializer.FromJson(ProjectSerializer.ToJson(value));
 
         public void NewProject(bool notify=true)
         {
@@ -61,13 +86,13 @@ namespace CreaJuego.Web
         void Seed(string id,Vector3 position,float width=0)
         {
             var definition=Find(id);if(definition==null||definition.prefab==null)return;var item=definition.prefab.GetComponent<GameItem>();if(item==null)return;
-            var data=RuntimeItemData.From(item,id);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);if(width>0)data.platformWidth=RuntimeSnap.Width(width,Project.alignAutomatically);Project.objects.Add(data);
+            var data=RuntimeItemData.From(item,id);EnsureDefaultAppearance(data,definition);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);if(width>0)data.platformWidth=RuntimeSnap.Width(width,Project.alignAutomatically);Project.objects.Add(data);
         }
         public GameItem Create(string id,Vector3 position)
         {
             if(Mode!=AuthoringMode.Build)return null;var definition=Find(id);if(definition==null||definition.prefab==null)return null;
             if(!definition.allowMultiple&&Project.objects.Any(o=>o.definitionId==id)){ui?.SetStatus("Este juego usa un solo "+definition.displayName+".");return null;}
-            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
+            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);EnsureDefaultAppearance(data,definition);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
         }
         public void DeleteSelected(){var id=SelectedId();if(id==null)return;Project.objects.RemoveAll(o=>o.instanceId==id);History.Record(Project);Rebuild();Changed();}
         public void DuplicateSelected(){var source=SelectedData();if(source==null)return;var definition=Find(source.definitionId);if(definition==null||!definition.allowMultiple)return;var copy=source.Clone();copy.instanceId=Guid.NewGuid().ToString("N");copy.position=RuntimeSnap.Position(copy.position+new Vector3(1,.5f),Project.alignAutomatically);Project.objects.Add(copy);History.Record(Project);Rebuild(copy.instanceId);Changed();}
@@ -85,7 +110,7 @@ namespace CreaJuego.Web
         public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
         public void SetAppearance(string id)
         {
-            var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;ApplySelected(data);CommitEdit();
+            var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
         public void SetSnap(bool value){if(Project.alignAutomatically==value)return;Project.alignAutomatically=value;CommitEdit();}
         public void SetLevelSize(RuntimeLevelSize value){if(Project.levelSize==value)return;Project.levelSize=value;Project.bounds=RuntimeLevelBounds.For(value);CommitEdit();}
@@ -94,7 +119,7 @@ namespace CreaJuego.Web
         public void Undo(){var value=History.Undo();if(value!=null){Project=value;Rebuild();Changed();}}
         public void Redo(){var value=History.Redo();if(value!=null){Project=value;Rebuild();Changed();}}
         public void SaveNow(){storage.Save(ProjectSerializer.ToJson(Project));dirty=false;ui?.SetSaveState("Guardado ✓");}
-        public void LoadLast(){if(!storage.Exists){ui?.SetStatus("Todavía no hay un proyecto guardado.");return;}ExitPlay(false);Project=ProjectSerializer.FromJson(storage.Load());History.Reset(Project);Rebuild();Changed(false);ui?.SetStatus("Proyecto abierto.");}
+        public void LoadLast(){if(!storage.Exists){ui?.SetStatus("Todavía no hay un proyecto guardado.");return;}ExitPlay(false);Project=ProjectSerializer.FromJson(storage.Load());EnsureDefaultAppearances(Project);History.Reset(Project);Rebuild();Changed(false);ui?.SetStatus("Proyecto abierto.");}
 
         public string EnterPlay()
         {
@@ -120,7 +145,7 @@ namespace CreaJuego.Web
         public void ReceiveImageError(string message)=>ui?.SetStatus(string.IsNullOrWhiteSpace(message)?RuntimeImageImport.TooLargeMessage:message);
         public void ReceiveImageDataUrl(string value)
         {
-            var data=SelectedData();if(data==null)return;if(!RuntimeImageImport.ValidateDataUrl(value,out var error)){ui?.SetStatus(error);return;}data.customImageBase64=value;data.appearanceId="";ApplySelected(data);CommitEdit();
+            var data=SelectedData();if(data==null)return;if(!RuntimeImageImport.ValidateDataUrl(value,out var error)){ui?.SetStatus(error);return;}data.customImageBase64=value;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
         public void ToggleMode(){if(Mode==AuthoringMode.Build)EnterPlay();else ExitPlay();}
 
@@ -139,9 +164,21 @@ namespace CreaJuego.Web
         }
         void ApplyData(GameItem item,RuntimeItemData data)
         {
-            data.Apply(item);item.appearanceCategory=contentPack!=null?contentPack.CategoryFor(item.definition.kind):null;if(string.IsNullOrEmpty(item.appearanceId)&&contentPack!=null)item.appearanceId=contentPack.DefaultFor(item.definition.kind);
+            EnsureDefaultAppearance(data,item.definition);data.Apply(item);item.appearanceCategory=contentPack!=null?contentPack.CategoryFor(item.definition.kind):null;
             item.customSprite=null;if(!string.IsNullOrEmpty(data.customImageBase64)&&RuntimeImageImport.TryDecodeDataUrl(data.customImageBase64,out var sprite,out var texture,out _)){imageAssets.Add(sprite);imageAssets.Add(texture);item.customSprite=sprite;}
             var visual=item.GetComponent<ItemVisual>();if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
+        }
+        void EnsureDefaultAppearances(CreaJuegoProjectData project)
+        {
+            if(project?.objects==null)return;foreach(var data in project.objects)EnsureDefaultAppearance(data,Find(data.definitionId));
+        }
+        void EnsureDefaultAppearance(RuntimeItemData data,GameItemDefinition definition)
+        {
+            if(data==null||definition==null||data.appearanceChosen||!string.IsNullOrEmpty(data.customImageBase64)||contentPack==null)return;
+            bool missing=string.IsNullOrEmpty(data.appearanceId);
+            bool formerPlayerDefault=definition.kind==ItemKind.Player&&data.appearanceId=="tiny-dungeon-84";
+            bool formerEnemyDefault=definition.kind==ItemKind.Enemy&&data.appearanceId=="tiny-dungeon-120";
+            if(missing||formerPlayerDefault||formerEnemyDefault)data.appearanceId=contentPack.DefaultFor(definition.kind);
         }
         public void FrameAll()
         {
@@ -150,7 +187,7 @@ namespace CreaJuego.Web
         public void FrameSelected(){if(Selection.SelectedItem!=null)Frame(ItemBounds(Selection.SelectedItem));}
         void Frame(Bounds bounds){if(buildCamera==null)return;var aspect=Mathf.Max(.1f,buildCamera.pixelWidth/(float)Mathf.Max(1,buildCamera.pixelHeight));buildCamera.transform.position=new Vector3(bounds.center.x,bounds.center.y,-10);buildCamera.orthographicSize=Mathf.Max(2,Mathf.Max(bounds.extents.y,bounds.extents.x/aspect)*1.25f);}
         static Bounds ItemBounds(GameItem item){var collider=item.GetComponent<Collider2D>();if(collider!=null)return collider.bounds;var renderer=ItemVisual.Resolve(item);return renderer!=null?renderer.bounds:new Bounds(item.transform.position,Vector3.one);}
-        GameItem ResolveAuthoredItem(string instanceId)=>buildRoot==null?null:buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).FirstOrDefault(m=>m.instanceId==instanceId)?.GetComponent<GameItem>();
+        GameItem ResolveAuthoredItem(string instanceId)=>buildRoot==null?null:buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(false).FirstOrDefault(m=>m.instanceId==instanceId)?.GetComponent<GameItem>();
         public string SelectedId()=>Selection.SelectedInstanceId;
         public RuntimeItemData SelectedData(){var id=SelectedId();return id==null?null:Project.objects.FirstOrDefault(o=>o.instanceId==id);}
         void Changed(bool notify=true){MarkDirty();if(notify)ProjectChanged?.Invoke();ui?.Refresh();}
@@ -159,12 +196,6 @@ namespace CreaJuego.Web
         static void DestroySafe(UnityEngine.Object value){if(Application.isPlaying)Destroy(value);else DestroyImmediate(value);}
         void OnApplicationQuit(){if(dirty)SaveNow();}
     }
-    public sealed class RuntimeAuthoredItem:MonoBehaviour{public string instanceId;}
+
     public sealed class RuntimeLevelBoundary:MonoBehaviour{}
-    public sealed class RuntimePerformanceProbe:MonoBehaviour
-    {
-        RuntimeAuthoringController controller;float started;int frames;
-        void Awake(){controller=GetComponent<RuntimeAuthoringController>();started=Time.realtimeSinceStartup;}
-        void Update(){frames++;var elapsed=Time.realtimeSinceStartup-started;if(elapsed<5)return;Debug.Log($"CREAJUEGO_WEB_PERF fps={frames/Mathf.Max(elapsed,.001f):0.0} memoryBytes={UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong()} objects={(controller!=null?controller.Project.objects.Count:0)} mode={(controller!=null?controller.Mode.ToString():"Unknown")}");frames=0;started=Time.realtimeSinceStartup;}
-    }
 }

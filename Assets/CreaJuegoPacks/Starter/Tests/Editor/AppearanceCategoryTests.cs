@@ -98,15 +98,33 @@ namespace CreaJuego.Starter.Tests
                 Assert.That(view.Query<HelpBox>().ToList().Any(h=>h.text.Contains("ya no está")),Is.True);
             }
         }
-        [Test] public void NewItemsUseFirstValidOptionAndDuplicateKeepsChoice()
+        [Test] public void NewItemsUseConfiguredDefaultsAndDuplicateKeepsChoice()
         {
-            var definition=ItemService.Catalog().First(d=>d.kind==ItemKind.Enemy);
-            var list=definition.appearancePack.CategoryFor(ItemKind.Enemy);
-            var item=ItemService.Create(definition,Vector3.zero);
-            Assert.That(item.appearanceCategory,Is.EqualTo(list));
-            Assert.That(item.appearanceId,Is.EqualTo(list.options[0].id));
-            var copy=ItemService.Duplicate(item);
-            Assert.That(copy.appearanceId,Is.EqualTo(item.appearanceId));
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            var playerDefinition=ItemService.Catalog().First(d=>d.kind==ItemKind.Player);
+            var enemyDefinition=ItemService.Catalog().First(d=>d.kind==ItemKind.Enemy);
+            var playerList=playerDefinition.appearancePack.CategoryFor(ItemKind.Player);
+            var enemyList=enemyDefinition.appearancePack.CategoryFor(ItemKind.Enemy);
+            var player=ItemService.Create(playerDefinition,Vector3.zero);
+            var enemy=ItemService.Create(enemyDefinition,Vector3.right*2);
+            Assert.That(player.appearanceCategory,Is.EqualTo(playerList));
+            Assert.That(player.appearanceId,Is.EqualTo(playerList.defaultAppearanceId));
+            Assert.That(player.SelectedAppearance.displayName,Is.EqualTo("Gino"));
+            Assert.That(enemy.appearanceCategory,Is.EqualTo(enemyList));
+            Assert.That(enemy.appearanceId,Is.EqualTo(enemyList.defaultAppearanceId));
+            Assert.That(enemy.SelectedAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));
+            var copy=ItemService.Duplicate(enemy);
+            Assert.That(copy.appearanceId,Is.EqualTo(enemy.appearanceId));
+        }
+
+        [Test] public void EmptyLegacySelectionFallsBackToConfiguredDefaultButMissingStableIdDoesNot()
+        {
+            var list=Player().definition.appearancePack.CategoryFor(ItemKind.Player);
+            var go=new GameObject("Selección antigua");var item=go.AddComponent<GameItem>();item.appearanceCategory=list;
+            Assert.That(item.SelectedAppearance,Is.EqualTo(list.Default));
+            item.appearanceId="id-eliminado";
+            Assert.That(item.SelectedAppearance,Is.Null);
+            Object.DestroyImmediate(go);
         }
         [Test] public void MovingPlatformIsPublishedWithThreePresetAppearances()
         {

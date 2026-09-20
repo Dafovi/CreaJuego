@@ -68,8 +68,12 @@ namespace CreaJuego
     public sealed class AppearanceCategory : ScriptableObject
     {
         [InspectorName("Categoría")] public ItemKind kind;
+        [InspectorName("Apariencia predeterminada")]
+        [Tooltip("Identificador estable de la opción que se usará al crear un elemento nuevo.")]
+        public string defaultAppearanceId;
         [InspectorName("Opciones")] public List<AppearanceOption> options=new List<AppearanceOption>();
         public AppearanceOption Find(string id)=>options.Find(a=>a!=null && a.id==id);
+        public AppearanceOption Default=>Find(defaultAppearanceId) ?? options.Find(a=>a!=null && a.Preview!=null);
         // Stable keys keep scene selections intact when the list is reordered or renamed.
         public void EnsureIds()
         {

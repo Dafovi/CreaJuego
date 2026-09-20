@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Enemigos
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 6
+  defaultAppearanceId: platformer-kit-scarecrow
   options:
   - id: tiny-dungeon-120
     displayName: "Murci\xE9lago"

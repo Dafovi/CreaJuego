@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Player
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 0
+  defaultAppearanceId: 5b84b5bdbf244cecb12b976bbf0aa6c7
   options:
   - id: tiny-dungeon-84
     displayName: Brujita
@@ -53,6 +54,6 @@ MonoBehaviour:
     jumpClip: {fileID: 7400000, guid: 5cd4b86d3201ce34e9f656c044f6d128, type: 2}
     attackClip: {fileID: 7400000, guid: 1b210e246753bfc449828d8b64f4d75b, type: 2}
     scale: {x: 0.25, y: 0.25}
-    offset: {x: -0.1796875, y: -0.453125}
+    offset: {x: -0.18, y: -0.45}
     flipX: 0
     preserveAspectWithoutPrefab: 1

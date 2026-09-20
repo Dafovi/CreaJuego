@@ -40,7 +40,7 @@ namespace CreaJuego.Editor
             EditorSceneManager.MarkSceneDirty(go.scene);
             Selection.activeGameObject = go;
             var category=definition.appearancePack?.CategoryFor(definition.kind);
-            var option=category?.options.FirstOrDefault(o=>o!=null && o.Preview!=null);
+            var option=category?.Default;
             if(option!=null) ItemAppearance.ChooseOption(new[]{item},category,option.id);
             if(definition.kind==ItemKind.Player) {
                 var recovery=go.GetComponent<PlayerFallRecovery>();

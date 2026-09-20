@@ -30,6 +30,10 @@ namespace CreaJuego
         {
             if(item==null) item=GetComponent<GameItem>();
             if(item==null || renderer==null) return;
+            // Runtime authoring prefabs may retain the source kit renderer as a
+            // geometry reference. Keep it for sizing, but show only CreaJuego's visual.
+            renderer.enabled=true;
+            if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             var appearance=item.SelectedAppearance;
             if(item.customSprite!=null) renderer.sprite=item.customSprite;
             else if(appearance!=null) renderer.sprite=appearance.sprite;
@@ -68,6 +72,8 @@ namespace CreaJuego
         }
         void LateUpdate()
         {
+            if(renderer!=null) renderer.enabled=true;
+            if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             if(item==null || renderer==null || item.definition==null) return;
             var body=GetComponent<Rigidbody2D>();
             float transformSpeed=(transform.position.x-previous.x)/Mathf.Max(Time.deltaTime,.0001f);

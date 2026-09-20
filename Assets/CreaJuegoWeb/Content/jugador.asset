@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Personaje
   description: Este es el personaje que controla quien juega.
   learningHint: "Mu\xE9vete con A/D o las flechas, salta con Espacio y golpea con X."
-  icon: {fileID: 3915191717485469913, guid: 6a5908a600b73024fb36f947b1d3c69b, type: 3}
+  icon: {fileID: 21300718, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 5341704120442342252, guid: d54c9d38e573c484b893d35ff6af2b5e, type: 3}
   kind: 0

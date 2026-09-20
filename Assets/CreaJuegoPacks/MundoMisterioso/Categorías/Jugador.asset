@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Jugador
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 0
+  defaultAppearanceId: 5b84b5bdbf244cecb12b976bbf0aa6c7
   options:
   - id: tiny-dungeon-84
     displayName: Brujita

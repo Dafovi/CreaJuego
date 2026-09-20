@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Retos
   description: "Se mueve por un tramo y hace da\xF1o al tocarlo."
   learningHint: Va y vuelve por un tramo. Puedes evitarlo o golpearlo con X.
-  icon: {fileID: -1092110371768519499, guid: 04ce8474e899c4247b7082ff21a6db2e, type: 3}
+  icon: {fileID: 21300758, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 1193659942177817768, guid: c6b9df37219b6cd418ea3185980607f5, type: 3}
   kind: 6

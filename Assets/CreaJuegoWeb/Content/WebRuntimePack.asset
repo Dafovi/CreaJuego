@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90dcd2bbb6790774da9369faf4bdbe30, type: 3}
+  m_Script: {fileID: 11500000, guid: c33292d63da35ca46a3e040d2fb6fbbc, type: 3}
   m_Name: WebRuntimePack
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeContentPack
   id: web-parity-1
@@ -24,7 +24,7 @@ MonoBehaviour:
   preparedAppearances: {fileID: 11400000, guid: 9c4a3b595052fb548b261541e19b8af8, type: 2}
   defaults:
   - kind: 0
-    appearanceId: tiny-dungeon-84
+    appearanceId: 5b84b5bdbf244cecb12b976bbf0aa6c7
   - kind: 1
     appearanceId: tiny-dungeon-36
   - kind: 2
@@ -34,7 +34,7 @@ MonoBehaviour:
   - kind: 4
     appearanceId: tiny-dungeon-21
   - kind: 6
-    appearanceId: tiny-dungeon-120
+    appearanceId: platformer-kit-scarecrow
   - kind: 7
     appearanceId: tiny-dungeon-2072
   sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}

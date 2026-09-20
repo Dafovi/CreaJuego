@@ -18,6 +18,7 @@ namespace CreaJuego.Starter.Editor
             var category=Category(definition);
             Configure(category,definition,"platformer-kit-gino","Gino",GinoPrefabPath,"Gino",
                 "Gino-Idle","Gino-Run","Gino-Jump-Loop","Gino-Attack1");
+            category.defaultAppearanceId=category.options.First(o=>o.prefab==AssetDatabase.LoadAssetAtPath<GameObject>(GinoPrefabPath)).id;
             Finish(category,"Gino está disponible en CreaJuego > Jugador > Apariencia. Playground conserva el control y la física.");
         }
 
@@ -36,6 +37,7 @@ namespace CreaJuego.Starter.Editor
                 "Naga-Idle","Naga-Walk",null,"Naga-Attack");
             Configure(enemies,enemy,"platformer-kit-scarecrow","Espantapájaros",EnemyPrefabRoot+"Scarecrow.prefab","Scarecrow",
                 "Scarecrow-Idle","Scarecrow-Walk","Scarecrow-Jump-Loop","Scarecrow-Attack");
+            enemies.defaultAppearanceId=enemies.Find("platformer-kit-scarecrow").id;
 
             var hazard=Definition(ItemKind.Hazard);
             var hazards=Category(hazard);
