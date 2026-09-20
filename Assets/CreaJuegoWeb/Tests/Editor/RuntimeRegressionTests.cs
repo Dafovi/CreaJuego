@@ -43,6 +43,11 @@ namespace CreaJuego.Web.Tests
             Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)),Is.EqualTo(0));
             Assert.That(Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Length,Is.EqualTo(1));
             Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(8));
+            var hierarchy=Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Select(transform=>transform.name).ToArray();
+            Assert.That(hierarchy,Does.Contain("Cabecera"));Assert.That(hierarchy,Does.Contain("Panel de elementos"));Assert.That(hierarchy,Does.Contain("Panel de propiedades"));Assert.That(hierarchy,Does.Contain("Herramientas"));Assert.That(hierarchy,Does.Contain("Estado para jugar"));
+            Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.EqualTo(controller.Project.objects.Count));
+            Assert.That(ui.FlowText,Does.Contain("Seleccionar"));Assert.That(ui.FlowText,Does.Contain("Personalizar"));Assert.That(ui.FlowText,Does.Contain("Jugar"));Assert.That(ui.ReadinessText,Does.Contain("listo"));
+            Assert.That(controller.buildCamera.rect.x,Is.EqualTo(260f/1280f).Within(.001f));Assert.That(controller.buildCamera.rect.y,Is.EqualTo(82f/720f).Within(.001f));Assert.That(controller.buildCamera.rect.width,Is.EqualTo(740f/1280f).Within(.001f));Assert.That(controller.buildCamera.rect.height,Is.EqualTo(564f/720f).Within(.001f));
         }
 
         [UnityTest]
