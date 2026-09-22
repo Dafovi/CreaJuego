@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2619949810809285715
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7604186872535351703}
+  - component: {fileID: 91525743327721387}
+  - component: {fileID: 1463882985498305653}
+  m_Layer: 0
+  m_Name: fondo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7604186872535351703
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2619949810809285715}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &91525743327721387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2619949810809285715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4bad0441404a74da8770d8139d61ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItem
+  definition: {fileID: 0}
+  appearance: {fileID: 0}
+  appearanceCategory: {fileID: 0}
+  appearanceId: 
+  customSprite: {fileID: 0}
+  visualScale: 1
+  stretchVisualToSurface: 0
+  speed: 2
+  jump: 10
+  canJump: 1
+  canAttack: 1
+  attackDamage: 1
+  distance: 3
+  health: 3
+  damage: 1
+  points: 1
+  disappear: 1
+  message: "\xA1Llegaste a la meta!"
+  tint: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1463882985498305653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2619949810809285715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f6ba35db9563614dbb93935ba688404, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeCanvasBackground

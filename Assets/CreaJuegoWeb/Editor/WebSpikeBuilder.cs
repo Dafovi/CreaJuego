@@ -26,14 +26,14 @@ namespace CreaJuego.Web.Editor
         static RuntimeContentPack EnsureRuntimePack()
         {
             EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");
-            var kinds=new[]{ItemKind.Player,ItemKind.Platform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Decoration};
+            var kinds=new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Decoration,ItemKind.Background};
             var sources=AssetDatabase.FindAssets("t:GameItemDefinition",new[]{"Assets/CreaJuegoPacks/Starter/Content"}).Select(g=>AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(d=>d!=null&&kinds.Contains(d.kind)&&d.id!="piso").OrderBy(d=>d.order).ToArray();
-            var preparedDefinitions=sources.Select(PrepareDefinition).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();
+            var preparedDefinitions=sources.Select(PrepareDefinition).Concat(new[]{PrepareBackgroundDefinition(EnsureBackgroundSprite())}).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();
             var preparedPack=LoadOrCreate<ContentPackDefinition>(ContentDirectory+"/WebAppearances.asset");preparedPack.id="web-parity-1";preparedPack.categories=categories;preparedPack.appearances=Array.Empty<AppearanceDefinition>();preparedPack.sceneServices=null;EditorUtility.SetDirty(preparedPack);
             var defaults=sources.Select(source=>
             {
                 var category=Array.Find(categories,c=>c.kind==source.kind);var option=PreferredDefault(category,source);return new RuntimeAppearanceDefault{kind=source.kind,appearanceId=option?.id??""};
-            }).GroupBy(d=>d.kind).Select(g=>g.First()).ToArray();
+            }).Concat(new[]{new RuntimeAppearanceDefault{kind=ItemKind.Background,appearanceId="web-cielo-azul"}}).GroupBy(d=>d.kind).Select(g=>g.First()).ToArray();
             var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;EditorUtility.SetDirty(runtime);return runtime;
         }
         static AppearanceOption PreferredDefault(AppearanceCategory category,GameItemDefinition source)
@@ -70,12 +70,30 @@ namespace CreaJuego.Web.Editor
         }
         static AppearanceCategory PrepareCategory(AppearanceCategory source,ItemKind kind)
         {
-            if(source==null)return null;var target=LoadOrCreate<AppearanceCategory>($"{ContentDirectory}/Appearances/{kind}.asset");target.kind=kind;target.defaultAppearanceId=source.defaultAppearanceId;target.options.Clear();
-            foreach(var original in source.options.Where(o=>o!=null&&o.Preview!=null))
+            if(source==null&&kind!=ItemKind.Background)return null;var target=LoadOrCreate<AppearanceCategory>($"{ContentDirectory}/Appearances/{kind}.asset");target.kind=kind;target.defaultAppearanceId=source!=null?source.defaultAppearanceId:"";target.options.Clear();
+            foreach(var original in (source!=null?source.options:Enumerable.Empty<AppearanceOption>()).Where(o=>o!=null&&o.Preview!=null))
             {
                 var data=(IAppearanceData)original;target.options.Add(new AppearanceOption{id=original.id,displayName=original.displayName,sprite=data.sprite,controller=data.controller,animationProfile=data.animationProfile,idleClip=data.idleClip,moveClip=data.moveClip,jumpClip=data.jumpClip,attackClip=data.attackClip,scale=data.scale,offset=data.offset,flipX=data.flipX,preserveAspectWithoutPrefab=data.preserveAspect});
             }
+            if(kind==ItemKind.Background&&target.options.Count==0){var sprite=EnsureBackgroundSprite();target.options.Add(new AppearanceOption{id="web-cielo-azul",displayName="Cielo azul",sprite=sprite,scale=Vector2.one,preserveAspectWithoutPrefab=true});target.defaultAppearanceId="web-cielo-azul";}
             target.EnsureIds();EditorUtility.SetDirty(target);return target;
+        }
+        static GameItemDefinition PrepareBackgroundDefinition(Sprite sprite)
+        {
+            var prefabPath=ContentDirectory+"/Prefabs/fondo.prefab";var go=new GameObject("Fondo",typeof(GameItem),typeof(RuntimeCanvasBackground));
+            try
+            {
+                var item=go.GetComponent<GameItem>();item.visualScale=1;
+                PrefabUtility.SaveAsPrefabAsset(go,prefabPath);
+            }
+            finally{UnityEngine.Object.DestroyImmediate(go);}
+            var definition=LoadOrCreate<GameItemDefinition>(ContentDirectory+"/fondo.asset");definition.id="fondo";definition.displayName="Fondo";definition.category="Escenario";definition.description="La imagen que aparece detrás del nivel.";definition.learningHint="Sólo puede haber un fondo. Puedes elegir una imagen preparada o cargar la tuya.";definition.icon=sprite;definition.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);definition.kind=ItemKind.Background;definition.order=90;definition.runtimeOnly=true;definition.availableInWorkshop=true;definition.extraInWorkshop=false;definition.allowMultiple=false;definition.properties=Array.Empty<EducationalProperty>();EditorUtility.SetDirty(definition);return definition;
+        }
+        static Sprite EnsureBackgroundSprite()
+        {
+            const string path=ContentDirectory+"/DefaultBackground.png";var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null)return sprite;
+            var texture=new Texture2D(64,64,TextureFormat.RGBA32,false);for(int y=0;y<64;y++){float t=y/63f;var color=Color.Lerp(new Color(.09f,.16f,.3f),new Color(.2f,.52f,.78f),t);for(int x=0;x<64;x++)texture.SetPixel(x,y,color);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);
+            var importer=(TextureImporter)AssetImporter.GetAtPath(path);importer.textureType=TextureImporterType.Sprite;importer.spriteImportMode=SpriteImportMode.Single;importer.spritePixelsPerUnit=64;importer.filterMode=FilterMode.Bilinear;importer.wrapMode=TextureWrapMode.Clamp;importer.mipmapEnabled=false;importer.SaveAndReimport();return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
         static T LoadOrCreate<T>(string path) where T:ScriptableObject
         {

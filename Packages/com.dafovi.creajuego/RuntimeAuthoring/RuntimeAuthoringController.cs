@@ -60,7 +60,7 @@ namespace CreaJuego.Web
         public void NewProject(bool notify=true)
         {
             ExitPlay(false);Project=new CreaJuegoProjectData();Project.bounds=RuntimeLevelBounds.For(Project.levelSize);
-            Seed("plataforma",new Vector3(-5,-2),6);Seed("plataforma",new Vector3(2,-2),6);Seed("jugador",new Vector3(-5,-1.25f));
+            Seed("fondo",Vector3.zero);Seed("plataforma",new Vector3(-5,-2),6);Seed("plataforma",new Vector3(2,-2),6);Seed("movil",new Vector3(4,.5f));Seed("jugador",new Vector3(-5,-1.25f));
             Seed("premio",new Vector3(-2,-1.15f));Seed("peligro",new Vector3(1,-1.4f));Seed("enemigo",new Vector3(4,-1.15f));Seed("meta",new Vector3(7,-1.15f));Seed("decoracion",new Vector3(-8,1.5f));
             History.Reset(Project);Rebuild();if(notify)Changed(false);
         }
@@ -92,7 +92,7 @@ namespace CreaJuego.Web
         {
             if(Mode!=AuthoringMode.Build)return null;var definition=Find(id);if(definition==null||definition.prefab==null)return null;
             if(!definition.allowMultiple&&Project.objects.Any(o=>o.definitionId==id)){ui?.SetStatus("Este juego usa un solo "+definition.displayName+".");return null;}
-            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);EnsureDefaultAppearance(data,definition);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
+            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);EnsureDefaultAppearance(data,definition);data.position=definition.kind==ItemKind.Background?Vector3.zero:RuntimeSnap.Position(position,Project.alignAutomatically);Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
         }
         public void DeleteSelected(){var id=SelectedId();if(id==null)return;Project.objects.RemoveAll(o=>o.instanceId==id);History.Record(Project);Rebuild();Changed();}
         public void DuplicateSelected(){var source=SelectedData();if(source==null)return;var definition=Find(source.definitionId);if(definition==null||!definition.allowMultiple)return;var copy=source.Clone();copy.instanceId=Guid.NewGuid().ToString("N");copy.position=RuntimeSnap.Position(copy.position+new Vector3(1,.5f),Project.alignAutomatically);Project.objects.Add(copy);History.Record(Project);Rebuild(copy.instanceId);Changed();}
@@ -104,7 +104,7 @@ namespace CreaJuego.Web
         }
         public void SetFloat(string path,float value,bool record=true)
         {
-            var data=SelectedData();if(data==null)return;switch(path){case "speed":data.speed=value;break;case "jump":data.jump=value;break;case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;case "width":ResizeSelected(value,data.position.x,record);return;}
+            var data=SelectedData();if(data==null)return;switch(path){case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;case "width":ResizeSelected(value,data.position.x,record);return;}
             ApplySelected(data);if(record)CommitEdit();
         }
         public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
@@ -113,9 +113,9 @@ namespace CreaJuego.Web
             var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
         public void SetSnap(bool value){if(Project.alignAutomatically==value)return;Project.alignAutomatically=value;CommitEdit();}
-        public void SetLevelSize(RuntimeLevelSize value){if(Project.levelSize==value)return;Project.levelSize=value;Project.bounds=RuntimeLevelBounds.For(value);CommitEdit();}
+        public void SetLevelSize(RuntimeLevelSize value){if(Project.levelSize==value)return;Project.levelSize=value;Project.bounds=RuntimeLevelBounds.For(value);Rebuild(SelectedId());CommitEdit();}
         public void CommitEdit(){History.Record(Project);Changed();}
-        void ApplySelected(RuntimeItemData data){var item=Selection.SelectedItem;if(item!=null&&SelectedId()==data.instanceId)ApplyData(item,data);}
+        void ApplySelected(RuntimeItemData data){var item=Selection.SelectedItem;if(item!=null&&SelectedId()==data.instanceId){ApplyData(item,data);item.GetComponent<RuntimeCanvasBackground>()?.Configure(buildCamera);}}
         public void Undo(){var value=History.Undo();if(value!=null){Project=value;Rebuild();Changed();}}
         public void Redo(){var value=History.Redo();if(value!=null){Project=value;Rebuild();Changed();}}
         public void SaveNow(){storage.Save(ProjectSerializer.ToJson(Project));dirty=false;ui?.SetSaveState("Guardado ✓");}
@@ -153,20 +153,21 @@ namespace CreaJuego.Web
         {
             if(buildRoot==null)return;Selection.Bind(ResolveAuthoredItem);selectId??=Selection.SelectedInstanceId;buildRoot.gameObject.SetActive(false);ReleaseImages();for(int i=buildRoot.childCount-1;i>=0;i--){buildRoot.GetChild(i).gameObject.SetActive(false);DestroySafe(buildRoot.GetChild(i).gameObject);}
             GameItem selected=null;foreach(var data in Project.objects){var item=InstantiateItem(data,buildRoot,true);var marker=item.gameObject.AddComponent<RuntimeAuthoredItem>();marker.instanceId=data.instanceId;if(data.instanceId==selectId)selected=item;}
-            buildRoot.gameObject.SetActive(true);foreach(var behaviour in buildRoot.GetComponentsInChildren<MonoBehaviour>())if(!(behaviour is GameItem)&&!(behaviour is ItemVisual)&&!(behaviour is RuntimeAuthoredItem))behaviour.enabled=false;foreach(var body in buildRoot.GetComponentsInChildren<Rigidbody2D>())body.simulated=false;
+            buildRoot.gameObject.SetActive(true);foreach(var behaviour in buildRoot.GetComponentsInChildren<MonoBehaviour>())if(!KeepEnabledWhileBuilding(behaviour))behaviour.enabled=false;foreach(var body in buildRoot.GetComponentsInChildren<Rigidbody2D>())body.simulated=false;
             Selection.Select(selected!=null?selectId:null);
         }
         GameItem InstantiateItem(RuntimeItemData data,Transform parent,bool authoring)
         {
-            var definition=Find(data.definitionId);var go=Instantiate(definition.prefab,parent);go.name=definition.displayName;go.SetActive(false);var item=go.GetComponent<GameItem>();item.definition=definition;ApplyData(item,data);
-            if(authoring){foreach(var behaviour in go.GetComponents<MonoBehaviour>())if(!(behaviour is GameItem)&&!(behaviour is ItemVisual))behaviour.enabled=false;foreach(var body in go.GetComponents<Rigidbody2D>())body.simulated=false;}
+            var definition=Find(data.definitionId);var go=Instantiate(definition.prefab,parent);go.name=definition.displayName;go.SetActive(false);var item=go.GetComponent<GameItem>();item.definition=definition;ApplyData(item,data);item.GetComponent<RuntimeCanvasBackground>()?.Configure(authoring?buildCamera:gameCamera);
+            if(authoring){foreach(var behaviour in go.GetComponents<MonoBehaviour>())if(!KeepEnabledWhileBuilding(behaviour))behaviour.enabled=false;foreach(var body in go.GetComponents<Rigidbody2D>())body.simulated=false;}
             go.SetActive(true);if(authoring)foreach(var body in go.GetComponents<Rigidbody2D>())body.simulated=false;return item;
         }
+        static bool KeepEnabledWhileBuilding(MonoBehaviour behaviour)=>behaviour is GameItem||behaviour is ItemVisual||behaviour is RuntimeAuthoredItem||behaviour is RuntimeCanvasBackground||behaviour.GetComponentInParent<RuntimeCanvasBackground>()!=null;
         void ApplyData(GameItem item,RuntimeItemData data)
         {
             EnsureDefaultAppearance(data,item.definition);data.Apply(item);item.appearanceCategory=contentPack!=null?contentPack.CategoryFor(item.definition.kind):null;
             item.customSprite=null;if(!string.IsNullOrEmpty(data.customImageBase64)&&RuntimeImageImport.TryDecodeDataUrl(data.customImageBase64,out var sprite,out var texture,out _)){imageAssets.Add(sprite);imageAssets.Add(texture);item.customSprite=sprite;}
-            var visual=item.GetComponent<ItemVisual>();if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
+            var visual=item.GetComponent<ItemVisual>();if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);item.GetComponent<RuntimeCanvasBackground>()?.Refresh();foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
         }
         void EnsureDefaultAppearances(CreaJuegoProjectData project)
         {

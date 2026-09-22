@@ -23,6 +23,7 @@ namespace CreaJuego.Web
         public int VisibleItemRowCount=>list==null?0:list.Cast<Transform>().Count(row=>row.gameObject.activeSelf);
         public int VisibleCatalogIconCount=>catalog==null?0:catalog.GetComponentsInChildren<Image>(false).Count(image=>image.name=="Miniatura"&&image.sprite!=null);
         public int VisibleSceneItemIconCount=>list==null?0:list.GetComponentsInChildren<Image>(false).Count(image=>image.name=="Miniatura"&&image.sprite!=null);
+        public Sprite VisibleSelectionIcon=>properties?.GetComponentsInChildren<Image>(false).FirstOrDefault(image=>image.name=="Miniatura")?.sprite;
         public string VisiblePropertiesText=>properties==null?"":string.Join("\n",properties.GetComponentsInChildren<Text>(false).Select(t=>t.text));
         public string FlowText=>flow!=null?flow.text:"";
         public string ReadinessText=>readinessTitle!=null?readinessTitle.text:"";
@@ -42,7 +43,7 @@ namespace CreaJuego.Web
 
         public void Build()
         {
-            var backdrop=New("Fondo de interfaz",transform);var backdropImage=backdrop.AddComponent<Image>();backdropImage.color=Background;backdropImage.raycastTarget=false;
+            var backdrop=New("CreaJuego Web UI",transform);
             canvas=backdrop.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=100;
             var scaler=backdrop.AddComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1280,720);scaler.matchWidthOrHeight=0f;backdrop.AddComponent<GraphicRaycaster>();Anchor(Rect(backdrop.transform));
             if(EventSystem.current==null){var events=New("Eventos",transform);events.AddComponent<EventSystem>();events.AddComponent<InputSystemUIInputModule>();}
@@ -89,10 +90,10 @@ namespace CreaJuego.Web
         public void Refresh()
         {
             if(c==null||catalog==null)return;float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);Clear(list);Clear(properties);
-            var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(d=>d!=null&&d.availableInWorkshop&&d.kind!=ItemKind.MovingPlatform&&d.kind!=ItemKind.Background).OrderBy(d=>d.order).ToArray();
+            var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(d=>d!=null&&d.availableInWorkshop).OrderBy(d=>d.order).ToArray();
             for(int i=0;i<defs.Length;i++)
             {
-                var definition=defs[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,232-row*72),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,66),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
+                var definition=defs[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,244-row*58),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,52),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
             }
             int itemRow=0;foreach(var data in c.Project.objects)
             {
@@ -102,7 +103,7 @@ namespace CreaJuego.Web
             ResizeContent(list,itemRow*35);list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition=listScroll;listInitialized=true;
             int py=0;if(worldSelected)WorldProperties(ref py);else
             {
-                var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
+                var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,data,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
             }
             ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);
             editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(true);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateFlow();UpdateReadiness();
@@ -127,9 +128,9 @@ namespace CreaJuego.Web
         {
             var card=PanelRect("Ayuda de selección",properties,new Vector2(4,-y),new Vector2(248,112),Soft,true);Label(card,"Selecciona un elemento",17,new Vector2(14,66),new Vector2(220,30),TextColor,FontStyle.Bold);Label(card,"Elige algo de Mi juego o haz clic en el nivel para cambiar sus propiedades.",13,new Vector2(14,12),new Vector2(220,56),Muted);y+=124;
         }
-        void SelectionHeader(GameItem item,ref int y)
+        void SelectionHeader(GameItem item,RuntimeItemData data,ref int y)
         {
-            var card=PanelRect("Elemento elegido",properties,new Vector2(4,-y),new Vector2(248,112),Soft,true);var icon=New("Miniatura",card).AddComponent<Image>();icon.sprite=ItemVisual.Resolve(item)?.sprite??item.definition.icon;icon.preserveAspect=true;icon.raycastTarget=false;Rect(icon.transform).anchoredPosition=new Vector2(12,18);Rect(icon.transform).sizeDelta=new Vector2(72,76);
+            var card=PanelRect("Elemento elegido",properties,new Vector2(4,-y),new Vector2(248,112),Soft,true);var icon=New("Miniatura",card).AddComponent<Image>();icon.sprite=ResolvePreview(data,item.definition,c.contentPack,item);icon.preserveAspect=true;icon.raycastTarget=false;Rect(icon.transform).anchoredPosition=new Vector2(12,18);Rect(icon.transform).sizeDelta=new Vector2(72,76);
             Label(card,item.definition.displayName.ToUpperInvariant(),18,new Vector2(94,62),new Vector2(140,30),Accent,FontStyle.Bold);Label(card,item.definition.description,12,new Vector2(94,14),new Vector2(140,50),Muted);y+=124;
         }
         void Group(string title,ref int y){Label(properties,title,15,new Vector2(6,-y),new Vector2(244,28),Accent,FontStyle.Bold);y+=34;}
@@ -143,12 +144,15 @@ namespace CreaJuego.Web
         {
             if(kind==ItemKind.Player){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,5,ref y);Slider("Fuerza de salto","jump",data.jump,5,18,ref y);Group("PUNTOS DE VIDA",ref y);Slider("Puntos de vida","health",data.health,1,10,ref y);}
             else if(kind==ItemKind.Platform){Group("FORMA",ref y);Slider("Ancho","width",data.platformWidth,.5f,20,ref y);}
+            else if(kind==ItemKind.MovingPlatform){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);}
+            else if(kind==ItemKind.Background){Group("FONDO",ref y);Label(properties,"El fondo cubre todo el lienzo visible y sólo puede haber uno.",13,new Vector2(6,-y),new Vector2(238,46),Muted);y+=52;}
             else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);}
             else if(kind==ItemKind.Hazard){Group("PELIGRO",ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
-            else if(kind==ItemKind.Enemy){Group("COMBATE",ref y);Slider("Vida","health",data.health,1,10,ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
+            else if(kind==ItemKind.Enemy){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);Group("COMBATE",ref y);Slider("Vida","health",data.health,1,10,ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
             else if(kind==ItemKind.Goal){Group("MENSAJE FINAL",ref y);Input("Mensaje",data.message,ref y);}
             else{Group("POSICIÓN",ref y);Label(properties,"Arrastra para mover este elemento por el nivel.",13,new Vector2(6,-y),new Vector2(238,44),Muted);y+=50;}
         }
+        void MovementHelp(ref int y){var help=PanelRect("Ayuda de recorrido",properties,new Vector2(6,-y),new Vector2(238,52),Hex("263B55"),true);Label(help,"La línea azul o naranja muestra el recorrido completo.",12,new Vector2(10,5),new Vector2(218,42),TextColor);y+=60;}
         void Appearance(ItemKind kind,RuntimeItemData data,ref int y)
         {
             Group("APARIENCIA",ref y);var category=c.contentPack?.CategoryFor(kind);if(category==null){Label(properties,"Este elemento usa su apariencia preparada.",12,new Vector2(6,-y),new Vector2(238,38),Muted);y+=44;}
@@ -184,8 +188,14 @@ namespace CreaJuego.Web
         Sprite BrandSprite(){var player=c?.contentPack?.definitions.FirstOrDefault(def=>def!=null&&def.kind==ItemKind.Player);return player!=null?player.icon:null;}
         Sprite Preview(RuntimeItemData data,GameItemDefinition definition)
         {
-            var marker=c.buildRoot!=null?c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).FirstOrDefault(value=>value.instanceId==data.instanceId):null;var item=marker!=null?marker.GetComponent<GameItem>():null;var rendered=item!=null?ItemVisual.Resolve(item):null;if(rendered!=null&&rendered.sprite!=null)return rendered.sprite;
-            var option=c.contentPack?.CategoryFor(definition!=null?definition.kind:ItemKind.Decoration)?.Find(data.appearanceId);return option?.Preview??definition?.icon;
+            var marker=c.buildRoot!=null?c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).FirstOrDefault(value=>value.instanceId==data.instanceId):null;var item=marker!=null?marker.GetComponent<GameItem>():null;
+            return ResolvePreview(data,definition,c.contentPack,item);
+        }
+        public static Sprite ResolvePreview(RuntimeItemData data,GameItemDefinition definition,RuntimeContentPack pack,GameItem item)
+        {
+            if(item!=null&&item.customSprite!=null)return item.customSprite;
+            var option=pack?.CategoryFor(definition!=null?definition.kind:ItemKind.Decoration)?.Find(data.appearanceId);if(option?.Preview!=null)return option.Preview;
+            var rendered=item!=null?ItemVisual.Resolve(item):null;return rendered!=null?rendered.sprite:definition?.icon;
         }
         Transform Scroll(string name,Transform parent,Vector2 pos,Vector2 size)
         {
@@ -212,7 +222,7 @@ namespace CreaJuego.Web
         static GameObject New(string name,Transform parent){var go=new GameObject(name,typeof(RectTransform));go.transform.SetParent(parent,false);var rect=(RectTransform)go.transform;var top=parent!=null&&parent.name=="Contenido"?new Vector2(0,1):Vector2.zero;rect.anchorMin=rect.anchorMax=rect.pivot=top;return go;}
         static RectTransform Rect(Transform transform)=>(RectTransform)transform;
         static void Anchor(RectTransform rect){rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.offsetMin=rect.offsetMax=Vector2.zero;}
-        static void Clear(Transform transform){for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i).gameObject;child.SetActive(false);Destroy(child);}}
+        static void Clear(Transform transform){for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i).gameObject;child.SetActive(false);DestroyNow(child);}}
         static void DestroyNow(UnityEngine.Object value){if(Application.isPlaying)Destroy(value);else DestroyImmediate(value);}
         void TryItemProperties(ItemKind kind,RuntimeItemData data,ref int y){try{ItemProperties(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudieron mostrar algunos ajustes.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}
         void TryAppearance(ItemKind kind,RuntimeItemData data,ref int y){try{Appearance(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudo mostrar Apariencia.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}

@@ -19,8 +19,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ccdb17a8f33ba7848b84bf57768d4e69, type: 2}
   - {fileID: 11400000, guid: 24a3683785aed4e4e895c83fdc61bfe1, type: 2}
   - {fileID: 11400000, guid: 95c772236e2f15640bbe5091af51e928, type: 2}
+  - {fileID: 11400000, guid: c0cfafc544496b34c9de100398e4bfef, type: 2}
   - {fileID: 11400000, guid: 11058175c0aafe94080ecb09bea1d436, type: 2}
   - {fileID: 11400000, guid: 86ee675dee6e103499f6a0aa8ac97576, type: 2}
+  - {fileID: 11400000, guid: 141eef062544a2146a0c87f26339f47e, type: 2}
   preparedAppearances: {fileID: 11400000, guid: 9c4a3b595052fb548b261541e19b8af8, type: 2}
   defaults:
   - kind: 0
@@ -33,8 +35,12 @@ MonoBehaviour:
     appearanceId: tiny-dungeon-103
   - kind: 4
     appearanceId: tiny-dungeon-21
+  - kind: 5
+    appearanceId: tiny-dungeon-36
   - kind: 6
     appearanceId: platformer-kit-scarecrow
   - kind: 7
     appearanceId: tiny-dungeon-2072
+  - kind: 8
+    appearanceId: web-cielo-azul
   sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}

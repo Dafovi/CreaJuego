@@ -41,8 +41,8 @@ namespace CreaJuego.Web.Tests
             Assert.That(ui.HasPreparedLayout,Is.True);Assert.That(controller.HasEditableScene,Is.True);Assert.That(controller.contentPack,Is.Not.Null);
             Assert.That(controller.GetComponents<RuntimeGameplayCamera>().Length,Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)),Is.EqualTo(0));
-            Assert.That(Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Length,Is.EqualTo(1));
-            Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(8));
+            var overlayCanvases=Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include,FindObjectsSortMode.None).Where(value=>value.renderMode==RenderMode.ScreenSpaceOverlay).ToArray();Assert.That(overlayCanvases.Length,Is.EqualTo(1));Assert.That(overlayCanvases[0].GetComponent<Image>(),Is.Null,"El Canvas de interfaz no debe tapar la cámara con un fondo opaco.");
+            Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(10));
             var hierarchy=Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Select(transform=>transform.name).ToArray();
             Assert.That(hierarchy,Does.Contain("Cabecera"));Assert.That(hierarchy,Does.Contain("Panel de elementos"));Assert.That(hierarchy,Does.Contain("Panel de propiedades"));Assert.That(hierarchy,Does.Contain("Herramientas"));Assert.That(hierarchy,Does.Contain("Estado para jugar"));
             Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.EqualTo(controller.Project.objects.Count));
@@ -214,6 +214,50 @@ namespace CreaJuego.Web.Tests
             var player=c.Project.objects.Single(o=>o.definitionId=="jugador");Assert.That(ui.ClickItemRow(player.instanceId),Is.True);yield return null;
             Assert.That(ui.VisiblePropertiesText,Does.Contain("JUGADOR").And.Contain("Fuerza de salto"));
             yield return new ExitPlayMode();
+        }
+
+        [Test]
+        public void BackgroundSelectionAndCreationShowImageControls()
+        {
+            var c=Open();var ui=c.GetComponent<RuntimeAuthoringUI>();ui.PrepareEditableLayout();c.NewProject(false);ui.Refresh();
+            var background=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.Background);var item=c.Selection.Select(background.instanceId);ui.Refresh();
+            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("APARIENCIA").And.Contain("Elegir imagen"));
+            Assert.That(ui.VisibleSelectionIcon,Is.SameAs(item.SelectedAppearance.sprite));
+            c.DeleteSelected();Assert.That(c.Project.objects.Any(o=>c.Find(o.definitionId)?.kind==ItemKind.Background),Is.False);
+            var recreated=c.Create("fondo",Vector3.zero);Assert.That(recreated,Is.Not.Null);ui.Refresh();
+            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("Elegir imagen"));Assert.That(ui.VisibleSelectionIcon,Is.Not.Null);
+        }
+
+        [Test]
+        public void MovingPlatformRowUsesItsSelectedAppearance()
+        {
+            var c=Open();var moving=c.Project.objects.First(o=>c.Find(o.definitionId)?.kind==ItemKind.MovingPlatform);var definition=c.Find(moving.definitionId);var appearances=c.contentPack.CategoryFor(ItemKind.MovingPlatform);
+            Assert.That(appearances,Is.Not.Null);var chosen=appearances.options.First(option=>option.Preview!=null&&option.id!=moving.appearanceId);moving.appearanceId=chosen.id;
+            var marker=c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Single(value=>value.instanceId==moving.instanceId);var item=marker.GetComponent<GameItem>();
+            Assert.That(RuntimeAuthoringUI.ResolvePreview(moving,definition,c.contentPack,item),Is.SameAs(chosen.Preview));
+        }
+
+        [Test]
+        public void PreparedPackIncludesUniqueBackgroundAndMovingPlatform()
+        {
+            var c=Open();var backgroundDefinition=c.contentPack.definitions.Single(d=>d.kind==ItemKind.Background);var movingDefinition=c.contentPack.definitions.Single(d=>d.kind==ItemKind.MovingPlatform);
+            Assert.That(backgroundDefinition.allowMultiple,Is.False);Assert.That(backgroundDefinition.icon,Is.Not.Null);Assert.That(movingDefinition.prefab,Is.Not.Null);
+            Assert.That(c.Project.objects.Count(o=>o.definitionId==backgroundDefinition.id),Is.EqualTo(1));Assert.That(c.Project.objects.Count(o=>o.definitionId==movingDefinition.id),Is.EqualTo(1));
+            var background=c.buildRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Background);var canvasBackground=background.GetComponent<RuntimeCanvasBackground>();
+            Assert.That(background.GetComponent<SpriteRenderer>(),Is.Null);Assert.That(canvasBackground,Is.Not.Null);Assert.That(canvasBackground.TargetCamera,Is.SameAs(c.buildCamera));Assert.That(canvasBackground.Image,Is.Not.Null);Assert.That(canvasBackground.Image.sprite,Is.SameAs(background.SelectedAppearance.sprite));
+            var imageRect=canvasBackground.Image.rectTransform;Assert.That(imageRect.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.anchorMax,Is.EqualTo(Vector2.one));Assert.That(imageRect.offsetMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.offsetMax,Is.EqualTo(Vector2.zero));
+            var canvas=canvasBackground.Image.GetComponentInParent<Canvas>();Assert.That(canvas.renderMode,Is.EqualTo(RenderMode.ScreenSpaceCamera));Assert.That(canvas.worldCamera,Is.SameAs(c.buildCamera));
+            int before=c.Project.objects.Count;Assert.That(c.Create(backgroundDefinition.id,Vector3.zero),Is.Null);Assert.That(c.Project.objects.Count,Is.EqualTo(before));
+        }
+
+        [Test]
+        public void MovementGuideMatchesConfiguredMovementDistance()
+        {
+            var c=Open();var movingData=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.MovingPlatform);
+            var moving=c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Single(marker=>marker.instanceId==movingData.instanceId).GetComponent<GameItem>();
+            Assert.That(RuntimeMovementGuide.TryGetRoute(moving,out var start,out var end),Is.True);Assert.That(end.x-start.x,Is.EqualTo(movingData.distance).Within(.01f));
+            moving.distance=7;Assert.That(RuntimeMovementGuide.TryGetRoute(moving,out start,out end),Is.True);Assert.That(end.x-start.x,Is.EqualTo(7).Within(.01f));
+            var platform=c.buildRoot.GetComponentsInChildren<GameItem>().First(item=>item.definition.kind==ItemKind.Platform);Assert.That(RuntimeMovementGuide.TryGetRoute(platform,out _,out _),Is.False);
         }
     }
 }

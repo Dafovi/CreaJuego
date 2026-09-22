@@ -36,3 +36,26 @@ El catálogo obtiene los iconos desde `GameItemDefinition.icon`. La lista usa pr
 - `git diff --check`: sin errores.
 
 No se ejecutó `BuildPipeline.BuildPlayer`.
+## Elementos de mundo añadidos
+
+### Fondo
+
+- aparece en el catálogo y en **Mi juego**;
+- sólo puede existir uno;
+- usa una apariencia azul predeterminada o una imagen PNG/JPG elegida por la persona;
+- ocupa todo el lienzo visible de la cámara, tanto al construir como al jugar, y se dibuja detrás de los objetos;
+- se conserva en Guardar/Abrir y participa en Undo/Redo;
+- el Canvas no tiene una imagen opaca a pantalla completa, por lo que la cámara de construcción permanece visible.
+
+### Plataforma móvil
+
+- utiliza la definición `movil` y el `Patrol` real del backend Playground;
+- permite editar **Velocidad** y **Distancia**;
+- conserva sus apariencias preparadas;
+- se incluye en el escenario inicial para poder probarla inmediatamente.
+
+### Guías de movimiento
+
+Al seleccionar una Plataforma móvil aparece una guía azul; al seleccionar un Enemigo aparece una guía naranja. Ambas muestran inicio, final, dirección y longitud del recorrido. La guía usa el mismo cálculo `posición + derecha × distancia` que configura el adapter de Playground y desaparece durante el modo Jugar.
+
+Validación posterior: 32/32 pruebas Web y 120/120 pruebas EditMode completas. No se generó un build.

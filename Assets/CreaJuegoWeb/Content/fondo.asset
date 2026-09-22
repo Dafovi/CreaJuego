@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d886a7966127f409ef02e51b291b99, type: 3}
+  m_Name: fondo
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.GameItemDefinition
+  id: fondo
+  displayName: Fondo
+  category: Escenario
+  description: "La imagen que aparece detr\xE1s del nivel."
+  learningHint: "S\xF3lo puede haber un fondo. Puedes elegir una imagen preparada o cargar la tuya."
+  icon: {fileID: 21300000, guid: 0f3d707d4e760cf4e861f54f4f4d5ee3, type: 3}
+  appearancePack: {fileID: 0}
+  prefab: {fileID: 2619949810809285715, guid: 4b05ae5540c13894b8eb4d4525d33058, type: 3}
+  kind: 8
+  order: 90
+  runtimeOnly: 1
+  availableInWorkshop: 1
+  extraInWorkshop: 0
+  allowMultiple: 0
+  properties: []
