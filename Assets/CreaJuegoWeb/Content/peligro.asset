@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Objetos
   description: Quita puntos de vida al personaje.
   learningHint: Al tocar este peligro, el personaje pierde puntos de vida.
-  icon: {fileID: 6020323851609522334, guid: 8650b6909be4ee74da5743ad8dcc0171, type: 3}
+  icon: {fileID: 8287658600207992586, guid: cc9ff4f18998b204b93fbc036cf26fe5, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 8319791712475564666, guid: 03314d453739ab84b87c513ab96a0ba3, type: 3}
   kind: 3

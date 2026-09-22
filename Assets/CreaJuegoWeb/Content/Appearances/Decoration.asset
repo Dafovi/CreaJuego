@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Decoration
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 7
+  defaultAppearanceId: 
   options:
   - id: tiny-dungeon-2072
     displayName: Mesa

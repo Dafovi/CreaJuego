@@ -17,7 +17,7 @@ MonoBehaviour:
   category: "Decoraci\xF3n"
   description: "Decora tu mundo. No bloquea ni hace da\xF1o."
   learningHint: "No bloquea el paso ni hace da\xF1o."
-  icon: {fileID: -2216631893085816980, guid: c996e091fec552e43a1fcceebc8f4899, type: 3}
+  icon: {fileID: 4553357440917884160, guid: 5c9d92145932c944890c003bf64d392c, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 646594550484602284, guid: 3560f5543232ffd469cfbfa9216abfa4, type: 3}
   kind: 7

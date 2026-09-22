@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Objetos
   description: "Indica d\xF3nde termina el recorrido."
   learningHint: "Llega aqu\xED para completar el recorrido."
-  icon: {fileID: 5879908866151352552, guid: 32b64b354f66c2e46aca92e648f1bc61, type: 3}
+  icon: {fileID: -578904658552062867, guid: d607d325561f9a24398cf9e0690ddd9f, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 4368396013753989669, guid: b286aa67be22bd84fa5091e9b66a8c47, type: 3}
   kind: 4

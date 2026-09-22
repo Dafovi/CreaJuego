@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Platform
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 1
+  defaultAppearanceId: 
   options:
   - id: tiny-dungeon-36
     displayName: Piedra clara

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Prize
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 2
+  defaultAppearanceId: 
   options:
   - id: tiny-dungeon-115
     displayName: Moneda dorada

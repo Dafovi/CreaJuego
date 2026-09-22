@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Hazard
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 3
+  defaultAppearanceId: 
   options:
   - id: tiny-dungeon-103
     displayName: Pinchos

@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Objetos
   description: El personaje lo recoge para ganar puntos.
   learningHint: El personaje recoge este premio al tocarlo y suma los puntos que elijas.
-  icon: {fileID: 2594184839887779542, guid: dbb364b432bc4094b942a0c3ac5c15fc, type: 3}
+  icon: {fileID: 7452913291803460528, guid: 7a94b829d3dd5e144a2cae157c03c8a7, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 1248105106086247622, guid: 0b903f43f0e19994690446a32d49c47c, type: 3}
   kind: 2

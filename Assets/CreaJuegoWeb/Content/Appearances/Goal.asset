@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Goal
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 4
+  defaultAppearanceId: 
   options:
   - id: tiny-dungeon-21
     displayName: Puerta antigua

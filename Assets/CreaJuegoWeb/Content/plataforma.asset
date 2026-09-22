@@ -17,7 +17,7 @@ MonoBehaviour:
   category: Mundo
   description: Un lugar firme donde el personaje puede caminar.
   learningHint: Un lugar firme donde el personaje puede caminar y apoyarse.
-  icon: {fileID: 5766548593978449095, guid: 32d2fb45ca11b764abf51e201fea8fbd, type: 3}
+  icon: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 4512232811257325162, guid: 21c9a0efa5f25cf4fa8ea497148c1b50, type: 3}
   kind: 1
