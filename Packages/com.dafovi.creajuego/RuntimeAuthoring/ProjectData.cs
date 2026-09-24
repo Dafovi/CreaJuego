@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CreaJuego.Web
 {
-    public enum RuntimeLevelSize { Small, Medium, Large }
+    public enum RuntimeLevelSize { Small, Medium, Large, ExtraLarge }
 
     [Serializable]
     public sealed class RuntimeLevelBounds
@@ -16,6 +16,7 @@ namespace CreaJuego.Web
         {
             if(size==RuntimeLevelSize.Small)return new RuntimeLevelBounds{left=-12,right=12,bottom=-8,top=10};
             if(size==RuntimeLevelSize.Large)return new RuntimeLevelBounds{left=-50,right=50,bottom=-16,top=25};
+            if(size==RuntimeLevelSize.ExtraLarge)return new RuntimeLevelBounds{left=-120,right=120,bottom=-30,top=45};
             return new RuntimeLevelBounds();
         }
     }
@@ -37,6 +38,7 @@ namespace CreaJuego.Web
     {
         public string instanceId, definitionId;
         public Vector3 position, scale=Vector3.one;
+        public float rotationZ;
         public float speed=2,jump=10,distance=3,visualScale=1,platformWidth=3;
         public int health=3,damage=1,points=1,attackDamage=1;
         public bool canJump=true,canAttack=true,disappear=true;
@@ -50,7 +52,7 @@ namespace CreaJuego.Web
             if(item==null)throw new ArgumentNullException(nameof(item));
             var box=item.GetComponent<BoxCollider2D>();
             return new RuntimeItemData{instanceId=Guid.NewGuid().ToString("N"),definitionId=definitionId??item.definition?.id??"",
-                position=item.transform.position,scale=item.transform.localScale,speed=item.speed,jump=item.jump,distance=item.distance,
+                position=item.transform.position,scale=item.transform.localScale,rotationZ=item.transform.eulerAngles.z,speed=item.speed,jump=item.jump,distance=item.distance,
                 visualScale=item.visualScale,platformWidth=box!=null?box.size.x:3,health=item.health,damage=item.damage,points=item.points,
                 attackDamage=item.attackDamage,canJump=item.canJump,canAttack=item.canAttack,disappear=item.disappear,message=item.message,
                 tint=item.tint,appearanceId=item.appearanceId};
@@ -59,7 +61,7 @@ namespace CreaJuego.Web
         {
             item.speed=speed;item.jump=jump;item.distance=distance;item.visualScale=visualScale;item.health=health;item.damage=damage;
             item.points=points;item.attackDamage=attackDamage;item.canJump=canJump;item.canAttack=canAttack;item.disappear=disappear;
-            item.message=message;item.tint=tint;item.appearanceId=appearanceId??"";item.transform.position=position;item.transform.localScale=scale;
+            item.message=message;item.tint=tint;item.appearanceId=appearanceId??"";item.transform.position=position;item.transform.localScale=scale;item.transform.rotation=Quaternion.Euler(0,0,rotationZ);
         }
     }
 

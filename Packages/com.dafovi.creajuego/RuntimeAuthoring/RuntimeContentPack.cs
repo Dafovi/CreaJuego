@@ -15,6 +15,10 @@ namespace CreaJuego.Web
         public ContentPackDefinition preparedAppearances;
         public RuntimeAppearanceDefault[] defaults=Array.Empty<RuntimeAppearanceDefault>();
         public GameObject sceneServices;
+        [Header("Marca")]
+        public string productName="CreaJuego Web";
+        public string tagline="Crea, aprende y juega";
+        public Sprite brandIcon;
         public GameItemDefinition Find(string definitionId)=>definitions.FirstOrDefault(d=>d!=null&&d.id==definitionId);
         public AppearanceCategory CategoryFor(ItemKind kind)=>preparedAppearances!=null?preparedAppearances.CategoryFor(kind):null;
         public AppearanceOption[] OptionsFor(ItemKind kind,string search=null)

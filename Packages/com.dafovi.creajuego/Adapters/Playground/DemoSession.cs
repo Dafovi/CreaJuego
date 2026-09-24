@@ -9,12 +9,38 @@ using UnityEngine.UI;
 namespace CreaJuego.PlaygroundBackend
 {
     [DefaultExecutionOrder(-300)]
-    public sealed class DemoSession : MonoBehaviour, IWorkshopSession
+    public sealed class DemoSession : MonoBehaviour, IWorkshopSessionMetrics
     {
         public UIScript playgroundUI;
         public Text status;
         public GameSessionState State { get; private set; } = GameSessionState.Playing;
         public bool Completed => State == GameSessionState.Won;
+        public int CurrentHealth
+        {
+            get
+            {
+                var player=SceneObjects.All<GameItem>(gameObject.scene).FirstOrDefault(i=>i.definition!=null&&i.definition.kind==ItemKind.Player);
+                var health=player!=null?player.GetComponent<Playground.Attributes.HealthSystemAttribute>():null;
+                return health!=null?Mathf.Max(0,health.health):0;
+            }
+        }
+        public int Score
+        {
+            get
+            {
+                if(playgroundUI==null||playgroundUI.numberLabels==null||playgroundUI.numberLabels.Length<2)return 0;
+                return int.TryParse(playgroundUI.numberLabels[1]?.text,out var value)?value:0;
+            }
+        }
+        public int EnemiesRemaining=>SceneObjects.All<EnemyVitality>(gameObject.scene).Count(enemy=>enemy.isActiveAndEnabled&&!enemy.Defeated);
+        public string Objective
+        {
+            get
+            {
+                var goal=SceneObjects.All<GameItem>(gameObject.scene).FirstOrDefault(i=>i.definition!=null&&i.definition.kind==ItemKind.Goal);
+                return goal!=null&&!string.IsNullOrWhiteSpace(goal.message)?goal.message:"Llega a la meta";
+            }
+        }
         public event System.Action<GameSessionState> ResultChanged;
         public static DemoSession InScene(Scene scene) => SceneObjects.All<DemoSession>(scene).FirstOrDefault(s => s.isActiveAndEnabled);
         private void Awake()

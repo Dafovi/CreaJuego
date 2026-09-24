@@ -104,7 +104,7 @@ namespace CreaJuego.Web
         }
         public void SetFloat(string path,float value,bool record=true)
         {
-            var data=SelectedData();if(data==null)return;switch(path){case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;case "width":ResizeSelected(value,data.position.x,record);return;}
+            var data=SelectedData();if(data==null)return;switch(path){case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;case "visualScale":data.visualScale=Mathf.Clamp(value,.1f,5f);break;case "width":ResizeSelected(value,data.position.x,record);return;}
             ApplySelected(data);if(record)CommitEdit();
         }
         public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
@@ -112,7 +112,20 @@ namespace CreaJuego.Web
         {
             var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
-        public void SetSnap(bool value){if(Project.alignAutomatically==value)return;Project.alignAutomatically=value;CommitEdit();}
+        public void SetSnap(bool value)
+        {
+            if(Project.alignAutomatically==value)return;Project.alignAutomatically=value;
+            var selected=SelectedData();if(value&&selected!=null){selected.position=RuntimeSnap.Position(selected.position,true);selected.platformWidth=RuntimeSnap.Width(selected.platformWidth,true);Rebuild(selected.instanceId);}
+            CommitEdit();ui?.SetStatus(value?"Cuadrícula activada: los elementos encajan cada 0,25 unidades.":"Movimiento libre activado.");
+        }
+        public void SetStructureDirection(bool facesRight)
+        {
+            var data=SelectedData();if(data==null)return;
+            if(data.definitionId=="muro")data.rotationZ=facesRight?0:90;
+            else if(data.definitionId=="rampa"||data.definitionId=="escalera")data.rotationZ=facesRight?25:-25;
+            else return;
+            ApplySelected(data);CommitEdit();
+        }
         public void SetLevelSize(RuntimeLevelSize value){if(Project.levelSize==value)return;Project.levelSize=value;Project.bounds=RuntimeLevelBounds.For(value);Rebuild(SelectedId());CommitEdit();}
         public void CommitEdit(){History.Record(Project);Changed();}
         void ApplySelected(RuntimeItemData data){var item=Selection.SelectedItem;if(item!=null&&SelectedId()==data.instanceId){ApplyData(item,data);item.GetComponent<RuntimeCanvasBackground>()?.Configure(buildCamera);}}
@@ -125,7 +138,7 @@ namespace CreaJuego.Web
         {
             if(Mode==AuthoringMode.Play)return null;var error=RuntimePreflight.Validate(Project,Find,new RuntimePreflightContext{cameraAvailable=gameCamera!=null});if(error!=null){ui?.SetStatus(error);return error;}
             Selection.Clear();buildRoot.gameObject.SetActive(false);services=sceneServicesPrefab!=null?Instantiate(sceneServicesPrefab):null;
-            if(services!=null){foreach(var camera in services.GetComponentsInChildren<Camera>(true))camera.enabled=false;foreach(var listener in services.GetComponentsInChildren<AudioListener>(true))listener.enabled=false;}
+            if(services!=null){foreach(var camera in services.GetComponentsInChildren<Camera>(true))camera.enabled=false;foreach(var listener in services.GetComponentsInChildren<AudioListener>(true))listener.enabled=false;foreach(var serviceCanvas in services.GetComponentsInChildren<Canvas>(true))serviceCanvas.enabled=false;}
             playRoot=new GameObject("Partida temporal").transform;playRoot.gameObject.SetActive(false);foreach(var data in Project.objects)InstantiateItem(data,playRoot,false);
             CreatePlayBoundaries(playRoot,Project.bounds);playRoot.gameObject.SetActive(true);playPlayer=playRoot.GetComponentsInChildren<GameItem>().First(i=>i.definition.kind==ItemKind.Player);
             var authored=Project.objects.First(o=>o.definitionId==playPlayer.definition.id);var recovery=playPlayer.GetComponent<PlayerFallRecovery>();recovery.ConfigureWorldLimit(authored.position,Project.bounds.bottom);
@@ -167,7 +180,15 @@ namespace CreaJuego.Web
         {
             EnsureDefaultAppearance(data,item.definition);data.Apply(item);item.appearanceCategory=contentPack!=null?contentPack.CategoryFor(item.definition.kind):null;
             item.customSprite=null;if(!string.IsNullOrEmpty(data.customImageBase64)&&RuntimeImageImport.TryDecodeDataUrl(data.customImageBase64,out var sprite,out var texture,out _)){imageAssets.Add(sprite);imageAssets.Add(texture);item.customSprite=sprite;}
-            var visual=item.GetComponent<ItemVisual>();if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);item.GetComponent<RuntimeCanvasBackground>()?.Refresh();foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
+            var visual=EnsureVisual(item);if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);item.GetComponent<RuntimeCanvasBackground>()?.Refresh();foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
+        }
+        static ItemVisual EnsureVisual(GameItem item)
+        {
+            if(item==null||item.definition==null||item.definition.kind==ItemKind.Background)return item!=null?item.GetComponent<ItemVisual>():null;
+            var visual=item.GetComponent<ItemVisual>();if(visual!=null&&visual.renderer!=null)return visual;
+            if(visual==null)visual=item.gameObject.AddComponent<ItemVisual>();
+            visual.renderer=item.GetComponent<SpriteRenderer>()??item.GetComponentsInChildren<SpriteRenderer>(true).FirstOrDefault();
+            visual.geometrySource=visual.renderer;visual.animator=item.GetComponentInChildren<Animator>(true);return visual;
         }
         void EnsureDefaultAppearances(CreaJuegoProjectData project)
         {
@@ -176,6 +197,7 @@ namespace CreaJuego.Web
         void EnsureDefaultAppearance(RuntimeItemData data,GameItemDefinition definition)
         {
             if(data==null||definition==null||data.appearanceChosen||!string.IsNullOrEmpty(data.customImageBase64)||contentPack==null)return;
+            if(definition.id=="escalera"&&string.IsNullOrEmpty(data.appearanceId)){data.appearanceId="web-escalera";return;}
             bool missing=string.IsNullOrEmpty(data.appearanceId);
             bool formerPlayerDefault=definition.kind==ItemKind.Player&&data.appearanceId=="tiny-dungeon-84";
             bool formerEnemyDefault=definition.kind==ItemKind.Enemy&&data.appearanceId=="tiny-dungeon-120";

@@ -19,7 +19,7 @@ namespace CreaJuego.Web
         void OnDestroy(){controller.Selection.SelectionChanged-=Selected;controller.ProjectChanged-=RefreshWorld;if(lineMaterial!=null)Destroy(lineMaterial);if(handleSprite!=null){var texture=handleSprite.texture;Destroy(handleSprite);Destroy(texture);}}
         void Update()
         {
-            bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||Mouse.current==null||View==null)return;
+            bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||Mouse.current==null||View==null)return;UpdateGuideScale();
             var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
@@ -31,7 +31,7 @@ namespace CreaJuego.Web
             else if(mouse.leftButton.isPressed&&dragging){var before=controller.Selection.SelectedItem.transform.position;controller.MoveSelected(world+offset,false);changed|=(before-controller.Selection.SelectedItem.transform.position).sqrMagnitude>.0001f;}
             else if(mouse.leftButton.isPressed&&panning){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
             if(mouse.leftButton.wasReleasedThisFrame){if((dragging||resizing)&&changed)controller.CommitEdit();dragging=panning=resizing=changed=false;}
-            var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,30);
+            var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,100);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
             if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();UpdateSelectionVisuals();
         }
@@ -56,7 +56,11 @@ namespace CreaJuego.Web
         {
             var item=controller.Selection.SelectedItem;if(item==null||outline==null)return;var bounds=ItemBounds(item);var z=item.transform.position.z-.1f;outline.SetPositions(new[]{new Vector3(bounds.min.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.min.y,z)});
             if(leftHandle!=null){float size=Mathf.Clamp(View.orthographicSize*.045f,.18f,.65f);leftHandle.transform.position=new Vector3(bounds.min.x,bounds.center.y,z-.01f);rightHandle.transform.position=new Vector3(bounds.max.x,bounds.center.y,z-.01f);leftHandle.transform.localScale=rightHandle.transform.localScale=Vector3.one*size;}
-            if(movementPath!=null){RuntimeMovementGuide.TryGetRoute(item,out var start,out var end);start.z=end.z=z-.02f;movementPath.SetPositions(new[]{start,end});float pointSize=Mathf.Clamp(View.orthographicSize*.035f,.14f,.5f);movementStart.transform.position=start;movementEnd.transform.position=end;movementStart.transform.localScale=movementEnd.transform.localScale=Vector3.one*pointSize;var tip=end;var basePoint=end+Vector3.left*.4f;movementArrow.SetPositions(new[]{basePoint+Vector3.up*.2f,tip,basePoint+Vector3.down*.2f});}
+            if(movementPath!=null){RuntimeMovementGuide.TryGetRoute(item,out var start,out var end);start.z=end.z=z-.02f;movementPath.SetPositions(new[]{start,end});float pointSize=Mathf.Clamp(View.orthographicSize*.035f,.14f,2f);movementStart.transform.position=start;movementEnd.transform.position=end;movementStart.transform.localScale=movementEnd.transform.localScale=Vector3.one*pointSize;float arrowSize=Mathf.Clamp(View.orthographicSize*.04f,.4f,3f);var direction=(end-start).normalized;var normal=new Vector3(-direction.y,direction.x);var tip=end;var basePoint=end-direction*arrowSize;movementArrow.SetPositions(new[]{basePoint+normal*arrowSize*.45f,tip,basePoint-normal*arrowSize*.45f});}
+        }
+        void UpdateGuideScale()
+        {
+            float width=Mathf.Clamp(View.orthographicSize*.012f,.06f,1.2f);if(worldFrame!=null)worldFrame.widthMultiplier=width;if(outline!=null)outline.widthMultiplier=width*1.25f;if(movementPath!=null)movementPath.widthMultiplier=width*1.35f;if(movementArrow!=null)movementArrow.widthMultiplier=width*1.35f;
         }
         void RefreshWorld()
         {

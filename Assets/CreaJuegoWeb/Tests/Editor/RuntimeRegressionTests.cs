@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 using UnityEditor.TestTools;
 using UnityEngine.UI;
 
@@ -35,8 +36,8 @@ namespace CreaJuego.Web.Tests
         public IEnumerator PreparedSceneContainsEditableLayoutAndInitialItems()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
+            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var authoredCameraRect=controller.buildCamera.rect;
             yield return null;
-            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();
             controller.NewProject(false);
             Assert.That(ui.HasPreparedLayout,Is.True);Assert.That(controller.HasEditableScene,Is.True);Assert.That(controller.contentPack,Is.Not.Null);
             Assert.That(controller.GetComponents<RuntimeGameplayCamera>().Length,Is.EqualTo(1));
@@ -47,7 +48,7 @@ namespace CreaJuego.Web.Tests
             Assert.That(hierarchy,Does.Contain("Cabecera"));Assert.That(hierarchy,Does.Contain("Panel de elementos"));Assert.That(hierarchy,Does.Contain("Panel de propiedades"));Assert.That(hierarchy,Does.Contain("Herramientas"));Assert.That(hierarchy,Does.Contain("Estado para jugar"));
             Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.EqualTo(controller.Project.objects.Count));
             Assert.That(ui.FlowText,Does.Contain("Seleccionar"));Assert.That(ui.FlowText,Does.Contain("Personalizar"));Assert.That(ui.FlowText,Does.Contain("Jugar"));Assert.That(ui.ReadinessText,Does.Contain("listo"));
-            Assert.That(controller.buildCamera.rect.x,Is.EqualTo(260f/1280f).Within(.001f));Assert.That(controller.buildCamera.rect.y,Is.EqualTo(82f/720f).Within(.001f));Assert.That(controller.buildCamera.rect.width,Is.EqualTo(740f/1280f).Within(.001f));Assert.That(controller.buildCamera.rect.height,Is.EqualTo(564f/720f).Within(.001f));
+            Assert.That(controller.buildCamera.rect,Is.EqualTo(authoredCameraRect),"Entrar en ejecución no debe reemplazar el encuadre guardado en la escena.");
         }
 
         [UnityTest]
@@ -181,12 +182,13 @@ namespace CreaJuego.Web.Tests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
             yield return new EnterPlayMode();yield return null;
-            var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();
+            var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var runtimeHeader=GameObject.Find("Cabecera").GetComponent<RectTransform>();
+            Assert.That(runtimeHeader.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(runtimeHeader.anchorMax,Is.EqualTo(Vector2.one));Assert.That(runtimeHeader.anchoredPosition,Is.EqualTo(new Vector2(0,254.91345f)).Using(Vector2ComparerWithEqualsOperator.Instance));Assert.That(runtimeHeader.sizeDelta,Is.EqualTo(new Vector2(0,-670.1731f)).Using(Vector2ComparerWithEqualsOperator.Instance),"Play Mode debe conservar el layout ajustado manualmente en WebAuthoringSpike.");
             c.NewProject(false);ui.Refresh();yield return null;
             Assert.That(ui.VisibleItemRowCount,Is.EqualTo(c.Project.objects.Count));
             var firstRow=Object.FindObjectsByType<RuntimeItemRow>(FindObjectsInactive.Exclude).First().GetComponent<RectTransform>();Assert.That(firstRow.pivot.y,Is.EqualTo(1));Assert.That(firstRow.anchorMin.y,Is.EqualTo(1));Assert.That(Object.FindObjectsByType<ScrollRect>(FindObjectsInactive.Exclude).Single(x=>x.name=="Mi juego").verticalNormalizedPosition,Is.EqualTo(1).Within(.01f));
 
-            var expected=new[]{("jugador","JUGADOR","Velocidad"),("plataforma","PLATAFORMA","Ancho"),("enemigo","ENEMIGO","Daño"),("decoracion","DECORACIÓN","Arrastra")};
+            var expected=new[]{("jugador","JUGADOR","Velocidad"),("plataforma","PLATAFORMA","Largo"),("enemigo","ENEMIGO","Daño"),("decoracion","DECORACIÓN","Arrastra")};
             foreach(var entry in expected)
             {
                 var data=c.Project.objects.First(o=>o.definitionId==entry.Item1);
@@ -204,12 +206,11 @@ namespace CreaJuego.Web.Tests
             c.Redo();yield return null;Assert.That(ui.VisibleItemRowCount,Is.EqualTo(before));
 
             Canvas.ForceUpdateCanvases();
-            Assert.That(RuntimePointerContext.IsPointerOverBlockingUI(new Vector2(Screen.width*.05f,Screen.height*.5f)),Is.True);
-            Assert.That(RuntimePointerContext.IsPointerOverBlockingUI(new Vector2(Screen.width*.5f,Screen.height*.5f)),Is.False);
-            Assert.That(RuntimePointerContext.IsPointerOverBlockingUI(new Vector2(Screen.width*.9f,Screen.height*.5f)),Is.True);
+            Assert.That(GameObject.Find("Panel de elementos").activeInHierarchy,Is.True);Assert.That(GameObject.Find("Panel de propiedades").activeInHierarchy,Is.True);
             Assert.That(Object.FindObjectsByType<ScrollRect>(FindObjectsInactive.Exclude).All(s=>s.scrollSensitivity>=20),Is.True);
 
-            Assert.That(c.EnterPlay(),Is.Null);yield return null;Assert.That(c.Project.objects.Count,Is.EqualTo(before));
+            Assert.That(c.EnterPlay(),Is.Null);yield return null;Assert.That(c.Project.objects.Count,Is.EqualTo(before));Assert.That(ui.GameplayHudVisible,Is.True);Assert.That(ui.GameplayHudText,Does.Contain("VIDAS").And.Contain("PUNTOS").And.Contain("ENEMIGOS").And.Contain("OBJETIVO"));
+            var metrics=Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include).OfType<IWorkshopSessionMetrics>().Single();Assert.That(((MonoBehaviour)metrics).GetComponentInChildren<Canvas>(true).enabled,Is.False,"El marcador técnico anterior debe quedar oculto.");
             c.ExitPlay();yield return null;Assert.That(ui.VisibleItemRowCount,Is.EqualTo(before));
             var player=c.Project.objects.Single(o=>o.definitionId=="jugador");Assert.That(ui.ClickItemRow(player.instanceId),Is.True);yield return null;
             Assert.That(ui.VisiblePropertiesText,Does.Contain("JUGADOR").And.Contain("Fuerza de salto"));
@@ -248,6 +249,37 @@ namespace CreaJuego.Web.Tests
             var imageRect=canvasBackground.Image.rectTransform;Assert.That(imageRect.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.anchorMax,Is.EqualTo(Vector2.one));Assert.That(imageRect.offsetMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.offsetMax,Is.EqualTo(Vector2.zero));
             var canvas=canvasBackground.Image.GetComponentInParent<Canvas>();Assert.That(canvas.renderMode,Is.EqualTo(RenderMode.ScreenSpaceCamera));Assert.That(canvas.worldCamera,Is.SameAs(c.buildCamera));
             int before=c.Project.objects.Count;Assert.That(c.Create(backgroundDefinition.id,Vector3.zero),Is.Null);Assert.That(c.Project.objects.Count,Is.EqualTo(before));
+        }
+
+        [Test]
+        public void WorkshopCatalogHasStructuresAndThreePreparedChoices()
+        {
+            var c=Open();
+            foreach(var kind in new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Background})
+                Assert.That(c.contentPack.OptionsFor(kind).Length,Is.GreaterThanOrEqualTo(3),kind+" debe ofrecer al menos tres apariencias.");
+            Assert.That(c.contentPack.Find("muro"),Is.Not.Null);Assert.That(c.contentPack.Find("rampa"),Is.Not.Null);Assert.That(c.contentPack.Find("escalera"),Is.Not.Null);
+        }
+
+        [Test]
+        public void ScaleAndStructureDirectionPersistInEducationalData()
+        {
+            var c=Open();var moving=c.Project.objects.Single(o=>o.definitionId=="movil");c.Selection.Select(moving.instanceId);var visual=ItemVisual.Resolve(c.Selection.SelectedItem);float ratio=Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),beforeX=Mathf.Abs(visual.transform.localScale.x);c.SetFloat("visualScale",2.25f);
+            Assert.That(moving.visualScale,Is.EqualTo(2.25f));Assert.That(Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),Is.EqualTo(ratio).Within(.001f));Assert.That(Mathf.Abs(visual.transform.localScale.x),Is.EqualTo(beforeX*2.25f).Within(.01f));
+            var ramp=c.Create("rampa",Vector3.zero);Assert.That(ramp,Is.Not.Null);var rampData=c.SelectedData();c.SetStructureDirection(false);
+            Assert.That(rampData.rotationZ,Is.EqualTo(-25));Assert.That(c.Selection.SelectedItem.transform.eulerAngles.z,Is.EqualTo(335).Within(.01f));
+            var roundTrip=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project)).objects.Single(o=>o.instanceId==rampData.instanceId);Assert.That(roundTrip.rotationZ,Is.EqualTo(-25));
+            Assert.That(RuntimeLevelBounds.For(RuntimeLevelSize.ExtraLarge).right,Is.EqualTo(120));
+        }
+
+        [UnityTest]
+        public IEnumerator MovingPlatformAndWitchApplyTheirActualSprites()
+        {
+            yield return new EnterPlayMode();yield return null;var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();c.NewProject(false);
+            var moving=c.Project.objects.Single(o=>o.definitionId=="movil");c.Selection.Select(moving.instanceId);var movingOption=c.contentPack.OptionsFor(ItemKind.MovingPlatform)[1];c.SetAppearance(movingOption.id);yield return null;
+            Assert.That(c.Selection.SelectedItem.GetComponent<ItemVisual>(),Is.Not.Null);Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(movingOption.Preview));
+            var player=c.Project.objects.Single(o=>o.definitionId=="jugador");c.Selection.Select(player.instanceId);var witch=c.contentPack.CategoryFor(ItemKind.Player).Find("tiny-dungeon-84");c.SetAppearance(witch.id);yield return null;
+            Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(witch.Preview));Assert.That(c.Selection.SelectedItem.SelectedAppearance.displayName,Is.EqualTo("Brujita"));
+            yield return new ExitPlayMode();
         }
 
         [Test]

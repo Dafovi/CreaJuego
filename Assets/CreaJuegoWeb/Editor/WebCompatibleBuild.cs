@@ -103,7 +103,7 @@ namespace CreaJuego.Web.Editor
 
             EditorUserBuildSettings.webGLBuildSubtarget = WebGLTextureSubtarget.DXT;
             UnityEditor.WebGL.UserBuildSettings.codeOptimization =
-                UnityEditor.WebGL.WasmCodeOptimization.RuntimeSpeedLTO;
+                UnityEditor.WebGL.WasmCodeOptimization.DiskSizeLTO;
             AssetDatabase.SaveAssets();
         }
 

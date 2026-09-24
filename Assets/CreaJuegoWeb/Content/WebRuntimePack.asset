@@ -22,6 +22,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c0cfafc544496b34c9de100398e4bfef, type: 2}
   - {fileID: 11400000, guid: 11058175c0aafe94080ecb09bea1d436, type: 2}
   - {fileID: 11400000, guid: 86ee675dee6e103499f6a0aa8ac97576, type: 2}
+  - {fileID: 11400000, guid: bdcc894b6d68b9e49b6d7101a2ae8c59, type: 2}
+  - {fileID: 11400000, guid: 286400a3a499c15498477d760b64101d, type: 2}
+  - {fileID: 11400000, guid: 3b74466e0e7470f4396abb9afccc4628, type: 2}
   - {fileID: 11400000, guid: 141eef062544a2146a0c87f26339f47e, type: 2}
   preparedAppearances: {fileID: 11400000, guid: 9c4a3b595052fb548b261541e19b8af8, type: 2}
   defaults:
@@ -44,3 +47,6 @@ MonoBehaviour:
   - kind: 8
     appearanceId: web-cielo-azul
   sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}
+  productName: CreaJuego Web
+  tagline: Crea, aprende y juega
+  brandIcon: {fileID: 21300718, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}

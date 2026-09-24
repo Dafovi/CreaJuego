@@ -30,6 +30,7 @@ namespace CreaJuego
         {
             if(item==null) item=GetComponent<GameItem>();
             if(item==null || renderer==null) return;
+            if(graph.IsValid()) graph.Destroy();
             // Runtime authoring prefabs may retain the source kit renderer as a
             // geometry reference. Keep it for sizing, but show only CreaJuego's visual.
             renderer.enabled=true;
@@ -41,19 +42,21 @@ namespace CreaJuego
             renderer.color=BaseColor(item);
             var visualAppearance=item.customSprite==null ? appearance : null;
             var size=geometrySource!=null && (item.stretchVisualToSurface || item.customSprite==null && (appearance==null || !appearance.preserveAspect)) ? geometrySource.size : Vector2.one;
-            var sourceScale=visualAppearance!=null ? visualAppearance.scale : Vector2.one;
-            float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
-            renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
-            renderer.transform.localPosition=visualAppearance!=null ? visualAppearance.offset : Vector3.zero;
+            ApplyTransform(visualAppearance,size);
             renderer.flipX=visualAppearance!=null && visualAppearance.flipX;
             if(animator!=null)
             {
                 var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;
-                if(animator.runtimeAnimatorController!=controller) animator.runtimeAnimatorController=controller;
+                if(animator.runtimeAnimatorController!=controller){animator.runtimeAnimatorController=controller;animator.Rebind();if(animator.isActiveAndEnabled)animator.Update(0);}
                 animator.enabled=controller!=null || item.customSprite==null && HasDirectClips(appearance);
             }
-            if(graph.IsValid()) graph.Destroy();
             state=0;
+        }
+        void ApplyTransform(IAppearanceData visualAppearance,Vector2 size)
+        {
+            var sourceScale=visualAppearance!=null?visualAppearance.scale:Vector2.one;float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
+            renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
+            renderer.transform.localPosition=visualAppearance!=null?visualAppearance.offset:Vector3.zero;
         }
         static bool HasDirectClips(IAppearanceData appearance)=>appearance!=null &&
             (appearance.idleClip!=null || appearance.moveClip!=null || appearance.jumpClip!=null || appearance.attackClip!=null);
@@ -75,13 +78,14 @@ namespace CreaJuego
             if(renderer!=null) renderer.enabled=true;
             if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             if(item==null || renderer==null || item.definition==null) return;
+            var appearance=item.customSprite==null?item.SelectedAppearance:null;var size=geometrySource!=null&&(item.stretchVisualToSurface||item.customSprite==null&&(appearance==null||!appearance.preserveAspect))?geometrySource.size:Vector2.one;ApplyTransform(appearance,size);
             var body=GetComponent<Rigidbody2D>();
             float transformSpeed=(transform.position.x-previous.x)/Mathf.Max(Time.deltaTime,.0001f);
             float speed=body!=null && Mathf.Abs(body.linearVelocity.x)>.01f ? body.linearVelocity.x : transformSpeed;
             previous=transform.position;
             bool character=item.definition.kind==ItemKind.Player || item.definition.kind==ItemKind.Enemy;
-            var appearance=item.SelectedAppearance;
-            if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (appearance!=null && appearance.flipX);
+            var selectedAppearance=item.SelectedAppearance;
+            if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (selectedAppearance!=null && selectedAppearance.flipX);
             bool attacking=action!=null && action.IsVisuallyAttacking;
             if(item.customSprite==null && HasDirectClips(appearance))
             {
@@ -93,7 +97,7 @@ namespace CreaJuego
                 if(next!=state) PlayDirect(clip,next);
                 return;
             }
-            var profile=appearance!=null ? appearance.animationProfile : null;
+            var profile=selectedAppearance!=null ? selectedAppearance.animationProfile : null;
             if(animator==null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController==null || profile==null) return;
             string named=attacking && !string.IsNullOrEmpty(profile.attack) && animator.HasState(0,Animator.StringToHash(profile.attack)) ? profile.attack :
                 support!=null && !support.IsSupported ? profile.jump : Mathf.Abs(speed)>profile.movementThreshold ? profile.move : profile.idle;

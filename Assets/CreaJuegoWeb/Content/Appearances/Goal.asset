@@ -43,3 +43,17 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
+  - id: web-meta-cofre
+    displayName: Cofre de llegada
+    sprite: {fileID: -3393669804764342910, guid: 3581417627e28f544bd109f21694b536, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

@@ -28,6 +28,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-121
     displayName: Fantasma
     sprite: {fileID: 911841031958816375, guid: 0ac71d47e18fc68438d7b06df83248fd, type: 3}
@@ -41,6 +42,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-122
     displayName: Escarabajo
     sprite: {fileID: 5119971492981962814, guid: 5b8cb8281c4ea3a4aa83615253e05bf1, type: 3}
@@ -54,6 +56,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-123
     displayName: Seta
     sprite: {fileID: 6426566509724856983, guid: 1628c04a38c4d304ab69c53892bc4b88, type: 3}
@@ -67,6 +70,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: platformer-kit-gobbat
     displayName: Gobbat
     sprite: {fileID: 0}
@@ -80,6 +84,7 @@ MonoBehaviour:
     scale: {x: 0.35, y: 0.35}
     offset: {x: -0.0109375, y: -0.21875}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: platformer-kit-gobbler
     displayName: Gobbler
     sprite: {fileID: 0}
@@ -93,6 +98,7 @@ MonoBehaviour:
     scale: {x: 0.35, y: 0.35}
     offset: {x: -0.0328125, y: -0.35}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: platformer-kit-mawflower
     displayName: "Flor carn\xEDvora"
     sprite: {fileID: 0}
@@ -106,6 +112,7 @@ MonoBehaviour:
     scale: {x: 0.175, y: 0.175}
     offset: {x: 0, y: -0.35}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: platformer-kit-naga
     displayName: Naga
     sprite: {fileID: 0}
@@ -119,6 +126,7 @@ MonoBehaviour:
     scale: {x: 0.175, y: 0.175}
     offset: {x: -0.16953124, y: -0.35}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: platformer-kit-scarecrow
     displayName: "Espantap\xE1jaros"
     sprite: {fileID: 0}
@@ -132,3 +140,4 @@ MonoBehaviour:
     scale: {x: 0.175, y: 0.175}
     offset: {x: -0.175, y: -0.35}
     flipX: 0
+    preserveAspectWithoutPrefab: 0

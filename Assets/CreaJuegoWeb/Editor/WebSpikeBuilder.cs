@@ -28,13 +28,13 @@ namespace CreaJuego.Web.Editor
             EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");
             var kinds=new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Decoration,ItemKind.Background};
             var sources=AssetDatabase.FindAssets("t:GameItemDefinition",new[]{"Assets/CreaJuegoPacks/Starter/Content"}).Select(g=>AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(d=>d!=null&&kinds.Contains(d.kind)&&d.id!="piso").OrderBy(d=>d.order).ToArray();
-            var preparedDefinitions=sources.Select(PrepareDefinition).Concat(new[]{PrepareBackgroundDefinition(EnsureBackgroundSprite())}).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();
+            var baseDefinitions=sources.Select(PrepareDefinition).ToArray();var platform=baseDefinitions.First(d=>d.id=="plataforma");var preparedDefinitions=baseDefinitions.Concat(PrepareStructures(platform)).Concat(new[]{PrepareBackgroundDefinition(EnsureBackgroundSprite())}).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();EnsureMinimumOptions(categories);
             var preparedPack=LoadOrCreate<ContentPackDefinition>(ContentDirectory+"/WebAppearances.asset");preparedPack.id="web-parity-1";preparedPack.categories=categories;preparedPack.appearances=Array.Empty<AppearanceDefinition>();preparedPack.sceneServices=null;EditorUtility.SetDirty(preparedPack);
             var defaults=sources.Select(source=>
             {
                 var category=Array.Find(categories,c=>c.kind==source.kind);var option=PreferredDefault(category,source);return new RuntimeAppearanceDefault{kind=source.kind,appearanceId=option?.id??""};
             }).Concat(new[]{new RuntimeAppearanceDefault{kind=ItemKind.Background,appearanceId="web-cielo-azul"}}).GroupBy(d=>d.kind).Select(g=>g.First()).ToArray();
-            var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;EditorUtility.SetDirty(runtime);return runtime;
+            var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;runtime.productName="CreaJuego Web";runtime.tagline="Crea, aprende y juega";runtime.brandIcon=preparedDefinitions.FirstOrDefault(d=>d.kind==ItemKind.Player)?.icon;EditorUtility.SetDirty(runtime);return runtime;
         }
         static AppearanceOption PreferredDefault(AppearanceCategory category,GameItemDefinition source)
         {
@@ -75,8 +75,33 @@ namespace CreaJuego.Web.Editor
             {
                 var data=(IAppearanceData)original;target.options.Add(new AppearanceOption{id=original.id,displayName=original.displayName,sprite=data.sprite,controller=data.controller,animationProfile=data.animationProfile,idleClip=data.idleClip,moveClip=data.moveClip,jumpClip=data.jumpClip,attackClip=data.attackClip,scale=data.scale,offset=data.offset,flipX=data.flipX,preserveAspectWithoutPrefab=data.preserveAspect});
             }
-            if(kind==ItemKind.Background&&target.options.Count==0){var sprite=EnsureBackgroundSprite();target.options.Add(new AppearanceOption{id="web-cielo-azul",displayName="Cielo azul",sprite=sprite,scale=Vector2.one,preserveAspectWithoutPrefab=true});target.defaultAppearanceId="web-cielo-azul";}
+            if(kind==ItemKind.Background&&target.options.Count==0){target.options.Add(new AppearanceOption{id="web-cielo-azul",displayName="Cielo azul",sprite=EnsureBackgroundSprite(),scale=Vector2.one,preserveAspectWithoutPrefab=true});target.options.Add(new AppearanceOption{id="web-atardecer",displayName="Atardecer",sprite=EnsureGradientSprite("BackgroundSunset.png",new Color(.15f,.08f,.25f),new Color(1f,.48f,.25f)),scale=Vector2.one,preserveAspectWithoutPrefab=true});target.options.Add(new AppearanceOption{id="web-noche",displayName="Noche",sprite=EnsureGradientSprite("BackgroundNight.png",new Color(.015f,.025f,.09f),new Color(.08f,.18f,.38f)),scale=Vector2.one,preserveAspectWithoutPrefab=true});target.defaultAppearanceId="web-cielo-azul";}
+            if(kind==ItemKind.Platform&&!target.options.Any(o=>o.id=="web-escalera"))target.options.Add(new AppearanceOption{id="web-escalera",displayName="Escalones",sprite=EnsureStairsSprite(),scale=Vector2.one,preserveAspectWithoutPrefab=true});
             target.EnsureIds();EditorUtility.SetDirty(target);return target;
+        }
+        static GameItemDefinition[] PrepareStructures(GameItemDefinition platform)
+        {
+            return new[]{
+                PrepareStructure(platform,"muro","Muro","Una pared firme que limita o divide el recorrido.",90,24,platform.icon),
+                PrepareStructure(platform,"rampa","Rampa","Una superficie inclinada para subir o bajar.",25,25,platform.icon),
+                PrepareStructure(platform,"escalera","Escalera","Una subida por escalones.",25,26,EnsureStairsSprite())
+            };
+        }
+        static GameItemDefinition PrepareStructure(GameItemDefinition source,string id,string name,string description,float rotation,int order,Sprite icon)
+        {
+            var prefabPath=$"{ContentDirectory}/Prefabs/{id}.prefab";var contents=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source.prefab));
+            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
+            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint="Puedes cambiar su largo y la dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
+        }
+        static void EnsureMinimumOptions(AppearanceCategory[] categories)
+        {
+            var goal=categories.FirstOrDefault(c=>c.kind==ItemKind.Goal);var decoration=categories.FirstOrDefault(c=>c.kind==ItemKind.Decoration);
+            if(goal!=null&&goal.options.Count<3&&decoration!=null)
+            {
+                var source=decoration.options.FirstOrDefault(o=>o!=null&&o.displayName.IndexOf("Cofre abierto",StringComparison.OrdinalIgnoreCase)>=0)??decoration.options.FirstOrDefault();
+                if(source!=null)goal.options.Add(new AppearanceOption{id="web-meta-cofre",displayName="Cofre de llegada",sprite=source.Preview,scale=source.scale,offset=source.offset,preserveAspectWithoutPrefab=true});
+                goal.EnsureIds();EditorUtility.SetDirty(goal);
+            }
         }
         static GameItemDefinition PrepareBackgroundDefinition(Sprite sprite)
         {
@@ -95,6 +120,17 @@ namespace CreaJuego.Web.Editor
             var texture=new Texture2D(64,64,TextureFormat.RGBA32,false);for(int y=0;y<64;y++){float t=y/63f;var color=Color.Lerp(new Color(.09f,.16f,.3f),new Color(.2f,.52f,.78f),t);for(int x=0;x<64;x++)texture.SetPixel(x,y,color);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);
             var importer=(TextureImporter)AssetImporter.GetAtPath(path);importer.textureType=TextureImporterType.Sprite;importer.spriteImportMode=SpriteImportMode.Single;importer.spritePixelsPerUnit=64;importer.filterMode=FilterMode.Bilinear;importer.wrapMode=TextureWrapMode.Clamp;importer.mipmapEnabled=false;importer.SaveAndReimport();return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
+        static Sprite EnsureGradientSprite(string fileName,Color bottom,Color top)
+        {
+            var path=ContentDirectory+"/"+fileName;var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null)return sprite;
+            var texture=new Texture2D(64,64,TextureFormat.RGBA32,false);for(int y=0;y<64;y++){var color=Color.Lerp(bottom,top,y/63f);for(int x=0;x<64;x++)texture.SetPixel(x,y,color);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);ImportSprite(path,64);return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+        static Sprite EnsureStairsSprite()
+        {
+            const string path=ContentDirectory+"/Stairs.png";var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null)return sprite;
+            var texture=new Texture2D(64,32,TextureFormat.RGBA32,false);var clear=new Color(0,0,0,0);for(int y=0;y<32;y++)for(int x=0;x<64;x++){int step=x/16;texture.SetPixel(x,y,y<=7+step*8?new Color(.62f,.7f,.82f):clear);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);ImportSprite(path,16);return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+        static void ImportSprite(string path,float pixelsPerUnit){AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);var importer=(TextureImporter)AssetImporter.GetAtPath(path);importer.textureType=TextureImporterType.Sprite;importer.spriteImportMode=SpriteImportMode.Single;importer.spritePixelsPerUnit=pixelsPerUnit;importer.filterMode=FilterMode.Point;importer.wrapMode=TextureWrapMode.Clamp;importer.mipmapEnabled=false;importer.SaveAndReimport();}
         static T LoadOrCreate<T>(string path) where T:ScriptableObject
         {
             var asset=AssetDatabase.LoadAssetAtPath<T>(path);if(asset!=null)return asset;asset=ScriptableObject.CreateInstance<T>();AssetDatabase.CreateAsset(asset,path);return asset;
