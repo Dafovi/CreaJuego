@@ -23,6 +23,7 @@ namespace CreaJuego
     public sealed class AppearanceOption : IAppearanceData
     {
         [HideInInspector] public string id;
+        [InspectorName("Elementos compatibles (vacío = todos)")] public string[] definitionIds=Array.Empty<string>();
         [InspectorName("Nombre")] public string displayName;
         [InspectorName("Sprite")] public Sprite sprite;
         [InspectorName("Prefab de referencia visual")]

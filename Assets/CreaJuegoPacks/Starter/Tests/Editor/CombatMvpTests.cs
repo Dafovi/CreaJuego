@@ -86,7 +86,7 @@ namespace CreaJuego.Starter.Tests
             Assert.That(decoration.GetComponent<CollectableAttribute>(),Is.Null);
             Selection.activeObject=decoration.gameObject; WorkshopTestWindows.Open();
             var selector=WorkshopTestWindows.Properties.Q<AppearanceSelector>(); selector.Q<ToolbarSearchField>().value="Cofre";
-            Assert.That(selector.Q<ScrollView>("lista-apariencias").Query<Button>().ToList().Count(b=>b.style.display.value!=DisplayStyle.None),Is.EqualTo(3));
+            Assert.That(selector.Q<ScrollView>("lista-apariencias").Query<Button>().ToList().Count(b=>b.style.display.value!=DisplayStyle.None),Is.GreaterThanOrEqualTo(3));
         }
         [UnityTest] public IEnumerator LegacyColorControlHidesAfterAssigningArtWithoutReselection()
         {

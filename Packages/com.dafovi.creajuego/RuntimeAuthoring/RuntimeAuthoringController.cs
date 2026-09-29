@@ -54,7 +54,7 @@ namespace CreaJuego.Web
             }
             return data.objects.Count==0?null:data;
         }
-        public bool CaptureEditableScene(bool allowRemoval=false){var data=ReadEditableSceneProject();if(data==null)return false;if(!allowRemoval&&editableSceneProject!=null&&data.objects.Count<editableSceneProject.objects.Count)return false;editableSceneProject=data;return true;}
+        public bool CaptureEditableScene(bool allowRemoval=false){var previous=editableSceneProject;editableSceneProject=CloneProject(Project);var data=ReadEditableSceneProject();if(data==null){editableSceneProject=previous;return false;}if(!allowRemoval&&previous!=null&&data.objects.Count<previous.objects.Count){editableSceneProject=previous;return false;}editableSceneProject=data;return true;}
         static CreaJuegoProjectData CloneProject(CreaJuegoProjectData value)=>ProjectSerializer.FromJson(ProjectSerializer.ToJson(value));
 
         public void NewProject(bool notify=true)
@@ -102,12 +102,33 @@ namespace CreaJuego.Web
             var data=SelectedData();var item=Selection.SelectedItem;if(data==null||item==null||item.definition.kind!=ItemKind.Platform)return;
             data.platformWidth=RuntimeSnap.Width(width,Project.alignAutomatically);data.position.x=Project.alignAutomatically?Mathf.Round(centerX/RuntimeSnap.Step)*RuntimeSnap.Step:centerX;item.transform.position=data.position;RuntimePlatformGeometry.Apply(item,data.platformWidth);if(record)CommitEdit();
         }
-        public void SetFloat(string path,float value,bool record=true)
+        public Vector2 SelectedWorldSize
         {
-            var data=SelectedData();if(data==null)return;switch(path){case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;case "visualScale":data.visualScale=Mathf.Clamp(value,.1f,5f);break;case "width":ResizeSelected(value,data.position.x,record);return;}
-            ApplySelected(data);if(record)CommitEdit();
+            get{var item=Selection.SelectedItem;if(item==null)return Vector2.one;var bounds=ItemBounds(item);return new Vector2(bounds.size.x,bounds.size.y);}
         }
-        public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
+        public void ResizeSelected(Vector2 worldSize,Vector2 worldCenter,bool record)
+        {
+            var data=SelectedData();var item=Selection.SelectedItem;if(data==null||item==null||item.definition==null||item.definition.kind==ItemKind.Background)return;
+            var bounds=ItemBounds(item);if(bounds.size.x<.001f||bounds.size.y<.001f)return;
+            worldSize.x=RuntimeSnap.Width(Mathf.Clamp(worldSize.x,.25f,30),Project.alignAutomatically);worldSize.y=RuntimeSnap.Width(Mathf.Clamp(worldSize.y,.25f,30),Project.alignAutomatically);
+            var scale=data.scale;if(Mathf.Abs(scale.x)<.001f)scale.x=1;if(Mathf.Abs(scale.y)<.001f)scale.y=1;
+            scale.x=Mathf.Clamp(scale.x*(worldSize.x/bounds.size.x),-20,20);scale.y=Mathf.Clamp(scale.y*(worldSize.y/bounds.size.y),-20,20);
+            if(Mathf.Abs(scale.x)<.05f)scale.x=.05f*Mathf.Sign(scale.x==0?1:scale.x);if(Mathf.Abs(scale.y)<.05f)scale.y=.05f*Mathf.Sign(scale.y==0?1:scale.y);
+            data.scale=scale;var delta=new Vector3(worldCenter.x-bounds.center.x,worldCenter.y-bounds.center.y);data.position+=delta;if(Project.alignAutomatically)data.position=RuntimeSnap.Position(data.position,true);
+            item.transform.position=data.position;item.transform.localScale=data.scale;if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);Physics2D.SyncTransforms();if(record)CommitEdit();
+        }        public void SetFloat(string path,float value,bool record=true)
+        {
+            var data=SelectedData();if(data==null)return;
+            switch(path)
+            {
+                case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;
+                case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;
+                case "visualScale":data.visualScale=Mathf.Clamp(value,.1f,5f);break;case "width":ResizeSelected(value,data.position.x,record);return;
+                case "sizeX":{var size=SelectedWorldSize;size.x=value;var center=ItemBounds(Selection.SelectedItem).center;ResizeSelected(size,new Vector2(center.x,center.y),record);return;}
+                case "sizeY":{var size=SelectedWorldSize;size.y=value;var center=ItemBounds(Selection.SelectedItem).center;ResizeSelected(size,new Vector2(center.x,center.y),record);return;}
+            }
+            ApplySelected(data);if(record)CommitEdit();
+        }        public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
         public void SetAppearance(string id)
         {
             var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
@@ -122,7 +143,7 @@ namespace CreaJuego.Web
         {
             var data=SelectedData();if(data==null)return;
             if(data.definitionId=="muro")data.rotationZ=facesRight?0:90;
-            else if(data.definitionId=="rampa"||data.definitionId=="escalera")data.rotationZ=facesRight?25:-25;
+            else if(data.definitionId=="rampa")data.rotationZ=facesRight?18:-18;
             else return;
             ApplySelected(data);CommitEdit();
         }
@@ -197,7 +218,7 @@ namespace CreaJuego.Web
         void EnsureDefaultAppearance(RuntimeItemData data,GameItemDefinition definition)
         {
             if(data==null||definition==null||data.appearanceChosen||!string.IsNullOrEmpty(data.customImageBase64)||contentPack==null)return;
-            if(definition.id=="escalera"&&string.IsNullOrEmpty(data.appearanceId)){data.appearanceId="web-escalera";return;}
+            if(string.IsNullOrEmpty(data.appearanceId)){var preferred=definition.id=="plataforma"?"platformer-stone-tile":definition.id=="muro"?"creajuego-wall-light":definition.id=="rampa"?"creajuego-ramp":null;if(preferred!=null&&contentPack.CategoryFor(definition.kind)?.Find(preferred)!=null){data.appearanceId=preferred;return;}}
             bool missing=string.IsNullOrEmpty(data.appearanceId);
             bool formerPlayerDefault=definition.kind==ItemKind.Player&&data.appearanceId=="tiny-dungeon-84";
             bool formerEnemyDefault=definition.kind==ItemKind.Enemy&&data.appearanceId=="tiny-dungeon-120";

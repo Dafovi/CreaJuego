@@ -30,6 +30,7 @@ namespace CreaJuego.Web
         public string FlowText=>flow!=null?flow.text:"";
         public string ReadinessText=>readinessTitle!=null?readinessTitle.text:"";
         public bool GameplayHudVisible=>gameplayHudPanel!=null&&gameplayHudPanel.activeSelf;
+        public int GameplayHeartCount=>hearts==null?0:hearts.GetComponentsInChildren<Image>(false).Count(image=>image.sprite==RuntimeIconLibrary.Heart);
         public string GameplayHudText=>(hudObjective?.text??"")+" "+(hudScore?.text??"")+" "+(hudEnemies?.text??"")+" "+(hearts!=null?string.Join(" ",hearts.GetComponentsInChildren<Text>(false).Select(t=>t.text)):"");
         public bool HasPreparedLayout=>canvas!=null&&catalog!=null&&list!=null&&properties!=null&&status!=null&&modeButton!=null&&leftPanel!=null&&rightPanel!=null&&readinessPanel!=null;
 
@@ -149,8 +150,9 @@ namespace CreaJuego.Web
         }
         void ItemProperties(ItemKind kind,RuntimeItemData data,ref int y)
         {
+            if(kind!=ItemKind.Background){var size=c.SelectedWorldSize;Group("TAMAÑO",ref y);Slider("Ancho","sizeX",size.x,.25f,30,ref y);Slider("Alto","sizeY",size.y,.25f,30,ref y);}
             if(kind==ItemKind.Player){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,5,ref y);Slider("Fuerza de salto","jump",data.jump,5,18,ref y);Group("PUNTOS DE VIDA",ref y);Slider("Puntos de vida","health",data.health,1,10,ref y);}
-            else if(kind==ItemKind.Platform){Group("FORMA",ref y);Slider("Largo","width",data.platformWidth,.5f,30,ref y);if(data.definitionId=="muro"||data.definitionId=="rampa"||data.definitionId=="escalera")Direction(data,ref y);}
+            else if(kind==ItemKind.Platform){if(data.definitionId=="muro"||data.definitionId=="rampa")Direction(data,ref y);}
             else if(kind==ItemKind.MovingPlatform){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);}
             else if(kind==ItemKind.Background){Group("FONDO",ref y);Label(properties,"El fondo cubre todo el lienzo visible y sólo puede haber uno.",13,new Vector2(6,-y),new Vector2(238,46),Muted);y+=52;}
             else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);}
@@ -170,11 +172,11 @@ namespace CreaJuego.Web
 
         void Appearance(ItemKind kind,RuntimeItemData data,ref int y)
         {
-            Group("APARIENCIA",ref y);if(kind!=ItemKind.Background)Slider("Tamaño de la imagen","visualScale",data.visualScale,.1f,5,ref y);var category=c.contentPack?.CategoryFor(kind);if(category==null){Label(properties,"Este elemento usa su apariencia preparada.",12,new Vector2(6,-y),new Vector2(238,38),Muted);y+=44;}
+            Group("APARIENCIA",ref y);var category=c.contentPack?.CategoryFor(kind);if(category==null){Label(properties,"Este elemento usa su apariencia preparada.",12,new Vector2(6,-y),new Vector2(238,38),Muted);y+=44;}
             else
             {
                 if(category.options.Count>8)Search(data,ref y);
-                var options=c.contentPack.OptionsFor(kind,appearanceSearch);foreach(var option in options.Take(24)){var captured=option;bool selected=data.appearanceId==option.id&&string.IsNullOrEmpty(data.customImageBase64);ButtonAt(properties,option.displayName,new Vector2(6,-y),()=>c.SetAppearance(captured.id),new Vector2(238,46),option.Preview,selected?Selected:Soft,TextColor,13);y+=51;}
+                var options=c.contentPack.OptionsFor(kind,appearanceSearch,data.definitionId);foreach(var option in options.Take(24)){var captured=option;bool selected=data.appearanceId==option.id&&string.IsNullOrEmpty(data.customImageBase64);ButtonAt(properties,option.displayName,new Vector2(6,-y),()=>c.SetAppearance(captured.id),new Vector2(238,46),option.Preview,selected?Selected:Soft,TextColor,13);y+=51;}
                 if(options.Length>24){Label(properties,"Refina la búsqueda para ver más opciones.",12,new Vector2(6,-y),new Vector2(238,34),Muted);y+=38;}
             }
             var custom=ButtonAt(properties,"Elegir imagen…",new Vector2(6,-y),c.PickImage,new Vector2(238,40),null,!string.IsNullOrEmpty(data.customImageBase64)?Selected:Soft,TextColor,13);y+=46;Label(properties,"PNG o JPG · máximo 2 MB y 2048 × 2048",11,new Vector2(6,-y),new Vector2(238,30),Muted);y+=34;

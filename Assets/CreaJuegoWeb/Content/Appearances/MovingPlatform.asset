@@ -16,6 +16,7 @@ MonoBehaviour:
   defaultAppearanceId: 
   options:
   - id: tiny-dungeon-36
+    definitionIds: []
     displayName: Piedra clara
     sprite: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
     prefab: {fileID: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-37
+    definitionIds: []
     displayName: Piedra antigua
     sprite: {fileID: 6382969040213947563, guid: 67fef63a100a3f94a8188fc8a5f9fe40, type: 3}
     prefab: {fileID: 0}
@@ -44,6 +46,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-38
+    definitionIds: []
     displayName: Piedra oscura
     sprite: {fileID: -3106639410894378149, guid: 2cb9865b1efaf5d48b0dd8d739737734, type: 3}
     prefab: {fileID: 0}
@@ -57,3 +60,18 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
+  - id: plains-moving-ground
+    definitionIds: []
+    displayName: "Plataforma de c\xE9sped"
+    sprite: {fileID: -1653456321, guid: 29e21165cb3ae334d969d4be634eaa9e, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

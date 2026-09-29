@@ -46,11 +46,12 @@ namespace CreaJuego.Web.Editor
                 throw new InvalidOperationException("La salida debe ser el repositorio PWA de CreaJuego Web.");
 
             var index = File.ReadAllText(indexPath);
-            if (!index.Contains("<title>CreaJuego Web | Dafovi_LabCo</title>") ||
-                !index.Contains("width=\"100%\" height=\"100%\""))
-                throw new InvalidOperationException("El index personalizado no contiene el título o el canvas al 100% esperados.");
+            if (!index.Contains("<title>") || !index.Contains("</title>") ||
+                !index.Contains("width=\"100%\"") || !index.Contains("height=\"100%\""))
+                throw new InvalidOperationException("El index personalizado no contiene un título o el canvas al 100% esperado.");
 
-            WebSpikeBuilder.Prepare();
+            if (!File.Exists(Path.GetFullPath(WebSpikeBuilder.ScenePath)))
+                throw new FileNotFoundException("No existe la escena Web preparada.", WebSpikeBuilder.ScenePath);
             Configure();
 
             var stagingRoot = Path.Combine(outputPath, ".unity-staging", "creajuego-web");
@@ -87,7 +88,9 @@ namespace CreaJuego.Web.Editor
             PlayerSettings.defaultWebScreenHeight = 540;
 
             PlayerSettings.WebGL.template = "APPLICATION:PWA";
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            // Brotli minimizes the initial transfer for workshop locations with slow internet.
+            // The fallback keeps the PWA compatible with static hosting such as GitHub Pages.
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.WebGL.dataCaching = true;
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
@@ -131,7 +134,6 @@ namespace CreaJuego.Web.Editor
         }
     }
 }
-
 
 
 

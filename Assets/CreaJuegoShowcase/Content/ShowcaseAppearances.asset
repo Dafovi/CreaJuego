@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a706aded0cf6554db9e24f336e5032e, type: 3}
+  m_Name: ShowcaseAppearances
+  m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.ContentPackDefinition
+  id: creajuego-showcase
+  categories:
+  - {fileID: 11400000, guid: 56611902b31bd6f4b8c723ab5dbd11e4, type: 2}
+  - {fileID: 11400000, guid: ea5d668ec24f36d40ac43f0b4be508d1, type: 2}
+  - {fileID: 11400000, guid: a0edb6b51ef5d32478516d533f585895, type: 2}
+  - {fileID: 11400000, guid: 4d92a1acf4f7e1140bd1999fb09aedea, type: 2}
+  - {fileID: 11400000, guid: 1bca57a030896ca488a796f7c801c0cb, type: 2}
+  - {fileID: 11400000, guid: 589cfb92e43ae174c84868d02aa9193b, type: 2}
+  - {fileID: 11400000, guid: cc00bfb76e2376148bbfa9472007d847, type: 2}
+  - {fileID: 11400000, guid: bbd08925600c0f4458e7fdbdee6cdcdc, type: 2}
+  - {fileID: 11400000, guid: b9cf9493a764e7a42a1791b9f68b420b, type: 2}
+  appearances: []
+  sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}

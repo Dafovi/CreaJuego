@@ -16,8 +16,8 @@ MonoBehaviour:
   displayName: Rampa
   category: Mundo
   description: Una superficie inclinada para subir o bajar.
-  learningHint: "Puedes cambiar su largo y la direcci\xF3n desde Propiedades."
-  icon: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
+  learningHint: "Puedes cambiar su ancho, alto y direcci\xF3n desde Propiedades."
+  icon: {fileID: 21300000, guid: b2897dc56dc08984d93ae4a9da761556, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 5895900911163389278, guid: 9539ddbc395f5614590f64986af01120, type: 3}
   kind: 1

@@ -22,13 +22,15 @@ namespace CreaJuego
         public static SpriteRenderer Resolve(GameItem item)
         {
             var visual=item.GetComponent<ItemVisual>();
-            return visual != null && visual.renderer != null ? visual.renderer : item.GetComponent<SpriteRenderer>();
+            return visual != null && visual.renderer != null ? visual.renderer : item.GetComponentInChildren<SpriteRenderer>(true);
         }
         void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().OfType<IVisualActionState>().FirstOrDefault(); }
         void OnDestroy() { if(graph.IsValid()) graph.Destroy(); }
         public void Apply()
         {
             if(item==null) item=GetComponent<GameItem>();
+            if(renderer==null) renderer=GetComponentsInChildren<SpriteRenderer>(true).FirstOrDefault();
+            if(geometrySource==null) geometrySource=renderer;
             if(item==null || renderer==null) return;
             if(graph.IsValid()) graph.Destroy();
             // Runtime authoring prefabs may retain the source kit renderer as a
@@ -36,6 +38,14 @@ namespace CreaJuego
             renderer.enabled=true;
             if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             var appearance=item.SelectedAppearance;
+            if(animator!=null)
+            {
+                var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;
+                if(animator.runtimeAnimatorController!=controller){animator.runtimeAnimatorController=controller;animator.Rebind();if(animator.isActiveAndEnabled)animator.Update(0);}
+                animator.enabled=controller!=null || item.customSprite==null && HasDirectClips(appearance);
+            }
+            // Animator.Rebind can restore values serialized in the source prefab.
+            // The educational appearance must therefore be applied afterwards.
             if(item.customSprite!=null) renderer.sprite=item.customSprite;
             else if(appearance!=null) renderer.sprite=appearance.sprite;
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
@@ -44,21 +54,26 @@ namespace CreaJuego
             var size=geometrySource!=null && (item.stretchVisualToSurface || item.customSprite==null && (appearance==null || !appearance.preserveAspect)) ? geometrySource.size : Vector2.one;
             ApplyTransform(visualAppearance,size);
             renderer.flipX=visualAppearance!=null && visualAppearance.flipX;
-            if(animator!=null)
-            {
-                var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;
-                if(animator.runtimeAnimatorController!=controller){animator.runtimeAnimatorController=controller;animator.Rebind();if(animator.isActiveAndEnabled)animator.Update(0);}
-                animator.enabled=controller!=null || item.customSprite==null && HasDirectClips(appearance);
-            }
             state=0;
         }
         void ApplyTransform(IAppearanceData visualAppearance,Vector2 size)
         {
             var sourceScale=visualAppearance!=null?visualAppearance.scale:Vector2.one;float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
-            renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
-            renderer.transform.localPosition=visualAppearance!=null?visualAppearance.offset:Vector3.zero;
-        }
-        static bool HasDirectClips(IAppearanceData appearance)=>appearance!=null &&
+            float scaleX=sourceScale.x*educationalScale,scaleY=sourceScale.y*educationalScale;
+            var offset=visualAppearance!=null?visualAppearance.offset:Vector2.zero;
+            if(item.definition!=null&&item.definition.kind==ItemKind.Platform&&item.stretchVisualToSurface)
+            {
+                renderer.drawMode=SpriteDrawMode.Tiled;renderer.transform.localScale=new Vector3(scaleX,scaleY,1);
+                renderer.size=new Vector2(size.x/Mathf.Max(.001f,Mathf.Abs(scaleX)),size.y/Mathf.Max(.001f,Mathf.Abs(scaleY)));
+                if(renderer.sprite!=null)
+                {
+                    var pivot=new Vector2(renderer.sprite.pivot.x/renderer.sprite.rect.width,renderer.sprite.pivot.y/renderer.sprite.rect.height);
+                    offset+=Vector2.Scale(pivot-new Vector2(.5f,.5f),size);
+                }
+            }
+            else renderer.transform.localScale=new Vector3(scaleX*size.x,scaleY*size.y,1);
+            renderer.transform.localPosition=offset;
+        }        static bool HasDirectClips(IAppearanceData appearance)=>appearance!=null &&
             (appearance.idleClip!=null || appearance.moveClip!=null || appearance.jumpClip!=null || appearance.attackClip!=null);
         void PlayDirect(AnimationClip clip,int next)
         {

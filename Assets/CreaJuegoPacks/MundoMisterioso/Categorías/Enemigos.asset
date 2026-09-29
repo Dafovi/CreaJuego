@@ -16,6 +16,7 @@ MonoBehaviour:
   defaultAppearanceId: platformer-kit-scarecrow
   options:
   - id: tiny-dungeon-120
+    definitionIds: []
     displayName: "Murci\xE9lago"
     sprite: {fileID: 6091706668691328248, guid: 161f6a4ee36994343a22e81b6260d161, type: 3}
     prefab: {fileID: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-121
+    definitionIds: []
     displayName: Fantasma
     sprite: {fileID: 911841031958816375, guid: 0ac71d47e18fc68438d7b06df83248fd, type: 3}
     prefab: {fileID: 0}
@@ -44,6 +46,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-122
+    definitionIds: []
     displayName: Escarabajo
     sprite: {fileID: 5119971492981962814, guid: 5b8cb8281c4ea3a4aa83615253e05bf1, type: 3}
     prefab: {fileID: 0}
@@ -58,6 +61,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-123
+    definitionIds: []
     displayName: Seta
     sprite: {fileID: 6426566509724856983, guid: 1628c04a38c4d304ab69c53892bc4b88, type: 3}
     prefab: {fileID: 0}
@@ -72,6 +76,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-gobbat
+    definitionIds: []
     displayName: Gobbat
     sprite: {fileID: 0}
     prefab: {fileID: 2240683968551890655, guid: 9ad93ac53b8896a42b4351d657f95f6f, type: 3}
@@ -86,6 +91,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-gobbler
+    definitionIds: []
     displayName: Gobbler
     sprite: {fileID: 0}
     prefab: {fileID: 3428413880164911850, guid: a71e9ae109abf3a4180fb45d4d6ce175, type: 3}
@@ -100,6 +106,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-mawflower
+    definitionIds: []
     displayName: "Flor carn\xEDvora"
     sprite: {fileID: 0}
     prefab: {fileID: 4972895403844446895, guid: ca20752769ff2734d8b799072559a729, type: 3}
@@ -114,6 +121,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-naga
+    definitionIds: []
     displayName: Naga
     sprite: {fileID: 0}
     prefab: {fileID: 8253166829650983234, guid: 7664d86eb1b24ba459e3de4f7bf1640f, type: 3}
@@ -128,6 +136,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-scarecrow
+    definitionIds: []
     displayName: "Espantap\xE1jaros"
     sprite: {fileID: 0}
     prefab: {fileID: 2443884310665460745, guid: aad80096f92533242bf5d7e5d522ad34, type: 3}

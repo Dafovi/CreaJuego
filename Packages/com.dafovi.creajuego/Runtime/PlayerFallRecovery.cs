@@ -23,7 +23,7 @@ namespace CreaJuego
 
         private void FixedUpdate()
         {
-            if (hasSafePosition && transform.position.y < FallLimit) ReturnToStart();
+            if (hasSafePosition && GetComponent<Rigidbody2D>().position.y < FallLimit) ReturnToStart();
         }
 
         public void CaptureCurrentPosition()
@@ -36,11 +36,17 @@ namespace CreaJuego
         {
             if (!hasSafePosition) CaptureCurrentPosition();
             var body = GetComponent<Rigidbody2D>();
-            transform.position = safePosition;
-            body.position = safePosition;
+            var wasSimulated = body.simulated;
+            body.simulated = false;
             body.linearVelocity = Vector2.zero;
             body.angularVelocity = 0;
+            transform.position = safePosition;
+            body.position = safePosition;
+            body.simulated = wasSimulated;
             body.WakeUp();
+            body.position = safePosition;
+            transform.position = safePosition;
+            Physics2D.SyncTransforms();
         }
     }
 }

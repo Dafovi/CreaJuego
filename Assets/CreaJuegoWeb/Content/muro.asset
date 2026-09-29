@@ -16,8 +16,8 @@ MonoBehaviour:
   displayName: Muro
   category: Mundo
   description: Una pared firme que limita o divide el recorrido.
-  learningHint: "Puedes cambiar su largo y la direcci\xF3n desde Propiedades."
-  icon: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
+  learningHint: "Puedes cambiar su ancho, alto y direcci\xF3n desde Propiedades."
+  icon: {fileID: 21300000, guid: 1524ac31150677c41bea6b7f6b521e6d, type: 3}
   appearancePack: {fileID: 0}
   prefab: {fileID: 5699804001566596433, guid: 27e5fa122e38a304aa52d600d78c8461, type: 3}
   kind: 1

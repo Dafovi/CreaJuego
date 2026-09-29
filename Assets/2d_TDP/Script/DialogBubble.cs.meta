@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 78e33b377035171458bfd16229c3cefb
+timeCreated: 1443804513
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Script/DialogBubble.cs
+  uploadId: 87323

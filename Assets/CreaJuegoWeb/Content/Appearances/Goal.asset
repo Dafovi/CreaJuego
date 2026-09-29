@@ -16,6 +16,7 @@ MonoBehaviour:
   defaultAppearanceId: 
   options:
   - id: tiny-dungeon-21
+    definitionIds: []
     displayName: Puerta antigua
     sprite: {fileID: -578904658552062867, guid: d607d325561f9a24398cf9e0690ddd9f, type: 3}
     prefab: {fileID: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-33
+    definitionIds: []
     displayName: Puerta misteriosa
     sprite: {fileID: -7354126104438456436, guid: 8cc55968bfdb13543bbfebebdb281799, type: 3}
     prefab: {fileID: 0}
@@ -43,9 +45,10 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
-  - id: web-meta-cofre
-    displayName: Cofre de llegada
-    sprite: {fileID: -3393669804764342910, guid: 3581417627e28f544bd109f21694b536, type: 3}
+  - id: skull-shrine-goal
+    definitionIds: []
+    displayName: Santuario
+    sprite: {fileID: 7065572184706838556, guid: e94941527fb7c5843a8287d181edb19e, type: 3}
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
@@ -53,7 +56,7 @@ MonoBehaviour:
     moveClip: {fileID: 0}
     jumpClip: {fileID: 0}
     attackClip: {fileID: 0}
-    scale: {x: 1, y: 1}
+    scale: {x: 0.18, y: 0.18}
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 1

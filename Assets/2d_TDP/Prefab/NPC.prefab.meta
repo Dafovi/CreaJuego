@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0d13baa786e3c9941b157ce7345d4e55
+timeCreated: 1444228443
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Prefab/NPC.prefab
+  uploadId: 87323

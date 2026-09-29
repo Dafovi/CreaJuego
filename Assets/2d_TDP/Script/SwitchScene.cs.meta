@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: d2aa5e4ffca638846bad7b680f69e35e
+timeCreated: 1444228697
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Script/SwitchScene.cs
+  uploadId: 87323

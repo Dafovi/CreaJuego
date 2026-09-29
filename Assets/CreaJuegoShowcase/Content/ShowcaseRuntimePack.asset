@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c33292d63da35ca46a3e040d2fb6fbbc, type: 3}
+  m_Name: ShowcaseRuntimePack
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeContentPack
+  id: creajuego-showcase
+  definitions:
+  - {fileID: 11400000, guid: 08faacc5ddd29db48bf61c75d9f1de6b, type: 2}
+  - {fileID: 11400000, guid: d61cdb87fa9a6a24fb100fbeffed5e62, type: 2}
+  - {fileID: 11400000, guid: ccdb17a8f33ba7848b84bf57768d4e69, type: 2}
+  - {fileID: 11400000, guid: 24a3683785aed4e4e895c83fdc61bfe1, type: 2}
+  - {fileID: 11400000, guid: 95c772236e2f15640bbe5091af51e928, type: 2}
+  - {fileID: 11400000, guid: c0cfafc544496b34c9de100398e4bfef, type: 2}
+  - {fileID: 11400000, guid: 11058175c0aafe94080ecb09bea1d436, type: 2}
+  - {fileID: 11400000, guid: 86ee675dee6e103499f6a0aa8ac97576, type: 2}
+  - {fileID: 11400000, guid: bdcc894b6d68b9e49b6d7101a2ae8c59, type: 2}
+  - {fileID: 11400000, guid: 286400a3a499c15498477d760b64101d, type: 2}
+  - {fileID: 11400000, guid: 141eef062544a2146a0c87f26339f47e, type: 2}
+  preparedAppearances: {fileID: 11400000, guid: 802b0a2df54f113459dd3d463f855ffa, type: 2}
+  defaults:
+  - kind: 0
+    appearanceId: 5b84b5bdbf244cecb12b976bbf0aa6c7
+  - kind: 1
+    appearanceId: tiny-dungeon-36
+  - kind: 2
+    appearanceId: tiny-dungeon-115
+  - kind: 3
+    appearanceId: tiny-dungeon-103
+  - kind: 4
+    appearanceId: tiny-dungeon-21
+  - kind: 5
+    appearanceId: tiny-dungeon-36
+  - kind: 6
+    appearanceId: platformer-kit-scarecrow
+  - kind: 7
+    appearanceId: tiny-dungeon-2072
+  - kind: 8
+    appearanceId: web-cielo-azul
+  sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}
+  productName: CreaJuego Showcase
+  tagline: El santuario perdido
+  brandIcon: {fileID: 21300718, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}

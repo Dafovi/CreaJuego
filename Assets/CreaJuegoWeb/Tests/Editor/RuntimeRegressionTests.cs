@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Linq;
 using CreaJuego.Web;
+using CreaJuego.PlaygroundBackend;
+using Playground.Attributes;
+using Playground.Movement;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -183,12 +186,12 @@ namespace CreaJuego.Web.Tests
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
             yield return new EnterPlayMode();yield return null;
             var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var runtimeHeader=GameObject.Find("Cabecera").GetComponent<RectTransform>();
-            Assert.That(runtimeHeader.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(runtimeHeader.anchorMax,Is.EqualTo(Vector2.one));Assert.That(runtimeHeader.anchoredPosition,Is.EqualTo(new Vector2(0,254.91345f)).Using(Vector2ComparerWithEqualsOperator.Instance));Assert.That(runtimeHeader.sizeDelta,Is.EqualTo(new Vector2(0,-670.1731f)).Using(Vector2ComparerWithEqualsOperator.Instance),"Play Mode debe conservar el layout ajustado manualmente en WebAuthoringSpike.");
+            Assert.That(runtimeHeader.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(runtimeHeader.anchorMax,Is.EqualTo(Vector2.one));Assert.That(runtimeHeader.anchoredPosition,Is.EqualTo(new Vector2(0,334.54327f)).Using(Vector2ComparerWithEqualsOperator.Instance));Assert.That(runtimeHeader.sizeDelta,Is.EqualTo(new Vector2(0,-669.08655f)).Using(Vector2ComparerWithEqualsOperator.Instance),"Play Mode debe conservar el layout ajustado manualmente en WebAuthoringSpike.");
             c.NewProject(false);ui.Refresh();yield return null;
             Assert.That(ui.VisibleItemRowCount,Is.EqualTo(c.Project.objects.Count));
             var firstRow=Object.FindObjectsByType<RuntimeItemRow>(FindObjectsInactive.Exclude).First().GetComponent<RectTransform>();Assert.That(firstRow.pivot.y,Is.EqualTo(1));Assert.That(firstRow.anchorMin.y,Is.EqualTo(1));Assert.That(Object.FindObjectsByType<ScrollRect>(FindObjectsInactive.Exclude).Single(x=>x.name=="Mi juego").verticalNormalizedPosition,Is.EqualTo(1).Within(.01f));
 
-            var expected=new[]{("jugador","JUGADOR","Velocidad"),("plataforma","PLATAFORMA","Largo"),("enemigo","ENEMIGO","Daño"),("decoracion","DECORACIÓN","Arrastra")};
+            var expected=new[]{("jugador","JUGADOR","Velocidad"),("plataforma","PLATAFORMA","Ancho"),("enemigo","ENEMIGO","Daño"),("decoracion","DECORACIÓN","Arrastra")};
             foreach(var entry in expected)
             {
                 var data=c.Project.objects.First(o=>o.definitionId==entry.Item1);
@@ -257,7 +260,11 @@ namespace CreaJuego.Web.Tests
             var c=Open();
             foreach(var kind in new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Background})
                 Assert.That(c.contentPack.OptionsFor(kind).Length,Is.GreaterThanOrEqualTo(3),kind+" debe ofrecer al menos tres apariencias.");
-            Assert.That(c.contentPack.Find("muro"),Is.Not.Null);Assert.That(c.contentPack.Find("rampa"),Is.Not.Null);Assert.That(c.contentPack.Find("escalera"),Is.Not.Null);
+            Assert.That(c.contentPack.Find("muro"),Is.Not.Null);Assert.That(c.contentPack.Find("rampa"),Is.Not.Null);Assert.That(c.contentPack.Find("escalera"),Is.Null);
+            Assert.That(c.contentPack.OptionsFor(ItemKind.Platform,null,"plataforma").Any(o=>o.id=="platformer-stone-tile"));Assert.That(c.contentPack.OptionsFor(ItemKind.Platform,null,"muro").All(o=>o.definitionIds.Contains("muro")));Assert.That(c.contentPack.OptionsFor(ItemKind.Platform,null,"muro").Any(o=>o.id=="creajuego-wall-light"));Assert.That(c.contentPack.OptionsFor(ItemKind.Platform,null,"rampa").All(o=>o.definitionIds.Contains("rampa")));
+            Assert.That(c.contentPack.OptionsFor(ItemKind.Goal).Any(o=>o.id=="platformer-finish-chest"||o.id=="web-meta-cofre"),Is.False);
+            var platformData=c.Project.objects.First(o=>o.definitionId=="plataforma");c.Selection.Select(platformData.instanceId);c.SetAppearance("platformer-stone-tile");var platformItem=c.Selection.SelectedItem;
+            Assert.That(ItemVisual.Resolve(platformItem).bounds.center.x,Is.EqualTo(platformItem.GetComponent<Collider2D>().bounds.center.x).Within(.01f));
         }
 
         [Test]
@@ -266,22 +273,132 @@ namespace CreaJuego.Web.Tests
             var c=Open();var moving=c.Project.objects.Single(o=>o.definitionId=="movil");c.Selection.Select(moving.instanceId);var visual=ItemVisual.Resolve(c.Selection.SelectedItem);float ratio=Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),beforeX=Mathf.Abs(visual.transform.localScale.x);c.SetFloat("visualScale",2.25f);
             Assert.That(moving.visualScale,Is.EqualTo(2.25f));Assert.That(Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),Is.EqualTo(ratio).Within(.001f));Assert.That(Mathf.Abs(visual.transform.localScale.x),Is.EqualTo(beforeX*2.25f).Within(.01f));
             var ramp=c.Create("rampa",Vector3.zero);Assert.That(ramp,Is.Not.Null);var rampData=c.SelectedData();c.SetStructureDirection(false);
-            Assert.That(rampData.rotationZ,Is.EqualTo(-25));Assert.That(c.Selection.SelectedItem.transform.eulerAngles.z,Is.EqualTo(335).Within(.01f));
-            var roundTrip=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project)).objects.Single(o=>o.instanceId==rampData.instanceId);Assert.That(roundTrip.rotationZ,Is.EqualTo(-25));
+            Assert.That(rampData.rotationZ,Is.EqualTo(-18));Assert.That(c.Selection.SelectedItem.transform.eulerAngles.z,Is.EqualTo(342).Within(.01f));
+            var roundTrip=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project)).objects.Single(o=>o.instanceId==rampData.instanceId);Assert.That(roundTrip.rotationZ,Is.EqualTo(-18));
             Assert.That(RuntimeLevelBounds.For(RuntimeLevelSize.ExtraLarge).right,Is.EqualTo(120));
         }
 
         [UnityTest]
-        public IEnumerator MovingPlatformAndWitchApplyTheirActualSprites()
+        public IEnumerator MovingPlatformAppliesItsActualSprite()
         {
-            yield return new EnterPlayMode();yield return null;var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();c.NewProject(false);
-            var moving=c.Project.objects.Single(o=>o.definitionId=="movil");c.Selection.Select(moving.instanceId);var movingOption=c.contentPack.OptionsFor(ItemKind.MovingPlatform)[1];c.SetAppearance(movingOption.id);yield return null;
-            Assert.That(c.Selection.SelectedItem.GetComponent<ItemVisual>(),Is.Not.Null);Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(movingOption.Preview));
-            var player=c.Project.objects.Single(o=>o.definitionId=="jugador");c.Selection.Select(player.instanceId);var witch=c.contentPack.CategoryFor(ItemKind.Player).Find("tiny-dungeon-84");c.SetAppearance(witch.id);yield return null;
-            Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(witch.Preview));Assert.That(c.Selection.SelectedItem.SelectedAppearance.displayName,Is.EqualTo("Brujita"));
+            OpenPrepared();
+            yield return new EnterPlayMode();
+            var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();
+            Assert.That(c!=null,Is.True,"La escena debe conservar su controlador activo.");
+            c.NewProject(false);
+
+            var moving=c.Project.objects.Single(o=>o.definitionId=="movil");
+            c.Selection.Select(moving.instanceId);
+            var movingOption=c.contentPack.OptionsFor(ItemKind.MovingPlatform)[1];
+            c.SetAppearance(movingOption.id);
+            yield return null;
+            Assert.That(c.Selection.SelectedItem,Is.Not.Null);
+            Assert.That(c.Selection.SelectedItem.GetComponent<ItemVisual>(),Is.Not.Null);
+            Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(movingOption.Preview));
+
             yield return new ExitPlayMode();
         }
 
+        [UnityTest]
+        public IEnumerator GameplayHudRemovesAHeartWhenPlayablePlayerTakesDamage()
+        {
+            OpenPrepared();
+            yield return new EnterPlayMode();
+            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();
+            var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();
+            controller.NewProject(false);
+            Assert.That(controller.EnterPlay(),Is.Null);
+            yield return null;
+
+            var health=controller.PlayPlayer.GetComponent<HealthSystemAttribute>();
+            var metrics=Object.FindObjectsByType<MonoBehaviour>().OfType<IWorkshopSessionMetrics>().Single();
+            int initial=health.health;
+            Assert.That(metrics.CurrentHealth,Is.EqualTo(initial));
+            Assert.That(ui.GameplayHeartCount,Is.EqualTo(initial));
+
+            health.ModifyHealth(-1);
+            yield return null;
+            Assert.That(metrics.CurrentHealth,Is.EqualTo(initial-1),"El marcador debe leer al jugador temporal activo, no al jugador editable oculto.");
+            Assert.That(ui.GameplayHeartCount,Is.EqualTo(initial-1),"El HUD debe retirar un corazón después de recibir daño.");
+
+            controller.ExitPlay();
+            yield return new ExitPlayMode();
+        }
+
+        [Test]
+        public void WitchAppearanceReplacesEveryVisibleGinoSprite()
+        {
+            var c=Open();
+            var player=c.Project.objects.Single(o=>o.definitionId=="jugador");
+            Assert.That(c.Selection.Select(player.instanceId),Is.Not.Null);
+            var defaultPlayerSprite=ItemVisual.Resolve(c.Selection.SelectedItem).sprite;
+            c.SetAppearance("tiny-dungeon-84");
+            var selectedPlayer=c.Selection.SelectedItem;
+            var selectedRenderer=ItemVisual.Resolve(selectedPlayer);
+            Assert.That(selectedRenderer,Is.Not.Null);
+            Assert.That(selectedRenderer.sprite,Is.Not.Null);
+            Assert.That(selectedRenderer.sprite,Is.Not.SameAs(defaultPlayerSprite),"La apariencia Brujita no puede conservar el sprite de Gino.");
+            Assert.That(selectedPlayer.appearanceId,Is.EqualTo("tiny-dungeon-84"));
+            Assert.That(selectedPlayer.GetComponentsInChildren<SpriteRenderer>(true).Where(r=>r.enabled).All(r=>r.sprite==selectedRenderer.sprite),Is.True,"Ningún renderer visible debe conservar sprites de Gino.");
+        }
+
+        [Test]
+        public void PlayerClimbsRampAndRemainsSupported()
+        {
+            var c=Open();
+            var player=c.Project.objects.Single(o=>o.definitionId=="jugador");
+            player.position=new Vector3(-.8f,.5f);
+            player.speed=3;
+            c.Project.objects.RemoveAll(o=>c.Find(o.definitionId)?.kind==ItemKind.Platform);
+            c.Rebuild();
+            Assert.That(c.Create("rampa",Vector3.zero),Is.Not.Null);
+            var ramp=c.SelectedData();
+            ramp.position=Vector3.zero;
+            ramp.platformWidth=4;
+            ramp.rotationZ=18;
+            c.Rebuild();
+            Assert.That(c.EnterPlay(),Is.Null);
+
+            var runtimePlayer=c.PlayPlayer;
+            var movement=runtimePlayer.GetComponent<Move>();
+            var body=runtimePlayer.GetComponent<Rigidbody2D>();
+            var gate=runtimePlayer.GetComponent<GroundedJumpGate>();
+            var slopeAssist=runtimePlayer.GetComponent<SlopeMovementAssist>();
+            Assert.That(movement,Is.Not.Null);
+            Assert.That(body,Is.Not.Null);
+            Assert.That(gate,Is.Not.Null);
+            Assert.That(slopeAssist,Is.Not.Null);
+            movement.rigidbody2D=body;
+            gate.Initialize();
+            movement.enabled=true;
+            movement.movementSource=()=>Vector2.right;
+            body.simulated=true;
+            body.WakeUp();
+            var start=body.position;
+            bool supported=false;
+            var end=start;
+            var previousMode=Physics2D.simulationMode;
+            try
+            {
+                Physics2D.simulationMode=SimulationMode2D.Script;
+                for(int i=0;i<30;i++)
+                {
+                    slopeAssist.Apply();
+                    Physics2D.Simulate(Time.fixedDeltaTime);
+                    gate.EvaluateSupport();
+                    supported|=gate.Supported;
+                }
+                end=body.position;
+            }
+            finally
+            {
+                Physics2D.simulationMode=previousMode;
+                c.ExitPlay();
+            }
+            Assert.That(supported,Is.True,"El jugador debe reconocer la pendiente como suelo.");
+            Assert.That(end.x,Is.GreaterThan(start.x+.5f));
+            Assert.That(end.y,Is.GreaterThan(start.y+.15f));
+        }
         [Test]
         public void MovementGuideMatchesConfiguredMovementDistance()
         {

@@ -19,7 +19,9 @@ namespace CreaJuego.PlaygroundBackend
         {
             get
             {
-                var player=SceneObjects.All<GameItem>(gameObject.scene).FirstOrDefault(i=>i.definition!=null&&i.definition.kind==ItemKind.Player);
+                // Runtime authoring keeps the editable level inactive while its playable clone is active.
+                // Ignore the hidden authoring player so the educational HUD reports the clone's real health.
+                var player=SceneObjects.All<GameItem>(gameObject.scene).FirstOrDefault(i=>i.isActiveAndEnabled&&i.gameObject.activeInHierarchy&&i.definition!=null&&i.definition.kind==ItemKind.Player);
                 var health=player!=null?player.GetComponent<Playground.Attributes.HealthSystemAttribute>():null;
                 return health!=null?Mathf.Max(0,health.health):0;
             }

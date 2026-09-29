@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Peligros
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 3
-  defaultAppearanceId: 
+  defaultAppearanceId:
   options:
   - id: tiny-dungeon-103
+    definitionIds: []
     displayName: Pinchos
     sprite: {fileID: 8287658600207992586, guid: cc9ff4f18998b204b93fbc036cf26fe5, type: 3}
     prefab: {fileID: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-104
+    definitionIds: []
     displayName: Trampa roja
     sprite: {fileID: 4150331129290082555, guid: 602a8d48247efaf408d28ffb89f4c48a, type: 3}
     prefab: {fileID: 0}
@@ -44,6 +46,7 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: platformer-kit-spikes
+    definitionIds: []
     displayName: Pinchos del kit
     sprite: {fileID: 0}
     prefab: {fileID: 823722481985417378, guid: 846ab1361bfcc884083592734aa52a69, type: 3}
@@ -57,3 +60,18 @@ MonoBehaviour:
     offset: {x: 0, y: -0.25}
     flipX: 0
     preserveAspectWithoutPrefab: 0
+  - id: plains-spikes
+    definitionIds: []
+    displayName: Pinchos de pradera
+    sprite: {fileID: 587555087, guid: 29e21165cb3ae334d969d4be634eaa9e, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

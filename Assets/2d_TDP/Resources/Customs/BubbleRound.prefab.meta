@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 40218ae1bf5d6e740b6cd6127aec4c4c
+timeCreated: 1443713434
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Resources/Customs/BubbleRound.prefab
+  uploadId: 87323

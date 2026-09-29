@@ -17,7 +17,7 @@ namespace CreaJuego.PlaygroundBackend
             var item = GetComponent<GameItem>();
             var session = Application.isPlaying ? DemoSession.InScene(gameObject.scene) : null;
             var renderer=ItemVisual.Resolve(item); if(renderer!=null) renderer.color=ItemVisual.BaseColor(item);
-            if (TryGetComponent<Move>(out var move)) { move.movementSource = WorkshopInput.ReadMovement; move.speed = item.speed / 20f; move.movementType = Enums.MovementType.OnlyHorizontal; }
+            if (TryGetComponent<Move>(out var move)) { move.movementSource = WorkshopInput.ReadMovement; move.speed = item.speed / 20f; move.movementType = Enums.MovementType.OnlyHorizontal; if(!TryGetComponent<SlopeMovementAssist>(out _))gameObject.AddComponent<SlopeMovementAssist>(); }
             if (TryGetComponent<Jump>(out var jump)) { jump.jumpStrength = item.jump; jump.enabled = item.canJump; }
             if (TryGetComponent<CollectableAttribute>(out var prize))
             {
@@ -54,7 +54,7 @@ namespace CreaJuego.PlaygroundBackend
                     foreach(var collider in GetComponents<Collider2D>()) collider.enabled=false;
                 };
             }
-            if (Application.isPlaying && item.definition.kind == ItemKind.MovingPlatform && !TryGetComponent<MovingPlatformPassengerCarrier>(out _))
+            if (Application.isPlaying && item.definition != null && item.definition.kind == ItemKind.MovingPlatform && !TryGetComponent<MovingPlatformPassengerCarrier>(out _))
                 gameObject.AddComponent<MovingPlatformPassengerCarrier>();
             if (TryGetComponent<Patrol>(out var patrol))
             {

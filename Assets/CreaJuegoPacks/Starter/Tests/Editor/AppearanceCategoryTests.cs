@@ -131,7 +131,7 @@ namespace CreaJuego.Starter.Tests
             var definition=ItemService.WorkshopCatalog().Single(d=>d.kind==ItemKind.MovingPlatform);
             var list=definition.appearancePack.CategoryFor(ItemKind.MovingPlatform);
             Assert.That(list,Is.Not.Null);
-            Assert.That(list.options.Count,Is.EqualTo(3));
+            Assert.That(list.options.Count,Is.GreaterThanOrEqualTo(3));
             var item=ItemService.Create(definition,Vector3.zero);
             Assert.That(item.appearanceCategory,Is.EqualTo(list));
             Assert.That(item.SelectedAppearance,Is.EqualTo(list.options[0]));

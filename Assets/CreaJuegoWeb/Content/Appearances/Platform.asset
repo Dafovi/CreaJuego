@@ -16,6 +16,8 @@ MonoBehaviour:
   defaultAppearanceId: 
   options:
   - id: tiny-dungeon-36
+    definitionIds:
+    - plataforma
     displayName: Piedra clara
     sprite: {fileID: -931820926294318381, guid: 17fa79102cf1b2b469c0b997b95756b2, type: 3}
     prefab: {fileID: 0}
@@ -30,6 +32,8 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-37
+    definitionIds:
+    - plataforma
     displayName: Piedra antigua
     sprite: {fileID: 6382969040213947563, guid: 67fef63a100a3f94a8188fc8a5f9fe40, type: 3}
     prefab: {fileID: 0}
@@ -44,6 +48,8 @@ MonoBehaviour:
     flipX: 0
     preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-38
+    definitionIds:
+    - plataforma
     displayName: Piedra oscura
     sprite: {fileID: -3106639410894378149, guid: 2cb9865b1efaf5d48b0dd8d739737734, type: 3}
     prefab: {fileID: 0}
@@ -57,9 +63,11 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
-  - id: web-escalera
-    displayName: Escalones
-    sprite: {fileID: 21300000, guid: a0da16be68c7e3e44802955c14d71d44, type: 3}
+  - id: platformer-stone-tile
+    definitionIds:
+    - plataforma
+    displayName: Bloques de piedra
+    sprite: {fileID: 1738114172, guid: 5d2e9979fdef5814b88986488e9f2709, type: 3}
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
@@ -70,4 +78,52 @@ MonoBehaviour:
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
-    preserveAspectWithoutPrefab: 1
+    preserveAspectWithoutPrefab: 0
+  - id: creajuego-wall-light
+    definitionIds:
+    - muro
+    displayName: Muro de piedra
+    sprite: {fileID: 21300000, guid: 1524ac31150677c41bea6b7f6b521e6d, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: creajuego-wall-dark
+    definitionIds:
+    - muro
+    displayName: Muro oscuro
+    sprite: {fileID: 21300000, guid: bdc65afd51718cb46ab0d3252bdd5403, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: creajuego-ramp
+    definitionIds:
+    - rampa
+    displayName: Rampa de madera
+    sprite: {fileID: 21300000, guid: b2897dc56dc08984d93ae4a9da761556, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0

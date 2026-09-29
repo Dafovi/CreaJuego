@@ -13,31 +13,65 @@ MonoBehaviour:
   m_Name: Premios
   m_EditorClassIdentifier: CreaJuego.Runtime::CreaJuego.AppearanceCategory
   kind: 2
+  defaultAppearanceId:
   options:
   - id: tiny-dungeon-115
+    definitionIds: []
     displayName: Moneda dorada
     sprite: {fileID: 7452913291803460528, guid: 7a94b829d3dd5e144a2cae157c03c8a7, type: 3}
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-116
+    definitionIds: []
     displayName: Gema azul
     sprite: {fileID: -2695878569446168431, guid: d41bbd15485823144901e04ab9177e08, type: 3}
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: tiny-dungeon-1027
+    definitionIds: []
     displayName: Llave dorada
     sprite: {fileID: -6725990758622001511, guid: 32f84aa175dfb0044a4b6aeb83165719, type: 3}
     prefab: {fileID: 0}
     controller: {fileID: 0}
     animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
     scale: {x: 1, y: 1}
     offset: {x: 0, y: 0}
     flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: platformer-treasure
+    definitionIds: []
+    displayName: Cofre del tesoro
+    sprite: {fileID: -2065246461, guid: a17fd815ac446494aa07992233bb6a05, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.65, y: 0.65}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

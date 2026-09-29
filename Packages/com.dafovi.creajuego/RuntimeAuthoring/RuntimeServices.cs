@@ -103,9 +103,15 @@ namespace CreaJuego.Web
             foreach(var pair in platforms)
             {
                 var surface=pair.Value.prefab.GetComponent<BoxCollider2D>();if(surface==null)continue;
-                var platform=pair.Key;var top=platform.position.y+(surface.offset.y+surface.size.y*.5f)*platform.scale.y;
-                var width=Mathf.Max(.5f,platform.platformWidth)*Mathf.Abs(platform.scale.x);
-                if(Mathf.Abs(player.position.x-platform.position.x)<half+width*.5f&&bottom-top>=-.2f&&bottom-top<=.45f)return true;
+                var platform=pair.Key;
+                float radians=platform.rotationZ*Mathf.Deg2Rad,cos=Mathf.Cos(radians),sin=Mathf.Sin(radians);
+                var tangent=new Vector2(cos,sin);var normal=new Vector2(-sin,cos);
+                var scaledOffset=new Vector2(surface.offset.x*platform.scale.x,surface.offset.y*platform.scale.y);
+                var center=(Vector2)platform.position+tangent*scaledOffset.x+normal*scaledOffset.y;
+                float width=Mathf.Max(.5f,platform.platformWidth)*Mathf.Abs(platform.scale.x),halfHeight=surface.size.y*.5f*Mathf.Abs(platform.scale.y);
+                float along=Vector2.Dot((Vector2)player.position-center,tangent);
+                float top=center.y+tangent.y*along+normal.y*halfHeight;
+                if(Mathf.Abs(along)<half+width*.5f&&bottom-top>=-.2f&&bottom-top<=.45f)return true;
             }
             return false;
         }
@@ -116,11 +122,9 @@ namespace CreaJuego.Web
         {
             if(item==null||item.definition==null||item.definition.kind!=ItemKind.Platform)return;
             width=Mathf.Clamp(width,.5f,30);var box=item.GetComponent<BoxCollider2D>();if(box==null)return;
-            var size=box.size;size.x=width;box.size=size;
+            var size=box.size;size.x=width;box.size=size;item.stretchVisualToSurface=true;
             var visual=item.GetComponent<ItemVisual>();if(visual!=null&&visual.geometrySource!=null)visual.geometrySource.size=size;
             var renderer=ItemVisual.Resolve(item);if(renderer==null||renderer.sprite==null)return;
-            renderer.drawMode=SpriteDrawMode.Simple;var spriteSize=renderer.sprite.bounds.size;
-            renderer.transform.localScale=new Vector3(width/Mathf.Max(.001f,spriteSize.x),size.y/Mathf.Max(.001f,spriteSize.y),1);
-        }
-    }
+            renderer.drawMode=SpriteDrawMode.Tiled;if(visual!=null)visual.Apply();else renderer.size=size;
+        }    }
 }

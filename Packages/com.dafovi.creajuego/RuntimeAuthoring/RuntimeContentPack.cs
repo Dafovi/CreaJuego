@@ -21,10 +21,10 @@ namespace CreaJuego.Web
         public Sprite brandIcon;
         public GameItemDefinition Find(string definitionId)=>definitions.FirstOrDefault(d=>d!=null&&d.id==definitionId);
         public AppearanceCategory CategoryFor(ItemKind kind)=>preparedAppearances!=null?preparedAppearances.CategoryFor(kind):null;
-        public AppearanceOption[] OptionsFor(ItemKind kind,string search=null)
+        public AppearanceOption[] OptionsFor(ItemKind kind,string search=null,string definitionId=null)
         {
             var category=CategoryFor(kind);if(category==null)return Array.Empty<AppearanceOption>();
-            return category.options.Where(o=>o!=null&&o.Preview!=null&&(string.IsNullOrWhiteSpace(search)||o.displayName.IndexOf(search,StringComparison.OrdinalIgnoreCase)>=0)).ToArray();
+            return category.options.Where(o=>o!=null&&o.Preview!=null&&(o.definitionIds==null||o.definitionIds.Length==0||string.IsNullOrEmpty(definitionId)||o.definitionIds.Contains(definitionId))&&(string.IsNullOrWhiteSpace(search)||o.displayName.IndexOf(search,StringComparison.OrdinalIgnoreCase)>=0)).ToArray();
         }
         public string DefaultFor(ItemKind kind)
         {
