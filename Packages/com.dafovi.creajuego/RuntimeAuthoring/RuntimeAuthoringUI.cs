@@ -62,6 +62,7 @@ namespace CreaJuego.Web
             for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i);if(child.GetComponent<Canvas>()!=null||child.GetComponent<EventSystem>()!=null)DestroyNow(child.gameObject);}
             Build();
         }
+        public void RefreshEditableLayout(){Initialize();Refresh();}
 
         public void Build()
         {

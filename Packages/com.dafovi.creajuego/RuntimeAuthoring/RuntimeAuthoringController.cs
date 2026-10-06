@@ -60,9 +60,35 @@ namespace CreaJuego.Web
         public void NewProject(bool notify=true)
         {
             ExitPlay(false);Project=new CreaJuegoProjectData();Project.bounds=RuntimeLevelBounds.For(Project.levelSize);
-            Seed("fondo",Vector3.zero);Seed("plataforma",new Vector3(-5,-2),6);Seed("plataforma",new Vector3(2,-2),6);Seed("movil",new Vector3(4,.5f));Seed("jugador",new Vector3(-5,-1.25f));
-            Seed("premio",new Vector3(-2,-1.15f));Seed("peligro",new Vector3(1,-1.4f));Seed("enemigo",new Vector3(4,-1.15f));Seed("meta",new Vector3(7,-1.15f));Seed("decoracion",new Vector3(-8,1.5f));
             History.Reset(Project);Rebuild();if(notify)Changed(false);
+        }
+        public void LoadStarterLevel(bool notify=true)
+        {
+            ExitPlay(false);Project=new CreaJuegoProjectData{projectName="La aventura del bosque",teamName="Mi equipo",levelSize=RuntimeLevelSize.Small,bounds=RuntimeLevelBounds.For(RuntimeLevelSize.Small)};
+            Starter("fondo",Vector3.zero,0,"platformer-sky-evening");
+            Starter("plataforma",new Vector3(-18,-6),8,"platformer-stone-tile");Starter("plataforma",new Vector3(-7,-6),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(5,-6),10,"platformer-stone-tile");Starter("plataforma",new Vector3(17,-6),7,"tiny-dungeon-38");
+            Starter("plataforma",new Vector3(-18,-1.5f),6,"tiny-dungeon-37");Starter("plataforma",new Vector3(-9,-1.5f),6,"platformer-stone-tile");Starter("plataforma",new Vector3(5,-1.5f),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(16,-1.5f),7,"platformer-stone-tile");
+            Starter("plataforma",new Vector3(-15,3),8,"platformer-stone-tile");Starter("plataforma",new Vector3(-4,3),7,"tiny-dungeon-38");Starter("plataforma",new Vector3(7,3),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(17,3),6,"platformer-stone-tile");
+            Starter("plataforma",new Vector3(-13,7.5f),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(0,7.5f),9,"platformer-stone-tile");Starter("plataforma",new Vector3(14,7.5f),8,"tiny-dungeon-37");
+            var leftRamp=Starter("rampa",new Vector3(-12,-3.8f),5,"creajuego-ramp");if(leftRamp!=null)leftRamp.rotationZ=18;
+            var rightRamp=Starter("rampa",new Vector3(11,.7f),5,"creajuego-ramp");if(rightRamp!=null)rightRamp.rotationZ=-18;
+            var moving=Starter("movil",new Vector3(-2,-.4f),0,"plains-moving-ground");if(moving!=null){moving.distance=5;moving.speed=1.4f;}
+            var player=Starter("jugador",new Vector3(-20,-5.1f),0,"5b84b5bdbf244cecb12b976bbf0aa6c7");if(player!=null){player.speed=3;player.jump=14;}
+            var prizePositions=new[]{new Vector3(-14,-.6f),new Vector3(-7,3.9f),new Vector3(0,8.4f),new Vector3(6,-.6f),new Vector3(13,3.9f),new Vector3(19,-5.1f)};
+            var prizeLooks=new[]{"tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure","tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure"};
+            for(var i=0;i<prizePositions.Length;i++)Starter("premio",prizePositions[i],0,prizeLooks[i]);
+            var hazardPositions=new[]{new Vector3(-3,-5.35f),new Vector3(10,-5.35f),new Vector3(2,2.65f),new Vector3(19,2.65f)};
+            var hazardLooks=new[]{"plains-spikes","platformer-kit-spikes","tiny-dungeon-104","plains-spikes"};
+            for(var i=0;i<hazardPositions.Length;i++)Starter("peligro",hazardPositions[i],0,hazardLooks[i]);
+            var enemyA=Starter("enemigo",new Vector3(-10,-.55f),0,"platformer-kit-gobbat");if(enemyA!=null)enemyA.distance=4;
+            var enemyB=Starter("enemigo",new Vector3(8,-.55f),0,"platformer-kit-scarecrow");if(enemyB!=null)enemyB.distance=5;
+            var enemyC=Starter("enemigo",new Vector3(2,8.4f),0,"platformer-kit-gobbler");if(enemyC!=null)enemyC.distance=4;
+            Starter("meta",new Vector3(17,8.5f),0,"tiny-dungeon-33");
+            var houseA=Starter("decoracion",new Vector3(-13,9),0,"platformer-house");if(houseA!=null)houseA.visualScale=.75f;
+            var houseB=Starter("decoracion",new Vector3(14,9),0,"platformer-house");if(houseB!=null)houseB.visualScale=.65f;
+            var decorations=new[]{("platformer-tree",new Vector3(-22,-4),.8f),("plains-plant",new Vector3(-21,1),1.5f),("tiny-dungeon-3126",new Vector3(21,-4),1.2f),("tiny-dungeon-3129",new Vector3(22,1),1.35f)};
+            foreach(var decoration in decorations){var item=Starter("decoracion",decoration.Item2,0,decoration.Item1);if(item!=null)item.visualScale=decoration.Item3;}
+            History.Reset(Project);Rebuild();FrameAll();if(notify)Changed(false);
         }
         public void CreateStressProject()=>CreateStress(false);
         public void CreateLargeStressProject()=>CreateStress(true);
@@ -83,10 +109,14 @@ namespace CreaJuego.Web
             }
             History.Reset(Project);Rebuild();Changed(false);Debug.Log($"CREAJUEGO_WEB_STRESS_READY objects={Project.objects.Count}");
         }
-        void Seed(string id,Vector3 position,float width=0)
+        RuntimeItemData Starter(string id,Vector3 position,float width=0,string appearance=null)
         {
-            var definition=Find(id);if(definition==null||definition.prefab==null)return;var item=definition.prefab.GetComponent<GameItem>();if(item==null)return;
-            var data=RuntimeItemData.From(item,id);EnsureDefaultAppearance(data,definition);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);if(width>0)data.platformWidth=RuntimeSnap.Width(width,Project.alignAutomatically);Project.objects.Add(data);
+            var data=Seed(id,position,width);if(data==null)return null;if(!string.IsNullOrEmpty(appearance)){data.appearanceId=appearance;data.appearanceChosen=true;}return data;
+        }
+        RuntimeItemData Seed(string id,Vector3 position,float width=0)
+        {
+            var definition=Find(id);if(definition==null||definition.prefab==null)return null;var item=definition.prefab.GetComponent<GameItem>();if(item==null)return null;
+            var data=RuntimeItemData.From(item,id);EnsureDefaultAppearance(data,definition);data.position=RuntimeSnap.Position(position,Project.alignAutomatically);if(width>0)data.platformWidth=RuntimeSnap.Width(width,Project.alignAutomatically);Project.objects.Add(data);return data;
         }
         public GameItem Create(string id,Vector3 position)
         {

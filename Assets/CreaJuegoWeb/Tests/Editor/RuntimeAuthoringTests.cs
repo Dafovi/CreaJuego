@@ -12,13 +12,26 @@ namespace CreaJuego.Web.Tests
         [Test] public void ProjectRoundTripPreservesAppearance(){var data=new CreaJuegoProjectData();data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",appearanceId="gino",position=new Vector3(2,3)});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.objects.Single().appearanceId,Is.EqualTo("gino"));Assert.That(restored.objects.Single().position,Is.EqualTo(new Vector3(2,3)));}
         [Test] public void HistoryUndoRedoRestoresMove(){var data=new CreaJuegoProjectData();data.objects.Add(new RuntimeItemData{instanceId="1",position=Vector3.zero});var history=new RuntimeHistory();history.Reset(data);data.objects[0].position=Vector3.right*4;history.Record(data);Assert.That(history.Undo().objects[0].position,Is.EqualTo(Vector3.zero));Assert.That(history.Redo().objects[0].position,Is.EqualTo(Vector3.right*4));}
         [Test] public void FileStorageSavesAndLoads(){var path=Path.Combine(Path.GetTempPath(),"creajuego-storage-test.json");try{var storage=new FileProjectStorage(path);storage.Save("{\"ok\":true}");Assert.That(storage.Exists);Assert.That(storage.Load(),Does.Contain("true"));}finally{if(File.Exists(path))File.Delete(path);}}
+        [Test] public void StarterLevelIsLayeredAndNewProjectIsCompletelyEmpty()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);
+            Assert.That(controller.Project.levelSize,Is.EqualTo(RuntimeLevelSize.Small));Assert.That(controller.Project.objects.Count,Is.GreaterThanOrEqualTo(35));
+            Assert.That(controller.Project.objects.Count(o=>o.definitionId=="jugador"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="meta"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="plataforma"),Is.GreaterThanOrEqualTo(12));
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="plataforma").Select(o=>o.position.y).Distinct().Count(),Is.GreaterThanOrEqualTo(4));
+            Assert.That(controller.Project.objects.Single(o=>o.definitionId=="fondo").appearanceId,Is.EqualTo("platformer-sky-evening"));
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="plataforma").Select(o=>o.appearanceId).Distinct().Count(),Is.GreaterThanOrEqualTo(3));
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="premio").Select(o=>o.appearanceId),Is.EquivalentTo(new[]{"tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure","tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure"}));
+            Assert.That(controller.Project.objects.Single(o=>o.definitionId=="jugador").appearanceId,Is.EqualTo("5b84b5bdbf244cecb12b976bbf0aa6c7"));
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="enemigo").All(o=>o.appearanceId.StartsWith("platformer-kit-")),Is.True);
+            controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.childCount,Is.EqualTo(0));
+        }
         [Test] public void ManualSaveSurvivesNewProjectAndRecoveryAutosave()
         {
             string token=System.Guid.NewGuid().ToString("N"),manualPath=Path.Combine(Path.GetTempPath(),token+"-manual.creajuego"),recoveryPath=Path.Combine(Path.GetTempPath(),token+"-recovery.creajuego");
             try
             {
                 EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.ConfigureStorage(new FileProjectStorage(manualPath),new FileProjectStorage(recoveryPath));
-                controller.NewProject(false);controller.Project.projectName="Aventura guardada";controller.Project.objects.Single(o=>o.definitionId=="jugador").health=7;controller.SaveNow();
+                controller.LoadStarterLevel(false);controller.Project.projectName="Aventura guardada";controller.Project.objects.Single(o=>o.definitionId=="jugador").health=7;controller.SaveNow();
                 controller.NewProject(false);controller.Project.projectName="Proyecto nuevo";controller.SaveRecovery();controller.LoadLast();
                 Assert.That(controller.Project.projectName,Is.EqualTo("Aventura guardada"));Assert.That(controller.Project.objects.Single(o=>o.definitionId=="jugador").health,Is.EqualTo(7));Assert.That(ProjectSerializer.FromJson(File.ReadAllText(recoveryPath)).projectName,Is.EqualTo("Proyecto nuevo"));
             }
@@ -33,7 +46,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void CreateMovePropertyUndoAndModesWork()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);
-            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);
+            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);
             int before=controller.Project.objects.Count;var created=controller.Create("decoracion",Vector3.zero);Assert.That(controller.Project.objects.Count,Is.EqualTo(before+1));
             controller.MoveSelected(new Vector3(4,2),true);Assert.That(controller.SelectedData().position,Is.EqualTo(new Vector3(4,2)));
             controller.Undo();Assert.That(controller.Project.objects.Count,Is.EqualTo(before+1));

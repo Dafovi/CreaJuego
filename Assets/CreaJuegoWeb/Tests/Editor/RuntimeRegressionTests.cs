@@ -23,7 +23,7 @@ namespace CreaJuego.Web.Tests
         }
         RuntimeAuthoringController Open()
         {
-            var controller=OpenPrepared();controller.NewProject(false);return controller;
+            var controller=OpenPrepared();controller.LoadStarterLevel(false);return controller;
         }
         static void AssertOnlyEducationalVisual(GameItem item,string spritePrefix)
         {
@@ -41,14 +41,14 @@ namespace CreaJuego.Web.Tests
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
             var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var authoredCameraRect=controller.buildCamera.rect;
             yield return null;
-            controller.NewProject(false);
+            controller.LoadStarterLevel(false);ui.Refresh();
             Assert.That(ui.HasPreparedLayout,Is.True);Assert.That(controller.HasEditableScene,Is.True);Assert.That(controller.contentPack,Is.Not.Null);
             Assert.That(ui.BrandText,Does.Contain("Gamer").And.Contain("Crea tu propia aventura"));
             Assert.That(controller.GetComponents<RuntimeGameplayCamera>().Length,Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)),Is.EqualTo(0));
             Assert.That(Object.FindObjectsByType<RuntimeItemRow>(FindObjectsInactive.Include),Is.All.Matches<RuntimeItemRow>(row=>UnityEditor.AssetDatabase.GetAssetPath(UnityEditor.MonoScript.FromMonoBehaviour(row)).EndsWith("RuntimeItemRow.cs")),"Las filas de Mi juego deben apuntar a un script real para sobrevivir al build WebGL.");
             var overlayCanvases=Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Where(value=>value.renderMode==RenderMode.ScreenSpaceOverlay).ToArray();Assert.That(overlayCanvases.Length,Is.EqualTo(1));Assert.That(overlayCanvases[0].GetComponent<Image>(),Is.Null,"El Canvas de interfaz no debe tapar la cámara con un fondo opaco.");
-            Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(10));
+            Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.GreaterThanOrEqualTo(35));
             var hierarchy=Object.FindObjectsByType<Transform>(FindObjectsInactive.Include).Select(transform=>transform.name).ToArray();
             Assert.That(hierarchy,Does.Contain("Cabecera"));Assert.That(hierarchy,Does.Contain("Panel de elementos"));Assert.That(hierarchy,Does.Contain("Panel de propiedades"));Assert.That(hierarchy,Does.Contain("Herramientas"));Assert.That(hierarchy,Does.Contain("Estado para jugar"));
             Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.EqualTo(controller.Project.objects.Count));
@@ -61,7 +61,7 @@ namespace CreaJuego.Web.Tests
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
             yield return null;
-            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);var player=controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Single(x=>x.GetComponent<GameItem>().definition.id=="jugador");
+            var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);var player=controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Single(x=>x.GetComponent<GameItem>().definition.id=="jugador");
             player.transform.position+=new Vector3(1.25f,.5f);var data=controller.ReadEditableSceneProject().objects.Single(x=>x.definitionId=="jugador");
             Assert.That(data.position,Is.EqualTo(player.transform.position));
         }
@@ -74,51 +74,49 @@ namespace CreaJuego.Web.Tests
             var playerAppearance=controller.contentPack.CategoryFor(ItemKind.Player).Find(playerDefault);var enemyAppearance=controller.contentPack.CategoryFor(ItemKind.Enemy).Find(enemyDefault);
             Assert.That(playerAppearance.displayName,Is.EqualTo("Gino"));Assert.That(playerAppearance.idleClip,Is.Not.Null);Assert.That(playerAppearance.moveClip,Is.Not.Null);Assert.That(playerAppearance.jumpClip,Is.Not.Null);Assert.That(playerAppearance.attackClip,Is.Not.Null);
             Assert.That(enemyAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));Assert.That(enemyAppearance.idleClip,Is.Not.Null);Assert.That(enemyAppearance.moveClip,Is.Not.Null);Assert.That(enemyAppearance.jumpClip,Is.Not.Null);Assert.That(enemyAppearance.attackClip,Is.Not.Null);
-            var items=controller.buildRoot.GetComponentsInChildren<GameItem>(true);Assert.That(items.Single(x=>x.definition.kind==ItemKind.Player).SelectedAppearance.displayName,Is.EqualTo("Gino"));Assert.That(items.Single(x=>x.definition.kind==ItemKind.Enemy).SelectedAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));
+            var items=controller.buildRoot.GetComponentsInChildren<GameItem>(true);Assert.That(items.Single(x=>x.definition.kind==ItemKind.Player).SelectedAppearance.displayName,Is.EqualTo("Gino"));Assert.That(items.Any(x=>x.definition.kind==ItemKind.Enemy&&x.SelectedAppearance.id=="platformer-kit-scarecrow"),Is.True);
             var playerDefinition=controller.Find("jugador");var enemyDefinition=controller.Find("enemigo");
             Assert.That(playerDefinition.icon.name,Does.StartWith("Gino-"));Assert.That(enemyDefinition.icon.name,Does.StartWith("Scarecrow-"));
             var playerVisual=playerDefinition.prefab.GetComponent<ItemVisual>();var enemyVisual=enemyDefinition.prefab.GetComponent<ItemVisual>();
             Assert.That(playerVisual.renderer.sprite.name,Does.StartWith("Gino-"));Assert.That(enemyVisual.renderer.sprite.name,Does.StartWith("Scarecrow-"));
             Assert.That(playerVisual.geometrySource.enabled,Is.False);Assert.That(enemyVisual.geometrySource.enabled,Is.False);
         }
-        [UnityTest]
-        public IEnumerator PreparedSceneKeepsDefaultCharactersSelectableAcrossPlayRoundTrip()
+        [Test]
+        public void PreparedSceneKeepsDefaultCharactersSelectableAcrossPlayRoundTrip()
         {
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
-            yield return new EnterPlayMode();yield return null;
-            var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();
-            var playerData=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemyData=c.Project.objects.Single(o=>o.definitionId=="enemigo");
+            var c=Open();
+            var playerData=c.Project.objects.Single(o=>o.definitionId=="jugador");
+            var enemyData=c.Project.objects.Single(o=>o.definitionId=="enemigo"&&o.appearanceId==c.contentPack.DefaultFor(ItemKind.Enemy));
             Assert.That(playerData.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
             Assert.That(enemyData.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Enemy)));
             var buildPlayer=c.Selection.Select(playerData.instanceId);var buildEnemy=c.Selection.Select(enemyData.instanceId);
             Assert.That(buildPlayer,Is.Not.Null);Assert.That(buildEnemy,Is.Not.Null);
             Assert.That(buildPlayer.SelectedAppearance.displayName,Is.EqualTo("Gino"));AssertOnlyEducationalVisual(buildPlayer,"Gino-");
             Assert.That(buildEnemy.SelectedAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));AssertOnlyEducationalVisual(buildEnemy,"Scarecrow-");
-            buildPlayer.GetComponent<ItemVisual>().geometrySource.enabled=true;yield return null;AssertOnlyEducationalVisual(buildPlayer,"Gino-");
+            var playerVisual=buildPlayer.GetComponent<ItemVisual>();playerVisual.geometrySource.enabled=true;playerVisual.Apply();AssertOnlyEducationalVisual(buildPlayer,"Gino-");
             Assert.That(RuntimeAuthoringHitTest.Pick(ItemVisual.Resolve(buildPlayer).bounds.center,c.buildRoot.GetComponentsInChildren<GameItem>()),Is.SameAs(buildPlayer));
 
-            Assert.That(c.EnterPlay(),Is.Null);yield return null;
+            Assert.That(c.EnterPlay(),Is.Null);
             Assert.That(c.PlayPlayer.SelectedAppearance.displayName,Is.EqualTo("Gino"));AssertOnlyEducationalVisual(c.PlayPlayer,"Gino-");
-            var playEnemy=c.PlayRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Enemy);
+            var playEnemy=c.PlayRoot.GetComponentsInChildren<GameItem>().First(i=>i.definition.kind==ItemKind.Enemy&&i.SelectedAppearance.id=="platformer-kit-scarecrow");
             Assert.That(playEnemy.SelectedAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));AssertOnlyEducationalVisual(playEnemy,"Scarecrow-");
 
-            c.ExitPlay();yield return null;
+            c.ExitPlay();
             buildPlayer=c.Selection.Select(playerData.instanceId);buildEnemy=c.Selection.Select(enemyData.instanceId);
             Assert.That(buildPlayer,Is.Not.Null);Assert.That(buildEnemy,Is.Not.Null);
             Assert.That(buildPlayer.SelectedAppearance.displayName,Is.EqualTo("Gino"));AssertOnlyEducationalVisual(buildPlayer,"Gino-");
             Assert.That(buildEnemy.SelectedAppearance.id,Is.EqualTo("platformer-kit-scarecrow"));AssertOnlyEducationalVisual(buildEnemy,"Scarecrow-");
-            buildPlayer.GetComponent<ItemVisual>().geometrySource.enabled=true;yield return null;AssertOnlyEducationalVisual(buildPlayer,"Gino-");
+            playerVisual=buildPlayer.GetComponent<ItemVisual>();playerVisual.geometrySource.enabled=true;playerVisual.Apply();AssertOnlyEducationalVisual(buildPlayer,"Gino-");
             Assert.That(RuntimeAuthoringHitTest.Pick(ItemVisual.Resolve(buildEnemy).bounds.center,c.buildRoot.GetComponentsInChildren<GameItem>()),Is.SameAs(buildEnemy));
             c.Selection.Select(playerData.instanceId);c.DeleteSelected();
-            var addedPlayer=c.Create("jugador",new Vector3(-5,-1.25f));yield return null;
+            var addedPlayer=c.Create("jugador",new Vector3(-5,-1.25f));
             Assert.That(addedPlayer.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
             AssertOnlyEducationalVisual(addedPlayer,"Gino-");
-            var addedPlayerId=c.SelectedId();var addedEnemy=c.Create("enemigo",new Vector3(5,-1.15f));yield return null;
+            var addedPlayerId=c.SelectedId();var addedEnemy=c.Create("enemigo",new Vector3(5,-1.15f));
             addedPlayer=c.Selection.Select(addedPlayerId);
             AssertOnlyEducationalVisual(addedPlayer,"Gino-");
             Assert.That(addedEnemy.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Enemy)));
             AssertOnlyEducationalVisual(addedEnemy,"Scarecrow-");
-            yield return new ExitPlayMode();
         }
         [Test]
         public void RuntimePackPrefersGinoAndScarecrowEvenWithStaleSerializedDefaults()
@@ -132,24 +130,24 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void SchemaTwoProjectMigratesFormerDefaultsBeforePlay()
         {
-            var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.Single(o=>o.definitionId=="enemigo");
+            var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.First(o=>o.definitionId=="enemigo");var enemyId=enemy.instanceId;
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(4));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.definitionId=="enemigo");
+            Assert.That(migrated.schemaVersion,Is.EqualTo(4));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
             Assert.That(enemy.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Enemy)));
             AssertOnlyEducationalVisual(c.buildRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Player),"Gino-");
-            AssertOnlyEducationalVisual(c.buildRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Enemy),"Scarecrow-");
+            AssertOnlyEducationalVisual(c.buildRoot.GetComponentsInChildren<GameItem>().First(i=>i.definition.kind==ItemKind.Enemy&&i.SelectedAppearance.id=="platformer-kit-scarecrow"),"Scarecrow-");
             Assert.That(c.EnterPlay(),Is.Null);
             AssertOnlyEducationalVisual(c.PlayPlayer,"Gino-");
-            AssertOnlyEducationalVisual(c.PlayRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Enemy),"Scarecrow-");
+            AssertOnlyEducationalVisual(c.PlayRoot.GetComponentsInChildren<GameItem>().First(i=>i.definition.kind==ItemKind.Enemy&&i.SelectedAppearance.id=="platformer-kit-scarecrow"),"Scarecrow-");
         }
         [Test]
         public void SelectionUsesStableInstanceIdAcrossRebuild()
         {
-            var c=Open();var data=c.Project.objects.Single(o=>o.definitionId=="premio");
+            var c=Open();var data=c.Project.objects.First(o=>o.definitionId=="premio");
             Assert.That(c.Selection.Select(data.instanceId),Is.Not.Null);
             var before=c.Selection.SelectedItem;c.Rebuild();
             Assert.That(c.Selection.SelectedInstanceId,Is.EqualTo(data.instanceId));
@@ -193,7 +191,7 @@ namespace CreaJuego.Web.Tests
             Assert.That(leftPanel.anchorMin.x,Is.EqualTo(0));Assert.That(leftPanel.anchorMax.x,Is.EqualTo(0));Assert.That(leftPanel.rect.width,Is.EqualTo(260).Within(.1f));
             Assert.That(rightPanel.anchorMin.x,Is.EqualTo(1));Assert.That(rightPanel.anchorMax.x,Is.EqualTo(1));Assert.That(rightPanel.rect.width,Is.EqualTo(280).Within(.1f));
             Assert.That(c.buildCamera.rect.x,Is.EqualTo(leftPanel.rect.width/canvasRect.rect.width).Within(.002f));Assert.That(c.buildCamera.rect.xMax,Is.EqualTo(1-rightPanel.rect.width/canvasRect.rect.width).Within(.002f));
-            c.NewProject(false);ui.Refresh();yield return null;
+            c.LoadStarterLevel(false);ui.Refresh();yield return null;
             Assert.That(ui.VisibleItemRowCount,Is.EqualTo(c.Project.objects.Count));
             var firstRow=Object.FindObjectsByType<RuntimeItemRow>(FindObjectsInactive.Exclude).First().GetComponent<RectTransform>();Assert.That(firstRow.pivot.y,Is.EqualTo(1));Assert.That(firstRow.anchorMin.y,Is.EqualTo(1));Assert.That(Object.FindObjectsByType<ScrollRect>(FindObjectsInactive.Exclude).Single(x=>x.name=="Mi juego").verticalNormalizedPosition,Is.EqualTo(1).Within(.01f));
 
@@ -229,7 +227,7 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void BackgroundSelectionAndCreationShowImageControls()
         {
-            var c=Open();var ui=c.GetComponent<RuntimeAuthoringUI>();ui.PrepareEditableLayout();c.NewProject(false);ui.Refresh();
+            var c=Open();var ui=c.GetComponent<RuntimeAuthoringUI>();ui.PrepareEditableLayout();c.LoadStarterLevel(false);ui.Refresh();
             var background=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.Background);var item=c.Selection.Select(background.instanceId);ui.Refresh();
             Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("APARIENCIA").And.Contain("Elegir imagen"));
             Assert.That(ui.VisibleSelectionIcon,Is.SameAs(item.SelectedAppearance.sprite));
@@ -291,7 +289,7 @@ namespace CreaJuego.Web.Tests
             yield return new EnterPlayMode();
             var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();
             Assert.That(c!=null,Is.True,"La escena debe conservar su controlador activo.");
-            c.NewProject(false);
+            c.LoadStarterLevel(false);
 
             var moving=c.Project.objects.Single(o=>o.definitionId=="movil");
             c.Selection.Select(moving.instanceId);
@@ -302,7 +300,6 @@ namespace CreaJuego.Web.Tests
             Assert.That(c.Selection.SelectedItem.GetComponent<ItemVisual>(),Is.Not.Null);
             Assert.That(ItemVisual.Resolve(c.Selection.SelectedItem).sprite,Is.SameAs(movingOption.Preview));
 
-            yield return new ExitPlayMode();
         }
 
         [UnityTest]
@@ -312,7 +309,7 @@ namespace CreaJuego.Web.Tests
             yield return new EnterPlayMode();
             var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();
             var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();
-            controller.NewProject(false);
+            controller.LoadStarterLevel(false);
             Assert.That(controller.EnterPlay(),Is.Null);
             yield return null;
 

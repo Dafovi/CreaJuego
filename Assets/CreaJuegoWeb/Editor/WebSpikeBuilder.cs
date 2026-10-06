@@ -20,8 +20,17 @@ namespace CreaJuego.Web.Editor
             controller.buildRoot=new GameObject("Runtime Authoring Root").transform;
             controller.buildCamera=MakeCamera("Cámara de construcción",new Vector3(0,1,-10),new Color(.04f,.06f,.1f));controller.buildCamera.rect=new Rect(260f/1280f,82f/720f,740f/1280f,564f/720f);controller.buildCamera.gameObject.AddComponent<AudioListener>();
             controller.gameCamera=MakeCamera("Cámara de juego",new Vector3(0,0,-10),new Color(.16f,.24f,.36f));controller.gameCamera.enabled=false;var gameListener=controller.gameCamera.gameObject.AddComponent<AudioListener>();gameListener.enabled=false;
-            controller.ui.PrepareEditableLayout();controller.PrepareEditableScene();controller.ui.Refresh();EditorUtility.SetDirty(controller);EditorUtility.SetDirty(controller.ui);EditorSceneManager.MarkSceneDirty(scene);
+            controller.ui.PrepareEditableLayout();controller.PrepareEditableScene();controller.LoadStarterLevel(false);controller.CaptureEditableScene(true);controller.ui.Refresh();EditorUtility.SetDirty(controller);EditorUtility.SetDirty(controller.ui);EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene,ScenePath);EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_PARITY_SCENE_READY");
+        }
+        [MenuItem("CreaJuego/Web/Restaurar nivel inicial")]
+        public static void ApplyStarterLevelToScene()
+        {
+            var scene=EditorSceneManager.OpenScene(ScenePath,OpenSceneMode.Single);var controller=UnityEngine.Object.FindAnyObjectByType<RuntimeAuthoringController>();
+            if(controller==null)throw new InvalidOperationException("La escena Web no contiene RuntimeAuthoringController.");
+            controller.LoadStarterLevel(false);controller.buildCamera.transform.position=new Vector3(0,1.5f,-10);controller.buildCamera.orthographicSize=19;
+            if(!controller.CaptureEditableScene(true))throw new InvalidOperationException("No se pudo capturar el nivel inicial.");controller.ui.RefreshEditableLayout();
+            EditorUtility.SetDirty(controller);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_STARTER_LEVEL_READY "+controller.Project.objects.Count);
         }
         public static RuntimeContentPack EnsureRuntimePack()
         {
