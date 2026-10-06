@@ -14,12 +14,14 @@ namespace CreaJuego.Web
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
         public Vector3 MovementGuideEnd=>movementEnd!=null?movementEnd.transform.position:Vector3.zero;
+        public float WorldFrameWidth=>worldFrame!=null?worldFrame.widthMultiplier:0;
+        public Color WorldFrameColor=>worldFrame!=null?worldFrame.startColor:Color.clear;
         void Awake(){controller=GetComponent<RuntimeAuthoringController>();controller.Selection.SelectionChanged+=Selected;controller.ProjectChanged+=RefreshWorld;}
-        void Start(){lineMaterial=new Material(Shader.Find("Sprites/Default"));handleSprite=CreateHandleSprite();worldFrame=Line("Zona del nivel",new Color(.2f,.75f,1,.65f),.045f,50);RefreshWorld();}
+        void Start(){lineMaterial=new Material(Shader.Find("Sprites/Default"));handleSprite=CreateHandleSprite();worldFrame=Line("Zona del nivel",new Color(1f,.72f,.05f,.98f),.08f,110);worldFrame.positionCount=4;worldFrame.loop=true;worldFrame.numCornerVertices=2;RefreshWorld();}
         void OnDestroy(){controller.Selection.SelectionChanged-=Selected;controller.ProjectChanged-=RefreshWorld;if(lineMaterial!=null)Destroy(lineMaterial);if(handleSprite!=null){var texture=handleSprite.texture;Destroy(handleSprite);Destroy(texture);}}
         void Update()
         {
-            bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||Mouse.current==null||View==null)return;UpdateGuideScale();
+            bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||View==null)return;UpdateGuideScale();if(Mouse.current==null)return;
             var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
@@ -65,11 +67,11 @@ namespace CreaJuego.Web
         }
         void UpdateGuideScale()
         {
-            float width=Mathf.Clamp(View.orthographicSize*.012f,.06f,1.2f);if(worldFrame!=null)worldFrame.widthMultiplier=width;if(outline!=null)outline.widthMultiplier=width*1.25f;if(movementPath!=null)movementPath.widthMultiplier=width*1.35f;if(movementArrow!=null)movementArrow.widthMultiplier=width*1.35f;
+            float width=RuntimeGuideScale.WorldWidth(View.orthographicSize,View.pixelHeight);if(worldFrame!=null)worldFrame.widthMultiplier=width;float guideWidth=Mathf.Clamp(View.orthographicSize*.012f,.06f,1.2f);if(outline!=null)outline.widthMultiplier=guideWidth*1.25f;if(movementPath!=null)movementPath.widthMultiplier=guideWidth*1.35f;if(movementArrow!=null)movementArrow.widthMultiplier=guideWidth*1.35f;
         }
         void RefreshWorld()
         {
-            if(worldFrame==null||controller.Project?.bounds==null)return;var b=controller.Project.bounds;worldFrame.SetPositions(new[]{new Vector3(b.left,b.bottom,5),new Vector3(b.left,b.top,5),new Vector3(b.right,b.top,5),new Vector3(b.right,b.bottom,5),new Vector3(b.left,b.bottom,5)});UpdateSelectionVisuals();
+            if(worldFrame==null||controller.Project?.bounds==null)return;var b=controller.Project.bounds;worldFrame.SetPositions(new[]{new Vector3(b.left,b.bottom,5),new Vector3(b.left,b.top,5),new Vector3(b.right,b.top,5),new Vector3(b.right,b.bottom,5)});UpdateGuideScale();UpdateSelectionVisuals();
         }
         void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(visible);if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
         void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)Destroy(handle.gameObject);if(movementPath!=null)Destroy(movementPath.gameObject);if(movementArrow!=null)Destroy(movementArrow.gameObject);if(movementStart!=null)Destroy(movementStart.gameObject);if(movementEnd!=null)Destroy(movementEnd.gameObject);outline=movementPath=movementArrow=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=null;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
@@ -87,6 +89,15 @@ namespace CreaJuego.Web
         }
     }
     public sealed class RuntimeResizeHandle:MonoBehaviour{}
+    public static class RuntimeGuideScale
+    {
+        public static float WorldWidth(float orthographicSize,int pixelHeight)
+        {
+            float worldPerPixel=2f*Mathf.Max(.01f,orthographicSize)/Mathf.Max(1,pixelHeight);
+            float pixels=Mathf.Lerp(4f,8f,Mathf.InverseLerp(8f,100f,orthographicSize));
+            return Mathf.Clamp(worldPerPixel*pixels,.04f,2f);
+        }
+    }
     public static class RuntimePointerContext
     {
         public const float ZoomSensitivity=.12f;

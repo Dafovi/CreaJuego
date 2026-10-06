@@ -22,12 +22,12 @@ namespace CreaJuego.Web.Tests
             var data=controller.Project.objects.First(o=>o.definitionId==id);var marker=UnityEngine.Object.FindObjectsByType<RuntimeAuthoredItem>(FindObjectsInactive.Exclude).First(m=>m.instanceId==data.instanceId);controller.Selection.Select(marker.gameObject);return marker;
         }
         [Test] public void SafePrefabCreatesDataWithExplicitDefinition(){var c=Open();var def=c.Find("jugador");Assert.That(def.prefab.GetComponent<GameItem>().definition,Is.Null);var data=RuntimeItemData.From(def.prefab.GetComponent<GameItem>(),def.id);Assert.That(data.definitionId,Is.EqualTo("jugador"));}
-        [Test] public void SchemaV3RoundTripPreservesWidthSnapBoundsAndAppearance()
+        [Test] public void CurrentSchemaRoundTripPreservesWidthSnapBoundsAndAppearance()
         {
             var data=new CreaJuegoProjectData{alignAutomatically=false,levelSize=RuntimeLevelSize.Large,bounds=RuntimeLevelBounds.For(RuntimeLevelSize.Large)};data.objects.Add(new RuntimeItemData{definitionId="plataforma",platformWidth=8.25f,appearanceId="stone"});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));
-            Assert.That(restored.schemaVersion,Is.EqualTo(3));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(50));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
+            Assert.That(restored.schemaVersion,Is.EqualTo(4));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(100));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
         }
-        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(3));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
+        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(4));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
         [Test] public void PlatformWidthChangesVisualColliderPersistsAndUndoRedo()
         {
             var c=Open();var marker=Select(c,"plataforma");var data=c.SelectedData();float original=data.platformWidth;float height=marker.GetComponent<BoxCollider2D>().size.y;c.ResizeSelected(8,data.position.x,true);

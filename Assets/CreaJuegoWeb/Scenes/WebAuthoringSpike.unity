@@ -14045,16 +14045,16 @@ MonoBehaviour:
   ui: {fileID: 1780046824}
   editableSceneProject:
     version: 1
-    schemaVersion: 3
+    schemaVersion: 4
     projectName: Mi juego
     teamName: Mi equipo
     alignAutomatically: 1
     levelSize: 1
     bounds:
-      left: -25
-      right: 25
-      bottom: -12
-      top: 15
+      left: -50
+      right: 50
+      bottom: -24
+      top: 30
     objects:
     - instanceId: 6bfbf1ca72124321b468e9a2494bfe01
       definitionId: fondo

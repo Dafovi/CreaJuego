@@ -9,14 +9,14 @@ namespace CreaJuego.Web
     [Serializable]
     public sealed class RuntimeLevelBounds
     {
-        public float left=-25, right=25, bottom=-12, top=15;
+        public float left=-50, right=50, bottom=-24, top=30;
         public bool IsValid => IsFinite(left) && IsFinite(right) && IsFinite(bottom) && IsFinite(top) && right-left>=4 && top-bottom>=4;
         static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
         public static RuntimeLevelBounds For(RuntimeLevelSize size)
         {
-            if(size==RuntimeLevelSize.Small)return new RuntimeLevelBounds{left=-12,right=12,bottom=-8,top=10};
-            if(size==RuntimeLevelSize.Large)return new RuntimeLevelBounds{left=-50,right=50,bottom=-16,top=25};
-            if(size==RuntimeLevelSize.ExtraLarge)return new RuntimeLevelBounds{left=-120,right=120,bottom=-30,top=45};
+            if(size==RuntimeLevelSize.Small)return new RuntimeLevelBounds{left=-24,right=24,bottom=-16,top=20};
+            if(size==RuntimeLevelSize.Large)return new RuntimeLevelBounds{left=-100,right=100,bottom=-32,top=50};
+            if(size==RuntimeLevelSize.ExtraLarge)return new RuntimeLevelBounds{left=-240,right=240,bottom=-60,top=90};
             return new RuntimeLevelBounds();
         }
     }
@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=3;
+        public int schemaVersion=4;
         public string projectName="Mi juego", teamName="Mi equipo";
         public bool alignAutomatically=true;
         public RuntimeLevelSize levelSize=RuntimeLevelSize.Medium;
@@ -81,13 +81,14 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>3)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>4)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
+            if(data.schemaVersion<4)data.bounds=RuntimeLevelBounds.For(data.levelSize);
             if(data.bounds==null)data.bounds=RuntimeLevelBounds.For(data.levelSize);
             if(data.objects==null)data.objects=new List<RuntimeItemData>();
             foreach(var item in data.objects){if(item.platformWidth<=0)item.platformWidth=3;if(item.scale==Vector3.zero)item.scale=Vector3.one;if(migrateFormerDefaults&&(item.definitionId=="jugador"&&item.appearanceId=="tiny-dungeon-84"||item.definitionId=="enemigo"&&item.appearanceId=="tiny-dungeon-120"))item.appearanceChosen=false;}
-            data.schemaVersion=3;
+            data.schemaVersion=4;
             return data;
         }
     }

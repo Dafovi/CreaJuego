@@ -135,7 +135,7 @@ namespace CreaJuego.Web.Tests
             var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.Single(o=>o.definitionId=="enemigo");
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(3));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.definitionId=="enemigo");
+            Assert.That(migrated.schemaVersion,Is.EqualTo(4));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.definitionId=="enemigo");
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
@@ -281,7 +281,7 @@ namespace CreaJuego.Web.Tests
             var ramp=c.Create("rampa",Vector3.zero);Assert.That(ramp,Is.Not.Null);var rampData=c.SelectedData();c.SetStructureDirection(false);
             Assert.That(rampData.rotationZ,Is.EqualTo(-18));Assert.That(c.Selection.SelectedItem.transform.eulerAngles.z,Is.EqualTo(342).Within(.01f));
             var roundTrip=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project)).objects.Single(o=>o.instanceId==rampData.instanceId);Assert.That(roundTrip.rotationZ,Is.EqualTo(-18));
-            Assert.That(RuntimeLevelBounds.For(RuntimeLevelSize.ExtraLarge).right,Is.EqualTo(120));
+            Assert.That(RuntimeLevelBounds.For(RuntimeLevelSize.ExtraLarge).right,Is.EqualTo(240));
         }
 
         [UnityTest]

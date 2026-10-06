@@ -25,15 +25,15 @@ namespace CreaJuego.Web
         public GameItem PlayPlayer=>playPlayer;
         public event Action ProjectChanged;
         readonly List<UnityEngine.Object> imageAssets=new List<UnityEngine.Object>();
-        Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage;bool dirty;float saveAt;
+        Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage,recoveryStorage;bool dirty;float saveAt;
 
         void Awake()
         {
-            storage=new FileProjectStorage();if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
+            storage=new FileProjectStorage();recoveryStorage=new FileProjectStorage(System.IO.Path.Combine(Application.persistentDataPath,"recuperacion.creajuego"));if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
             if(editableSceneProject!=null){Project=CloneProject(editableSceneProject);EnsureDefaultAppearances(Project);History.Reset(Project);}else NewProject(false);
         }
         void Start(){if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
-        void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveNow();}
+        void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveRecovery();}
         void OnDestroy(){ReleaseImages();}
         public GameItemDefinition Find(string id)=>contentPack!=null?contentPack.Find(id):definitions.FirstOrDefault(d=>d!=null&&d.id==id);
         public bool HasEditableScene=>editableSceneProject!=null&&buildRoot!=null&&buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length>0;
@@ -152,8 +152,41 @@ namespace CreaJuego.Web
         void ApplySelected(RuntimeItemData data){var item=Selection.SelectedItem;if(item!=null&&SelectedId()==data.instanceId){ApplyData(item,data);item.GetComponent<RuntimeCanvasBackground>()?.Configure(buildCamera);}}
         public void Undo(){var value=History.Undo();if(value!=null){Project=value;Rebuild();Changed();}}
         public void Redo(){var value=History.Redo();if(value!=null){Project=value;Rebuild();Changed();}}
-        public void SaveNow(){storage.Save(ProjectSerializer.ToJson(Project));dirty=false;ui?.SetSaveState("Guardado ✓");}
-        public void LoadLast(){if(!storage.Exists){ui?.SetStatus("Todavía no hay un proyecto guardado.");return;}ExitPlay(false);Project=ProjectSerializer.FromJson(storage.Load());EnsureDefaultAppearances(Project);History.Reset(Project);Rebuild();Changed(false);ui?.SetStatus("Proyecto abierto.");}
+        public void ConfigureStorage(IProjectStorage manual,IProjectStorage recovery){storage=manual??throw new ArgumentNullException(nameof(manual));recoveryStorage=recovery??throw new ArgumentNullException(nameof(recovery));}
+        public void SaveNow()
+        {
+            try{var json=ProjectSerializer.ToJson(Project);storage.Save(json);recoveryStorage.Save(json);dirty=false;RuntimeProjectFiles.Flush();ui?.SetSaveState("Guardado ✓");ui?.SetStatus("Proyecto guardado en este navegador.");}
+            catch(Exception exception){ui?.SetStatus("No se pudo guardar el proyecto: "+exception.Message);}
+        }
+        public void SaveRecovery()
+        {
+            try{recoveryStorage.Save(ProjectSerializer.ToJson(Project));dirty=false;RuntimeProjectFiles.Flush();ui?.SetSaveState("Autoguardado ✓");}
+            catch(Exception exception){ui?.SetStatus("No se pudo crear la recuperación automática: "+exception.Message);}
+        }
+        public void LoadLast()
+        {
+            if(!storage.Exists){ui?.SetStatus("Todavía no hay un proyecto guardado. Usa Guardar primero.");return;}
+            try{ApplyProjectJson(storage.Load());ui?.SetStatus("Proyecto guardado abierto.");}
+            catch(Exception exception){ui?.SetStatus("No se pudo abrir el proyecto: "+exception.Message);}
+        }
+        public void DownloadProject()
+        {
+            SaveNow();var filename=SafeFilename(Project.projectName)+".creajuego";
+            if(!RuntimeProjectFiles.Download(filename,ProjectSerializer.ToJson(Project)))ui?.SetStatus("La descarga de copias está disponible en la versión web.");
+            else ui?.SetStatus("Copia descargada. Guárdala para abrirla después o llevarla a otro computador.");
+        }
+        public void PickProjectFile(){if(!RuntimeProjectFiles.Pick(gameObject.name))ui?.SetStatus("La importación de copias está disponible en la versión web.");}
+        public void ReceiveProjectJson(string json)
+        {
+            try{ApplyProjectJson(json);SaveNow();ui?.SetStatus("Copia importada y guardada correctamente.");}
+            catch(Exception exception){ui?.SetStatus("No se pudo importar esta copia: "+exception.Message);}
+        }
+        public void ReceiveProjectError(string message)=>ui?.SetStatus(string.IsNullOrWhiteSpace(message)?"No se pudo leer esta copia del nivel.":message);
+        void ApplyProjectJson(string json){ExitPlay(false);Project=ProjectSerializer.FromJson(json);EnsureDefaultAppearances(Project);History.Reset(Project);Rebuild();Changed(false);}
+        static string SafeFilename(string value)
+        {
+            if(string.IsNullOrWhiteSpace(value))return "mi-juego";var invalid=System.IO.Path.GetInvalidFileNameChars();var clean=new string(value.Trim().Select(character=>invalid.Contains(character)?'-':character).ToArray());return string.IsNullOrWhiteSpace(clean)?"mi-juego":clean;
+        }
 
         public string EnterPlay()
         {
@@ -238,7 +271,7 @@ namespace CreaJuego.Web
         void MarkDirty(){dirty=true;saveAt=Time.unscaledTime+1;ui?.SetSaveState("Guardando…");}
         void ReleaseImages(){foreach(var value in imageAssets)if(value!=null)DestroySafe(value);imageAssets.Clear();}
         static void DestroySafe(UnityEngine.Object value){if(Application.isPlaying)Destroy(value);else DestroyImmediate(value);}
-        void OnApplicationQuit(){if(dirty)SaveNow();}
+        void OnApplicationQuit(){if(dirty)SaveRecovery();}
     }
 
     public sealed class RuntimeLevelBoundary:MonoBehaviour{}

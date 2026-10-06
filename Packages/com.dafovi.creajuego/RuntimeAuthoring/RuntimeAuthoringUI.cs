@@ -162,7 +162,11 @@ namespace CreaJuego.Web
         {
             Group("NIVEL",ref y);Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
             foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}
-            var help=PanelRect("Ayuda del nivel",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(help,"El marco azul muestra la zona válida. Si el personaje cae, vuelve al inicio.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+            var help=PanelRect("Ayuda del nivel",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(help,"El marco amarillo muestra la zona válida. Si el personaje cae, vuelve al inicio.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+            Group("ARCHIVO DEL NIVEL",ref y);
+            ButtonAt(properties,"Descargar copia JSON",new Vector2(6,-y),c.DownloadProject,new Vector2(238,40),null,Soft,TextColor,13);y+=46;
+            ButtonAt(properties,"Importar copia JSON",new Vector2(6,-y),c.PickProjectFile,new Vector2(238,40),null,Soft,TextColor,13);y+=46;
+            var fileHelp=PanelRect("Ayuda de copias",properties,new Vector2(6,-y),new Vector2(238,88),Hex("263B55"),true);Label(fileHelp,"Guardar y Abrir usan este navegador. Descarga una copia para recuperar el nivel o llevarlo a otro computador.",12,new Vector2(10,7),new Vector2(218,74),TextColor);y+=96;
         }
         void ItemProperties(ItemKind kind,RuntimeItemData data,ref int y)
         {
