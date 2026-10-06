@@ -71,7 +71,7 @@ MonoBehaviour:
     moveClip: {fileID: 0}
     jumpClip: {fileID: 0}
     attackClip: {fileID: 0}
-    scale: {x: 0.5, y: 0.5}
+    scale: {x: 0.35, y: 0.35}
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 1

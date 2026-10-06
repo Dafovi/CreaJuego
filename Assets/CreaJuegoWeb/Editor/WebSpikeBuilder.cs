@@ -146,16 +146,16 @@ namespace CreaJuego.Web.Editor
                 case ItemKind.Background:AddPrepared(target,Option("workshop-forest-background","Valle del castillo","Fondo.png","ForestBackground.png",Vector2.one,true,null,1024,false));break;
                 case ItemKind.Platform:
                     AddPrepared(target,Option("workshop-grass-platform","Tierra con césped","Plataforma.png","GrassPlatform.png",Vector2.one,false,new[]{"plataforma"}));
-                    AddPrepared(target,Option("workshop-grass-wall","Tierra profunda","Muro.png","GrassWall.png",Vector2.one,false,new[]{"muro"}));
+                    AddPrepared(target,new AppearanceOption{id="workshop-grass-wall",displayName="Tierra profunda",sprite=PrepareWorkshopSquareTile("Muro.png","GrassWall.png"),scale=Vector2.one,preserveAspectWithoutPrefab=false,definitionIds=new[]{"muro"}});
                     AddPrepared(target,Option("workshop-grass-ramp","Pendiente con césped","Rampa.png","GrassRamp.png",Vector2.one,false,new[]{"rampa"}));
                     break;
                 case ItemKind.MovingPlatform:AddPrepared(target,Option("workshop-grass-moving","Plataforma flotante","Plataforma movil.png","GrassMovingPlatform.png",Vector2.one,false));break;
-                case ItemKind.Prize:AddPrepared(target,Option("workshop-gold-coin","Moneda dorada","Moneda.png","GoldCoin.png",new Vector2(.18f,.18f)));break;
-                case ItemKind.Hazard:AddPrepared(target,Option("workshop-grass-spikes","Pinchos del bosque","Pincho.png","GrassSpikes.png",new Vector2(.4f,.4f)));break;
-                case ItemKind.Goal:AddPrepared(target,Option("workshop-red-flag","Bandera roja","Meta.png","RedFlag.png",new Vector2(.5f,.5f)));break;
+                case ItemKind.Prize:AddPrepared(target,Option("workshop-gold-coin","Moneda dorada","Moneda.png","GoldCoin.png",new Vector2(.1f,.1f)));break;
+                case ItemKind.Hazard:AddPrepared(target,Option("workshop-grass-spikes","Pinchos del bosque","Pincho.png","GrassSpikes.png",new Vector2(.25f,.25f)));break;
+                case ItemKind.Goal:AddPrepared(target,Option("workshop-red-flag","Bandera roja","Meta.png","RedFlag.png",new Vector2(.35f,.35f)));break;
                 case ItemKind.Decoration:
-                    AddPrepared(target,Option("workshop-large-tree","Árbol frondoso","Arbol.png","LargeTree.png",new Vector2(.7f,.7f)));
-                    AddPrepared(target,Option("workshop-flower-bush","Arbusto con flores","Arbusto.png","FlowerBush.png",new Vector2(.5f,.5f)));
+                    AddPrepared(target,Option("workshop-large-tree","Árbol frondoso","Arbol.png","LargeTree.png",new Vector2(.5f,.5f)));
+                    AddPrepared(target,Option("workshop-flower-bush","Arbusto con flores","Arbusto.png","FlowerBush.png",new Vector2(.35f,.35f)));
                     break;
             }
         }
@@ -217,7 +217,7 @@ namespace CreaJuego.Web.Editor
         }
         static Sprite EnsureGradientSprite(string fileName,Color bottom,Color top)
         {
-            var path=ContentDirectory+"/"+fileName;var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null){ImportSprite(path,64);return AssetDatabase.LoadAssetAtPath<Sprite>(path);}
+            var path=ContentDirectory+"/"+fileName;var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null)return sprite;
             var texture=new Texture2D(64,64,TextureFormat.RGBA32,false);for(int y=0;y<64;y++){var color=Color.Lerp(bottom,top,y/63f);for(int x=0;x<64;x++)texture.SetPixel(x,y,color);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);ImportSprite(path,64);return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
         static Sprite EnsureWallSprite(string fileName,Color dark,Color light)
@@ -264,6 +264,17 @@ namespace CreaJuego.Web.Editor
                 result.Apply();System.IO.File.WriteAllBytes(outputPath,result.EncodeToPNG());UnityEngine.Object.DestroyImmediate(source);UnityEngine.Object.DestroyImmediate(result);
             }
             ImportSprite(outputPath,100);return AssetDatabase.LoadAssetAtPath<Sprite>(outputPath);
+        }
+        static Sprite PrepareWorkshopSquareTile(string sourceFile,string outputFile)
+        {
+            var sourcePath=WorkshopSourceDirectory+"/"+sourceFile;var outputPath=WorkshopSpriteDirectory+"/"+outputFile;if(!System.IO.File.Exists(sourcePath))return null;
+            var source=new Texture2D(2,2,TextureFormat.RGBA32,false);source.LoadImage(System.IO.File.ReadAllBytes(sourcePath),false);var pixels=source.GetPixels32();var minX=source.width;var minY=source.height;var maxX=-1;var maxY=-1;
+            for(var y=0;y<source.height;y++)for(var x=0;x<source.width;x++)if(pixels[y*source.width+x].a>4){minX=Mathf.Min(minX,x);minY=Mathf.Min(minY,y);maxX=Mathf.Max(maxX,x);maxY=Mathf.Max(maxY,y);}
+            if(maxX<minX){minX=0;minY=0;maxX=source.width-1;maxY=source.height-1;}
+            var opaqueWidth=maxX-minX+1;var opaqueHeight=maxY-minY+1;var cropSize=Mathf.Max(16,Mathf.Min(Mathf.RoundToInt(opaqueWidth*.62f),Mathf.RoundToInt(opaqueHeight*.35f)));var startX=Mathf.Clamp(minX+(opaqueWidth-cropSize)/2,minX,maxX-cropSize+1);var startY=Mathf.Clamp(minY+Mathf.RoundToInt(opaqueHeight*.22f),minY,maxY-cropSize+1);const int outputSize=256;
+            var result=new Texture2D(outputSize,outputSize,TextureFormat.RGBA32,false);
+            for(var y=0;y<outputSize;y++)for(var x=0;x<outputSize;x++){var sampleX=startX+Mathf.Min(cropSize-1,Mathf.FloorToInt((x+.5f)/outputSize*cropSize));var sampleY=startY+Mathf.Min(cropSize-1,Mathf.FloorToInt((y+.5f)/outputSize*cropSize));result.SetPixel(x,y,source.GetPixel(sampleX,sampleY));}
+            result.Apply();System.IO.File.WriteAllBytes(outputPath,result.EncodeToPNG());UnityEngine.Object.DestroyImmediate(source);UnityEngine.Object.DestroyImmediate(result);ImportSprite(outputPath,100);return AssetDatabase.LoadAssetAtPath<Sprite>(outputPath);
         }
         static void AddPrepared(AppearanceCategory category,AppearanceOption option)
         {
