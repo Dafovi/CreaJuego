@@ -18,6 +18,7 @@ namespace CreaJuego.PlaygroundBackend
         Rigidbody2D body;
         Collider2D bodyCollider;
         Move movement;
+        PlayerSprint sprint;
 
         void Awake()=>Resolve();
         void FixedUpdate()=>Apply();
@@ -28,6 +29,7 @@ namespace CreaJuego.PlaygroundBackend
             if(body==null)body=GetComponent<Rigidbody2D>();
             if(bodyCollider==null)bodyCollider=GetComponent<Collider2D>();
             if(movement==null)movement=GetComponent<Move>();
+            if(sprint==null)TryGetComponent(out sprint);
         }
 
         public void Apply()
@@ -53,7 +55,7 @@ namespace CreaJuego.PlaygroundBackend
             if(Mathf.Abs(supportNormal.x)<.05f)return;
             var tangent=new Vector2(supportNormal.y,-supportNormal.x).normalized;
             if(tangent.x<0)tangent=-tangent;
-            float desiredSpeed=input*Mathf.Max(.1f,item.speed);
+            float desiredSpeed=input*Mathf.Max(.1f,item.speed)*(sprint!=null?sprint.CurrentMultiplier:1f);
             float currentSpeed=Vector2.Dot(body.linearVelocity,tangent);
             body.linearVelocity+=tangent*(desiredSpeed-currentSpeed);
         }

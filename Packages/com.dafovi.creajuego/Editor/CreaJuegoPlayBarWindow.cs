@@ -83,7 +83,7 @@ namespace CreaJuego.Editor
             if(playing) {
                 validation.Clear();
                 validation.Add(Styled(new Label("Tu juego está en marcha"),"preflight-title"));
-                validation.Add(Styled(new Label("Muévete con A/D o las flechas, salta con Espacio y golpea con X."),"hint"));
+                validation.Add(Styled(new Label("Muévete con A/D o las flechas, corre con Shift, salta con Espacio y golpea con X o clic."),"hint"));
                 validation.style.display=DisplayStyle.Flex;
             } else RefreshPreflight();
             status.text=playing?"Haz clic en Juego para jugar tu recorrido.":"Los cambios se hacen antes de jugar. Ctrl+Z deshace tu último cambio.";

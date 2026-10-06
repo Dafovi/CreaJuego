@@ -3,13 +3,13 @@ using UnityEngine;
 namespace CreaJuego.Web
 {
     /// <summary>
-    /// Configura una rampa como superficie atravesable desde abajo.
+    /// Configura una plataforma o rampa como superficie atravesable desde abajo.
     /// PlatformEffector2D usa el eje superior local, por lo que también funciona
     /// cuando la rampa está rotada hacia cualquiera de los dos lados.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Collider2D), typeof(PlatformEffector2D))]
-    public sealed class OneWayRampSurface : MonoBehaviour
+    public sealed class OneWayPlatformSurface : MonoBehaviour
     {
         [SerializeField, Range(120f, 180f)] float surfaceArc = 160f;
 

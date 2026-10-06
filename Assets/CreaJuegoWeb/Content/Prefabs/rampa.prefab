@@ -233,7 +233,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2a5cb36e0ef14dbaac8372a2dd14c302, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.OneWayRampSurface
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.OneWayPlatformSurface
   surfaceArc: 160
 --- !u!1 &8811829906854696330
 GameObject:

@@ -405,11 +405,11 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void RampCanBeCrossedFromBelowAndSupportsFromAbove()
         {
-            var surface=new GameObject("Rampa unidireccional",typeof(BoxCollider2D),typeof(PlatformEffector2D),typeof(OneWayRampSurface));
+            var surface=new GameObject("Superficie unidireccional",typeof(BoxCollider2D),typeof(PlatformEffector2D),typeof(OneWayPlatformSurface));
             var actor=new GameObject("Participante",typeof(BoxCollider2D),typeof(Rigidbody2D));
             surface.transform.position=new Vector3(1000,0);
             surface.GetComponent<BoxCollider2D>().size=new Vector2(4,.4f);
-            surface.GetComponent<OneWayRampSurface>().Configure();
+            surface.GetComponent<OneWayPlatformSurface>().Configure();
             var body=actor.GetComponent<Rigidbody2D>();body.gravityScale=0;body.collisionDetectionMode=CollisionDetectionMode2D.Continuous;
             var previousMode=Physics2D.simulationMode;
             try
@@ -428,6 +428,24 @@ namespace CreaJuego.Web.Tests
                 Physics2D.simulationMode=previousMode;
                 Object.DestroyImmediate(actor);Object.DestroyImmediate(surface);
             }
+        }
+        [Test]
+        public void WorkshopControlsSupportMouseAttackAndShiftRun()
+        {
+            Assert.That(WorkshopInput.AttackPressed(true,false,true),Is.True);
+            Assert.That(WorkshopInput.AttackPressed(false,true,false),Is.True);
+            Assert.That(WorkshopInput.AttackPressed(false,true,true),Is.False,"Un clic en la interfaz no debe atacar.");
+            Assert.That(WorkshopInput.SprintMultiplier(false),Is.EqualTo(1));
+            Assert.That(WorkshopInput.SprintMultiplier(true),Is.EqualTo(WorkshopInput.RunMultiplier));
+
+            var go=new GameObject("Corredor",typeof(GameItem),typeof(Rigidbody2D),typeof(Move),typeof(PlayerSprint));
+            try
+            {
+                var item=go.GetComponent<GameItem>();item.speed=4;
+                var sprint=go.GetComponent<PlayerSprint>();sprint.sprintHeld=()=>true;sprint.Apply();
+                Assert.That(go.GetComponent<Move>().speed,Is.EqualTo(item.speed/20f*WorkshopInput.RunMultiplier).Within(.0001f));
+            }
+            finally{Object.DestroyImmediate(go);}
         }
         [Test]
         public void MovementGuideMatchesConfiguredMovementDistance()

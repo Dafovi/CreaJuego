@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 8887168598719078759}
   - component: {fileID: 3210687041757212526}
   - component: {fileID: 6334088760461657257}
+  - component: {fileID: 4443255034157367491}
+  - component: {fileID: 5815210313076288805}
   m_Layer: 0
   m_Name: plataforma
   m_TagString: Untagged
@@ -159,7 +161,7 @@ BoxCollider2D:
     serializedVersion: 2
     m_Bits: 4294967295
   m_IsTrigger: 0
-  m_UsedByEffector: 0
+  m_UsedByEffector: 1
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
@@ -201,6 +203,38 @@ MonoBehaviour:
   renderer: {fileID: 8366214980309979263}
   animator: {fileID: 6593981546444313076}
   geometrySource: {fileID: 8443132836932766189}
+--- !u!251 &4443255034157367491
+PlatformEffector2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4512232811257325162}
+  m_Enabled: 1
+  m_UseColliderMask: 1
+  m_ColliderMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RotationalOffset: 0
+  m_UseOneWay: 1
+  m_UseOneWayGrouping: 1
+  m_SurfaceArc: 160
+  m_UseSideFriction: 0
+  m_UseSideBounce: 0
+  m_SideArc: 0
+--- !u!114 &5815210313076288805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4512232811257325162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a5cb36e0ef14dbaac8372a2dd14c302, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.OneWayPlatformSurface
+  surfaceArc: 160
 --- !u!1 &6268249711040185928
 GameObject:
   m_ObjectHideFlags: 0

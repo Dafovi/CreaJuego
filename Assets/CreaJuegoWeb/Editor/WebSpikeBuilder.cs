@@ -32,19 +32,18 @@ namespace CreaJuego.Web.Editor
             if(!controller.CaptureEditableScene(true))throw new InvalidOperationException("No se pudo capturar el nivel inicial.");controller.ui.RefreshEditableLayout();
             EditorUtility.SetDirty(controller);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_STARTER_LEVEL_READY "+controller.Project.objects.Count);
         }
-        [MenuItem("CreaJuego/Web/Configurar rampas atravesables")]
-        public static void ApplyOneWayRampCollision()
+        [MenuItem("CreaJuego/Web/Configurar plataformas atravesables")]
+        public static void ApplyOneWayPlatformCollision()
         {
-            const string prefabPath=ContentDirectory+"/Prefabs/rampa.prefab";
-            var contents=PrefabUtility.LoadPrefabContents(prefabPath);
-            try
+            foreach(var id in new[]{"plataforma","movil","rampa"})
             {
-                ConfigureOneWayRamp(contents);
-                PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);
+                var prefabPath=$"{ContentDirectory}/Prefabs/{id}.prefab";
+                var contents=PrefabUtility.LoadPrefabContents(prefabPath);
+                try{ConfigureOneWaySurface(contents);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}
+                finally{PrefabUtility.UnloadPrefabContents(contents);}
             }
-            finally{PrefabUtility.UnloadPrefabContents(contents);}
             AssetDatabase.SaveAssets();
-            Debug.Log("CREAJUEGO_WEB_ONE_WAY_RAMP_READY");
+            Debug.Log("CREAJUEGO_WEB_ONE_WAY_PLATFORMS_READY");
         }
         public static RuntimeContentPack EnsureRuntimePack()
         {
@@ -85,6 +84,7 @@ namespace CreaJuego.Web.Editor
                         if(visual.geometrySource!=null&&visual.geometrySource!=visual.renderer)visual.geometrySource.enabled=false;
                     }
                     if(source.kind==ItemKind.Player){if(item.GetComponent<PlayerFallRecovery>()==null)item.gameObject.AddComponent<PlayerFallRecovery>();var bodyCollider=item.GetComponent<BoxCollider2D>();if(bodyCollider!=null)bodyCollider.edgeRadius=Mathf.Min(.12f,Mathf.Min(bodyCollider.size.x,bodyCollider.size.y)*.24f);}
+                    if(source.kind==ItemKind.Platform||source.kind==ItemKind.MovingPlatform)ConfigureOneWaySurface(contents);
                 }
                 PrefabUtility.SaveAsPrefabAsset(contents,safePrefabPath);
             }
@@ -139,16 +139,16 @@ namespace CreaJuego.Web.Editor
         }        static GameItemDefinition PrepareStructure(GameItemDefinition source,string id,string name,string description,float rotation,int order,Sprite icon)
         {
             var prefabPath=$"{ContentDirectory}/Prefabs/{id}.prefab";var contents=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source.prefab));
-            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);if(id=="rampa")ConfigureOneWayRamp(contents);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
+            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);if(id=="rampa")ConfigureOneWaySurface(contents);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
             var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint="Puedes cambiar su ancho, alto y dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
         }
-        static void ConfigureOneWayRamp(GameObject ramp)
+        static void ConfigureOneWaySurface(GameObject platform)
         {
-            var surface=ramp.GetComponent<OneWayRampSurface>()??ramp.AddComponent<OneWayRampSurface>();
+            var surface=platform.GetComponent<OneWayPlatformSurface>()??platform.AddComponent<OneWayPlatformSurface>();
             surface.Configure();
             EditorUtility.SetDirty(surface);
-            EditorUtility.SetDirty(ramp.GetComponent<Collider2D>());
-            EditorUtility.SetDirty(ramp.GetComponent<PlatformEffector2D>());
+            EditorUtility.SetDirty(platform.GetComponent<Collider2D>());
+            EditorUtility.SetDirty(platform.GetComponent<PlatformEffector2D>());
         }
         static void EnsureMinimumOptions(AppearanceCategory[] categories)
         {

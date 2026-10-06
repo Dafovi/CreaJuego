@@ -17,7 +17,16 @@ namespace CreaJuego.PlaygroundBackend
             var item = GetComponent<GameItem>();
             var session = Application.isPlaying ? DemoSession.InScene(gameObject.scene) : null;
             var renderer=ItemVisual.Resolve(item); if(renderer!=null) renderer.color=ItemVisual.BaseColor(item);
-            if (TryGetComponent<Move>(out var move)) { move.movementSource = WorkshopInput.ReadMovement; move.speed = item.speed / 20f; move.movementType = Enums.MovementType.OnlyHorizontal; if(!TryGetComponent<SlopeMovementAssist>(out _))gameObject.AddComponent<SlopeMovementAssist>(); }
+            if (TryGetComponent<Move>(out var move))
+            {
+                move.movementSource = WorkshopInput.ReadMovement; move.speed = item.speed / 20f; move.movementType = Enums.MovementType.OnlyHorizontal;
+                if(!TryGetComponent<SlopeMovementAssist>(out _))gameObject.AddComponent<SlopeMovementAssist>();
+                if(item.definition!=null&&item.definition.kind==ItemKind.Player)
+                {
+                    var sprint=GetComponent<PlayerSprint>()??gameObject.AddComponent<PlayerSprint>();
+                    sprint.sprintHeld=WorkshopInput.SprintHeld;sprint.Apply();
+                }
+            }
             if (TryGetComponent<Jump>(out var jump)) { jump.jumpStrength = item.jump; jump.enabled = item.canJump; }
             if (TryGetComponent<CollectableAttribute>(out var prize))
             {
