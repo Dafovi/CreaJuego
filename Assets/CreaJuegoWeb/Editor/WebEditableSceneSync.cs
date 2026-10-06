@@ -19,7 +19,7 @@ namespace CreaJuego.Web.Editor
         static void Capture(Scene scene,bool allowRemoval)
         {
             if(!scene.IsValid()||!scene.isLoaded)return;
-            foreach(var controller in Object.FindObjectsByType<RuntimeAuthoringController>(FindObjectsInactive.Include,FindObjectsSortMode.None))
+            foreach(var controller in Object.FindObjectsByType<RuntimeAuthoringController>(FindObjectsInactive.Include))
                 if(controller.gameObject.scene==scene&&controller.CaptureEditableScene(allowRemoval))EditorUtility.SetDirty(controller);
         }
     }

@@ -278,14 +278,30 @@ namespace CreaJuego.Web
         }
         void ApplyResponsiveLayout(bool force=false)
         {
-            if(!adaptLayoutAtRuntime||canvas==null||Screen.width<=0||Screen.height<=0||!force&&screenWidth==Screen.width&&screenHeight==Screen.height)return;
+            if(canvas==null||Screen.width<=0||Screen.height<=0||!force&&screenWidth==Screen.width&&screenHeight==Screen.height)return;
             screenWidth=Screen.width;screenHeight=Screen.height;if(scaler!=null)scaler.matchWidthOrHeight=1f;
             float effectiveWidth=720f*Screen.width/Mathf.Max(1f,Screen.height);
+            PinSidePanel(leftPanel?.GetComponent<RectTransform>(),true,260);
+            PinSidePanel(rightPanel?.GetComponent<RectTransform>(),false,280);
+            if(c?.buildCamera!=null)
+            {
+                var cameraRect=c.buildCamera.rect;
+                cameraRect.x=260/effectiveWidth;
+                cameraRect.width=Mathf.Max(.1f,(effectiveWidth-540)/effectiveWidth);
+                c.buildCamera.rect=cameraRect;
+            }
+            if(!adaptLayoutAtRuntime)return;
             Stretch(top as RectTransform,0,0,646,0);Stretch(leftPanel?.GetComponent<RectTransform>(),0,effectiveWidth-260,0,74);Stretch(rightPanel?.GetComponent<RectTransform>(),effectiveWidth-280,0,82,74);
             Stretch(editTop as RectTransform,260,280,596,74);Stretch(readinessPanel?.GetComponent<RectTransform>(),260,0,0,638);Stretch(gameplayHudPanel?.GetComponent<RectTransform>(),0,0,0,0);
             if(returnButton!=null){var r=Rect(returnButton.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-15,14);}
             if(save!=null){var r=Rect(save.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-215,15);}
             if(c?.buildCamera!=null)c.buildCamera.rect=new Rect(260/effectiveWidth,82/720f,Mathf.Max(.1f,(effectiveWidth-540)/effectiveWidth),564/720f);
+        }
+        static void PinSidePanel(RectTransform rect,bool left,float width)
+        {
+            if(rect==null)return;
+            rect.anchorMin=new Vector2(left?0:1,rect.anchorMin.y);rect.anchorMax=new Vector2(left?0:1,rect.anchorMax.y);
+            rect.pivot=new Vector2(.5f,rect.pivot.y);rect.anchoredPosition=new Vector2((left?1:-1)*width*.5f,rect.anchoredPosition.y);rect.sizeDelta=new Vector2(width,rect.sizeDelta.y);
         }
         static void Stretch(RectTransform rect,float left,float right,float bottom,float top)
         {
