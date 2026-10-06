@@ -403,6 +403,33 @@ namespace CreaJuego.Web.Tests
             Assert.That(end.y,Is.GreaterThan(start.y+.15f));
         }
         [Test]
+        public void RampCanBeCrossedFromBelowAndSupportsFromAbove()
+        {
+            var surface=new GameObject("Rampa unidireccional",typeof(BoxCollider2D),typeof(PlatformEffector2D),typeof(OneWayRampSurface));
+            var actor=new GameObject("Participante",typeof(BoxCollider2D),typeof(Rigidbody2D));
+            surface.transform.position=new Vector3(1000,0);
+            surface.GetComponent<BoxCollider2D>().size=new Vector2(4,.4f);
+            surface.GetComponent<OneWayRampSurface>().Configure();
+            var body=actor.GetComponent<Rigidbody2D>();body.gravityScale=0;body.collisionDetectionMode=CollisionDetectionMode2D.Continuous;
+            var previousMode=Physics2D.simulationMode;
+            try
+            {
+                Physics2D.simulationMode=SimulationMode2D.Script;
+                actor.transform.position=new Vector3(1000,-1);body.position=actor.transform.position;body.linearVelocity=Vector2.up*5;Physics2D.SyncTransforms();
+                for(int i=0;i<30;i++)Physics2D.Simulate(Time.fixedDeltaTime);
+                Assert.That(body.position.y,Is.GreaterThan(.7f),"La rampa debe poder atravesarse desde abajo.");
+
+                body.position=new Vector2(1000,1);body.linearVelocity=Vector2.down*5;Physics2D.SyncTransforms();
+                for(int i=0;i<30;i++)Physics2D.Simulate(Time.fixedDeltaTime);
+                Assert.That(body.position.y,Is.EqualTo(.7f).Within(.08f),"La cara superior debe sostener al personaje.");
+            }
+            finally
+            {
+                Physics2D.simulationMode=previousMode;
+                Object.DestroyImmediate(actor);Object.DestroyImmediate(surface);
+            }
+        }
+        [Test]
         public void MovementGuideMatchesConfiguredMovementDistance()
         {
             var c=Open();var movingData=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.MovingPlatform);

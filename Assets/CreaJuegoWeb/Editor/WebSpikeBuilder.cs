@@ -32,6 +32,20 @@ namespace CreaJuego.Web.Editor
             if(!controller.CaptureEditableScene(true))throw new InvalidOperationException("No se pudo capturar el nivel inicial.");controller.ui.RefreshEditableLayout();
             EditorUtility.SetDirty(controller);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_STARTER_LEVEL_READY "+controller.Project.objects.Count);
         }
+        [MenuItem("CreaJuego/Web/Configurar rampas atravesables")]
+        public static void ApplyOneWayRampCollision()
+        {
+            const string prefabPath=ContentDirectory+"/Prefabs/rampa.prefab";
+            var contents=PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                ConfigureOneWayRamp(contents);
+                PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);
+            }
+            finally{PrefabUtility.UnloadPrefabContents(contents);}
+            AssetDatabase.SaveAssets();
+            Debug.Log("CREAJUEGO_WEB_ONE_WAY_RAMP_READY");
+        }
         public static RuntimeContentPack EnsureRuntimePack()
         {
             EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");RemoveLegacyStairs();
@@ -125,8 +139,16 @@ namespace CreaJuego.Web.Editor
         }        static GameItemDefinition PrepareStructure(GameItemDefinition source,string id,string name,string description,float rotation,int order,Sprite icon)
         {
             var prefabPath=$"{ContentDirectory}/Prefabs/{id}.prefab";var contents=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source.prefab));
-            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
+            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);if(id=="rampa")ConfigureOneWayRamp(contents);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
             var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint="Puedes cambiar su ancho, alto y dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
+        }
+        static void ConfigureOneWayRamp(GameObject ramp)
+        {
+            var surface=ramp.GetComponent<OneWayRampSurface>()??ramp.AddComponent<OneWayRampSurface>();
+            surface.Configure();
+            EditorUtility.SetDirty(surface);
+            EditorUtility.SetDirty(ramp.GetComponent<Collider2D>());
+            EditorUtility.SetDirty(ramp.GetComponent<PlatformEffector2D>());
         }
         static void EnsureMinimumOptions(AppearanceCategory[] categories)
         {

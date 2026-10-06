@@ -29,6 +29,11 @@ namespace CreaJuego.Web.Tests
                 var direction=new Vector2(Mathf.Cos(ramp.rotationZ*Mathf.Deg2Rad),Mathf.Sin(ramp.rotationZ*Mathf.Deg2Rad));var half=direction*ramp.platformWidth*.5f;
                 foreach(var edge in new[]{(Vector2)ramp.position-half,(Vector2)ramp.position+half})Assert.That(platforms.Any(platform=>Mathf.Abs(platform.position.y-edge.y)<.05f&&Mathf.Abs(Mathf.Abs(platform.position.x-edge.x)-platform.platformWidth*.5f)<.05f),Is.True,$"La rampa en {ramp.position} no toca una plataforma en {edge}.");
             }
+            foreach(var ramp in controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="rampa"))
+            {
+                var collider=ramp.GetComponent<Collider2D>();var effector=ramp.GetComponent<PlatformEffector2D>();var oneWay=ramp.GetComponent<OneWayRampSurface>();
+                Assert.That(oneWay,Is.Not.Null);Assert.That(collider.usedByEffector,Is.True);Assert.That(effector,Is.Not.Null);Assert.That(effector.useOneWay,Is.True);Assert.That(effector.useOneWayGrouping,Is.True);Assert.That(effector.surfaceArc,Is.EqualTo(160f));Assert.That(effector.useSideFriction,Is.False);Assert.That(effector.useSideBounce,Is.False);
+            }
             var playerItem=controller.buildRoot.GetComponentsInChildren<GameItem>().Single(item=>item.definition.kind==ItemKind.Player);var playerCollider=playerItem.GetComponent<Collider2D>();var support=controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="plataforma").Select(item=>item.GetComponent<Collider2D>()).First(collider=>playerCollider.bounds.center.x>=collider.bounds.min.x&&playerCollider.bounds.center.x<=collider.bounds.max.x);
             Assert.That(Mathf.Abs(playerCollider.bounds.min.y-support.bounds.max.y),Is.LessThan(.05f));
             controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.childCount,Is.EqualTo(0));
