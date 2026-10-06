@@ -676,7 +676,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 63310600}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -6642,7 +6642,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 852006981}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -6873,7 +6873,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 897156117}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -7324,7 +7324,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 921601540}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -8194,7 +8194,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1138852108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -9340,7 +9340,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1253839671}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -13145,7 +13145,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1694300330}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -13693,7 +13693,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1732150370}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId:
@@ -13976,6 +13976,8 @@ MonoBehaviour:
   flow: {fileID: 1849011932}
   readinessTitle: {fileID: 1407810265}
   readinessChecks: {fileID: 1989071730}
+  brandTitle: {fileID: 1977596271}
+  brandTagline: {fileID: 1799621263}
   newButton: {fileID: 1139640547}
   saveButton: {fileID: 496168451}
   openButton: {fileID: 75028391}
@@ -14401,21 +14403,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1782117571}
   m_CullTransparentMesh: 1
---- !u!115 &1793369197
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name:
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: RuntimeItemRow
-  m_Namespace: CreaJuego.Web
-  m_AssemblyName: CreaJuego.RuntimeAuthoring
 --- !u!1 &1799621261
 GameObject:
   m_ObjectHideFlags: 0
@@ -14486,7 +14473,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Crea, aprende y juega
+  m_Text: Crea tu propia aventura
 --- !u!222 &1799621264
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14854,7 +14841,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1922947966}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId: db0d5275d32546cd85fa7984930baf63
@@ -15160,7 +15147,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1956566898}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1793369197}
+  m_Script: {fileID: 11500000, guid: 2d11e53e4ba94df99623e0ba38e02d70, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeItemRow
   instanceId: 54bca69a16344d51b91934cf4028b669
@@ -15331,7 +15318,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: CreaJuego Web
+  m_Text: Gamer
 --- !u!222 &1977596272
 CanvasRenderer:
   m_ObjectHideFlags: 0

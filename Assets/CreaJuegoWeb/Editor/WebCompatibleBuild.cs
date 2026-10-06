@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
+using CreaJuego.Web;
 
 namespace CreaJuego.Web.Editor
 {
@@ -49,6 +51,8 @@ namespace CreaJuego.Web.Editor
             if (!index.Contains("<title>") || !index.Contains("</title>") ||
                 !index.Contains("width=\"100%\"") || !index.Contains("height=\"100%\""))
                 throw new InvalidOperationException("El index personalizado no contiene un título o el canvas al 100% esperado.");
+
+            ApplyBranding(indexPath, manifestPath);
 
             if (!File.Exists(Path.GetFullPath(WebSpikeBuilder.ScenePath)))
                 throw new FileNotFoundException("No existe la escena Web preparada.", WebSpikeBuilder.ScenePath);
@@ -132,8 +136,24 @@ namespace CreaJuego.Web.Editor
                 $"const cacheName = \"CreaJuego-Web-{DateTime.UtcNow:yyyyMMddHHmmss}\";\n" +
                 text.Substring(firstLineEnd + 1));
         }
+
+        static void ApplyBranding(string indexPath, string manifestPath)
+        {
+            var pack = AssetDatabase.LoadAssetAtPath<RuntimeContentPack>("Assets/CreaJuegoWeb/Content/WebRuntimePack.asset");
+            var product = !string.IsNullOrWhiteSpace(pack != null ? pack.productName : null) ? pack.productName : CreaJuegoBranding.ProductName;
+            var tagline = !string.IsNullOrWhiteSpace(pack != null ? pack.tagline : null) ? pack.tagline : CreaJuegoBranding.Tagline;
+            var fullTitle = product + ": " + tagline;
+
+            var index = File.ReadAllText(indexPath);
+            index = Regex.Replace(index, "<title>.*?</title>", "<title>" + fullTitle + "</title>", RegexOptions.Singleline);
+            File.WriteAllText(indexPath, index);
+
+            var manifest = File.ReadAllText(manifestPath);
+            manifest = Regex.Replace(manifest, "(\"name\"\\s*:\\s*\")[^\"]*(\")", "$1" + fullTitle + "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
+            manifest = Regex.Replace(manifest, "(\"short_name\"\\s*:\\s*\")[^\"]*(\")", "$1" + product + "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
+            File.WriteAllText(manifestPath, manifest);
+        }
     }
 }
-
 
 

@@ -46,6 +46,6 @@ MonoBehaviour:
   - kind: 8
     appearanceId: web-cielo-azul
   sceneServices: {fileID: 7764999060475395404, guid: 93f1d6b3676ae0e41be59d899ad6200c, type: 3}
-  productName: CreaJuego Web
-  tagline: Crea, aprende y juega
+  productName: Gamer
+  tagline: Crea tu propia aventura
   brandIcon: {fileID: 21300718, guid: 838b1c6315c47364e8bd4123f3c575e0, type: 3}

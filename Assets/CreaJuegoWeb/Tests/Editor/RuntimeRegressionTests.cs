@@ -43,8 +43,10 @@ namespace CreaJuego.Web.Tests
             yield return null;
             controller.NewProject(false);
             Assert.That(ui.HasPreparedLayout,Is.True);Assert.That(controller.HasEditableScene,Is.True);Assert.That(controller.contentPack,Is.Not.Null);
+            Assert.That(ui.BrandText,Does.Contain("Gamer").And.Contain("Crea tu propia aventura"));
             Assert.That(controller.GetComponents<RuntimeGameplayCamera>().Length,Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)),Is.EqualTo(0));
+            Assert.That(Object.FindObjectsByType<RuntimeItemRow>(FindObjectsInactive.Include,FindObjectsSortMode.None),Is.All.Matches<RuntimeItemRow>(row=>UnityEditor.AssetDatabase.GetAssetPath(UnityEditor.MonoScript.FromMonoBehaviour(row)).EndsWith("RuntimeItemRow.cs")),"Las filas de Mi juego deben apuntar a un script real para sobrevivir al build WebGL.");
             var overlayCanvases=Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include,FindObjectsSortMode.None).Where(value=>value.renderMode==RenderMode.ScreenSpaceOverlay).ToArray();Assert.That(overlayCanvases.Length,Is.EqualTo(1));Assert.That(overlayCanvases[0].GetComponent<Image>(),Is.Null,"El Canvas de interfaz no debe tapar la cámara con un fondo opaco.");
             Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(10));
             var hierarchy=Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,FindObjectsSortMode.None).Select(transform=>transform.name).ToArray();

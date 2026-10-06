@@ -11,7 +11,7 @@ namespace CreaJuego.Web
     {
         [SerializeField] Canvas canvas;
         [SerializeField] Transform catalog,list,properties,editTop,top,hearts;
-        [SerializeField] Text status,save,flow,readinessTitle,readinessChecks;
+        [SerializeField] Text status,save,flow,readinessTitle,readinessChecks,brandTitle,brandTagline;
         [SerializeField] Button newButton,saveButton,openButton,undoButton,redoButton,frameAllButton,frameSelectedButton,levelButton,duplicateButton,deleteButton,modeButton,returnButton;
         [SerializeField] Toggle snap;
         [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel;
@@ -27,6 +27,7 @@ namespace CreaJuego.Web
         public int VisibleSceneItemIconCount=>list==null?0:list.GetComponentsInChildren<Image>(false).Count(image=>image.name=="Miniatura"&&image.sprite!=null);
         public Sprite VisibleSelectionIcon=>properties?.GetComponentsInChildren<Image>(false).FirstOrDefault(image=>image.name=="Miniatura")?.sprite;
         public string VisiblePropertiesText=>properties==null?"":string.Join("\n",properties.GetComponentsInChildren<Text>(false).Select(t=>t.text));
+        public string BrandText=>(brandTitle?.text??"")+" "+(brandTagline?.text??"");
         public string FlowText=>flow!=null?flow.text:"";
         public string ReadinessText=>readinessTitle!=null?readinessTitle.text:"";
         public bool GameplayHudVisible=>gameplayHudPanel!=null&&gameplayHudPanel.activeSelf;
@@ -38,7 +39,22 @@ namespace CreaJuego.Web
         void OnDestroy(){if(c!=null){if(selectionChanged!=null)c.Selection.SelectionChanged-=selectionChanged;c.ProjectChanged-=Refresh;}}
         void LateUpdate(){ApplyResponsiveLayout();UpdateGameplayHud();}
         void OnSelection(GameItem item){if(item!=null)worldSelected=false;if(item!=null&&item.definition!=null&&searchKind!=item.definition.kind){appearanceSearch="";searchKind=item.definition.kind;}Refresh();}
-        void Initialize(){c=GetComponent<RuntimeAuthoringController>();font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");if(canvas!=null)scaler=canvas.GetComponent<CanvasScaler>();}
+        void Initialize(){c=GetComponent<RuntimeAuthoringController>();font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");if(canvas!=null)scaler=canvas.GetComponent<CanvasScaler>();ResolveBrandLabels();ApplyBranding();}
+
+        void ResolveBrandLabels()
+        {
+            if(brandPanel==null||brandTitle!=null&&brandTagline!=null)return;
+            var labels=brandPanel.GetComponentsInChildren<Text>(true).OrderByDescending(label=>label.fontSize).ToArray();
+            if(brandTitle==null)brandTitle=labels.FirstOrDefault();
+            if(brandTagline==null)brandTagline=labels.FirstOrDefault(label=>label!=brandTitle);
+        }
+
+        void ApplyBranding()
+        {
+            ResolveBrandLabels();
+            if(brandTitle!=null)brandTitle.text=!string.IsNullOrWhiteSpace(c?.contentPack?.productName)?c.contentPack.productName:CreaJuegoBranding.ProductName;
+            if(brandTagline!=null)brandTagline.text=!string.IsNullOrWhiteSpace(c?.contentPack?.tagline)?c.contentPack.tagline:CreaJuegoBranding.Tagline;
+        }
 
         public void PrepareEditableLayout()
         {
@@ -56,7 +72,7 @@ namespace CreaJuego.Web
 
             top=PanelRect("Cabecera",canvas.transform,new Vector2(0,646),new Vector2(1280,74),Header,true);brandPanel=New("Marca",top);Rect(brandPanel.transform).anchoredPosition=new Vector2(14,8);Rect(brandPanel.transform).sizeDelta=new Vector2(300,58);
             var brandIcon=New("Icono CreaJuego",brandPanel.transform).AddComponent<Image>();brandIcon.sprite=BrandSprite();brandIcon.preserveAspect=true;brandIcon.raycastTarget=false;Rect(brandIcon.transform).anchoredPosition=new Vector2(0,6);Rect(brandIcon.transform).sizeDelta=new Vector2(46,46);
-            Label(brandPanel.transform,c?.contentPack?.productName??"CreaJuego Web",25,new Vector2(58,22),new Vector2(220,30),TextColor,FontStyle.Bold);Label(brandPanel.transform,c?.contentPack?.tagline??"Crea, aprende y juega",12,new Vector2(59,6),new Vector2(230,20),Muted);
+            brandTitle=Label(brandPanel.transform,CreaJuegoBranding.ProductName,25,new Vector2(58,22),new Vector2(220,30),TextColor,FontStyle.Bold);brandTagline=Label(brandPanel.transform,CreaJuegoBranding.Tagline,12,new Vector2(59,6),new Vector2(230,20),Muted);ApplyBranding();
             flow=Label(top,"",14,new Vector2(330,13),new Vector2(620,48),Muted);flow.alignment=TextAnchor.MiddleCenter;
             save=Label(top,"",12,new Vector2(930,15),new Vector2(135,44),Muted);save.alignment=TextAnchor.MiddleRight;
             returnButton=ButtonAt(top,"VOLVER A CONSTRUIR",new Vector2(1065,14),null,new Vector2(200,46),RuntimeIconLibrary.Back,Hex("075BD8"),TextColor,14);returnButton.gameObject.SetActive(false);
@@ -96,7 +112,7 @@ namespace CreaJuego.Web
 
         public void Refresh()
         {
-            if(c==null||catalog==null)return;float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);Clear(list);Clear(properties);
+            if(c==null||catalog==null)return;ApplyBranding();float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);Clear(list);Clear(properties);
             var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(d=>d!=null&&d.availableInWorkshop).OrderBy(d=>d.order).ToArray();
             for(int i=0;i<defs.Length;i++)
             {
@@ -279,8 +295,6 @@ namespace CreaJuego.Web
         void TryAppearance(ItemKind kind,RuntimeItemData data,ref int y){try{Appearance(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudo mostrar Apariencia.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}
     }
 
-    public sealed class RuntimeItemRow:MonoBehaviour{public string instanceId;}
-    public sealed class RuntimeSliderCommit:MonoBehaviour,IPointerUpHandler{public Action commit;public void OnPointerUp(PointerEventData eventData)=>commit?.Invoke();}
     public static class RuntimeIconLibrary
     {
         static Sprite check,play,back,undo,redo,left,right,heart,grid;

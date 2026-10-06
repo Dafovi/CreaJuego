@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace CreaJuego.Web
 {
+    public static class CreaJuegoBranding
+    {
+        public const string ProductName = "Gamer";
+        public const string Tagline = "Crea tu propia aventura";
+        public static string FullTitle => ProductName + ": " + Tagline;
+    }
+
     [Serializable]
     public sealed class RuntimeAppearanceDefault { public ItemKind kind; public string appearanceId; }
 
@@ -16,8 +23,8 @@ namespace CreaJuego.Web
         public RuntimeAppearanceDefault[] defaults=Array.Empty<RuntimeAppearanceDefault>();
         public GameObject sceneServices;
         [Header("Marca")]
-        public string productName="CreaJuego Web";
-        public string tagline="Crea, aprende y juega";
+        public string productName=CreaJuegoBranding.ProductName;
+        public string tagline=CreaJuegoBranding.Tagline;
         public Sprite brandIcon;
         public GameItemDefinition Find(string definitionId)=>definitions.FirstOrDefault(d=>d!=null&&d.id==definitionId);
         public AppearanceCategory CategoryFor(ItemKind kind)=>preparedAppearances!=null?preparedAppearances.CategoryFor(kind):null;
