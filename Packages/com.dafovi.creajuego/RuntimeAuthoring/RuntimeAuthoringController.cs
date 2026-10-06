@@ -66,27 +66,28 @@ namespace CreaJuego.Web
         {
             ExitPlay(false);Project=new CreaJuegoProjectData{projectName="La aventura del bosque",teamName="Mi equipo",levelSize=RuntimeLevelSize.Small,bounds=RuntimeLevelBounds.For(RuntimeLevelSize.Small)};
             Starter("fondo",Vector3.zero,0,"platformer-sky-evening");
-            Starter("plataforma",new Vector3(-18,-6),8,"platformer-stone-tile");Starter("plataforma",new Vector3(-7,-6),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(5,-6),10,"platformer-stone-tile");Starter("plataforma",new Vector3(17,-6),7,"tiny-dungeon-38");
-            Starter("plataforma",new Vector3(-18,-1.5f),6,"tiny-dungeon-37");Starter("plataforma",new Vector3(-9,-1.5f),6,"platformer-stone-tile");Starter("plataforma",new Vector3(5,-1.5f),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(16,-1.5f),7,"platformer-stone-tile");
-            Starter("plataforma",new Vector3(-15,3),8,"platformer-stone-tile");Starter("plataforma",new Vector3(-4,3),7,"tiny-dungeon-38");Starter("plataforma",new Vector3(7,3),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(17,3),6,"platformer-stone-tile");
-            Starter("plataforma",new Vector3(-13,7.5f),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(0,7.5f),9,"platformer-stone-tile");Starter("plataforma",new Vector3(14,7.5f),8,"tiny-dungeon-37");
-            var leftRamp=Starter("rampa",new Vector3(-12,-3.8f),5,"creajuego-ramp");if(leftRamp!=null)leftRamp.rotationZ=18;
-            var rightRamp=Starter("rampa",new Vector3(11,.7f),5,"creajuego-ramp");if(rightRamp!=null)rightRamp.rotationZ=-18;
-            var moving=Starter("movil",new Vector3(-2,-.4f),0,"plains-moving-ground");if(moving!=null){moving.distance=5;moving.speed=1.4f;}
-            var player=Starter("jugador",new Vector3(-20,-5.1f),0,"5b84b5bdbf244cecb12b976bbf0aa6c7");if(player!=null){player.speed=3;player.jump=14;}
-            var prizePositions=new[]{new Vector3(-14,-.6f),new Vector3(-7,3.9f),new Vector3(0,8.4f),new Vector3(6,-.6f),new Vector3(13,3.9f),new Vector3(19,-5.1f)};
+            Starter("plataforma",new Vector3(-19,-6),10,"platformer-stone-tile");Starter("plataforma",new Vector3(5,-6),14,"tiny-dungeon-37");Starter("plataforma",new Vector3(19,-6),8,"tiny-dungeon-38");
+            Starter("plataforma",new Vector3(-1,-3),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(7,-3),8,"platformer-stone-tile");Starter("plataforma",new Vector3(18,-3),10,"tiny-dungeon-38");
+            Starter("plataforma",new Vector3(-16,0),10,"platformer-stone-tile");Starter("plataforma",new Vector3(-7,0),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(6,0),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(17,0),10,"platformer-stone-tile");
+            Starter("plataforma",new Vector3(-15,3),8,"tiny-dungeon-38");Starter("plataforma",new Vector3(-3,3),8,"platformer-stone-tile");Starter("plataforma",new Vector3(10,3),8,"tiny-dungeon-37");Starter("plataforma",new Vector3(19,3),8,"platformer-stone-tile");
+            StarterRamp(new Vector2(-14,-6),new Vector2(-5,-3));
+            StarterRamp(new Vector2(11,-3),new Vector2(2,0));
+            StarterRamp(new Vector2(-3,0),new Vector2(6,3));
+            var moving=Starter("movil",new Vector3(-9,1.5f),0,"plains-moving-ground");if(moving!=null){moving.distance=5;moving.speed=1.4f;}
+            var player=StarterOnSurface("jugador",-21,-6,"5b84b5bdbf244cecb12b976bbf0aa6c7");if(player!=null){player.speed=3;player.jump=14;}
+            var prizePositions=new[]{new Vector3(-18,-6),new Vector3(3,-6),new Vector3(-1,-3),new Vector3(-7,0),new Vector3(8,3),new Vector3(16,3)};
             var prizeLooks=new[]{"tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure","tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure"};
-            for(var i=0;i<prizePositions.Length;i++)Starter("premio",prizePositions[i],0,prizeLooks[i]);
-            var hazardPositions=new[]{new Vector3(-3,-5.35f),new Vector3(10,-5.35f),new Vector3(2,2.65f),new Vector3(19,2.65f)};
+            for(var i=0;i<prizePositions.Length;i++)StarterOnSurface("premio",prizePositions[i].x,prizePositions[i].y,prizeLooks[i]);
+            var hazardPositions=new[]{new Vector3(8,-6),new Vector3(6,-3),new Vector3(17,0),new Vector3(-3,3)};
             var hazardLooks=new[]{"plains-spikes","platformer-kit-spikes","tiny-dungeon-104","plains-spikes"};
-            for(var i=0;i<hazardPositions.Length;i++)Starter("peligro",hazardPositions[i],0,hazardLooks[i]);
-            var enemyA=Starter("enemigo",new Vector3(-10,-.55f),0,"platformer-kit-gobbat");if(enemyA!=null)enemyA.distance=4;
-            var enemyB=Starter("enemigo",new Vector3(8,-.55f),0,"platformer-kit-scarecrow");if(enemyB!=null)enemyB.distance=5;
-            var enemyC=Starter("enemigo",new Vector3(2,8.4f),0,"platformer-kit-gobbler");if(enemyC!=null)enemyC.distance=4;
-            Starter("meta",new Vector3(17,8.5f),0,"tiny-dungeon-33");
-            var houseA=Starter("decoracion",new Vector3(-13,9),0,"platformer-house");if(houseA!=null)houseA.visualScale=.75f;
-            var houseB=Starter("decoracion",new Vector3(14,9),0,"platformer-house");if(houseB!=null)houseB.visualScale=.65f;
-            var decorations=new[]{("platformer-tree",new Vector3(-22,-4),.8f),("plains-plant",new Vector3(-21,1),1.5f),("tiny-dungeon-3126",new Vector3(21,-4),1.2f),("tiny-dungeon-3129",new Vector3(22,1),1.35f)};
+            for(var i=0;i<hazardPositions.Length;i++)StarterOnSurface("peligro",hazardPositions[i].x,hazardPositions[i].y,hazardLooks[i]);
+            var enemyA=StarterOnSurface("enemigo",18,-3,"platformer-kit-gobbat");if(enemyA!=null)enemyA.distance=4;
+            var enemyB=StarterOnSurface("enemigo",-15,0,"platformer-kit-scarecrow");if(enemyB!=null)enemyB.distance=5;
+            var enemyC=StarterOnSurface("enemigo",12,3,"platformer-kit-gobbler");if(enemyC!=null)enemyC.distance=4;
+            StarterOnSurface("meta",21,3,"tiny-dungeon-33");
+            var houseA=Starter("decoracion",new Vector3(-15,4.5f),0,"platformer-house");if(houseA!=null)houseA.visualScale=.75f;
+            var houseB=Starter("decoracion",new Vector3(10,4.5f),0,"platformer-house");if(houseB!=null)houseB.visualScale=.65f;
+            var decorations=new[]{("platformer-tree",new Vector3(-22,-4),.8f),("plains-plant",new Vector3(-20,-2),1.5f),("tiny-dungeon-3126",new Vector3(21,-4),1.2f),("tiny-dungeon-3129",new Vector3(22,1),1.35f)};
             foreach(var decoration in decorations){var item=Starter("decoracion",decoration.Item2,0,decoration.Item1);if(item!=null)item.visualScale=decoration.Item3;}
             History.Reset(Project);Rebuild();FrameAll();if(notify)Changed(false);
         }
@@ -112,6 +113,19 @@ namespace CreaJuego.Web
         RuntimeItemData Starter(string id,Vector3 position,float width=0,string appearance=null)
         {
             var data=Seed(id,position,width);if(data==null)return null;if(!string.IsNullOrEmpty(appearance)){data.appearanceId=appearance;data.appearanceChosen=true;}return data;
+        }
+        RuntimeItemData StarterOnSurface(string id,float x,float surfaceY,string appearance=null)
+        {
+            var definition=Find(id);var itemCollider=definition!=null&&definition.prefab!=null?definition.prefab.GetComponent<BoxCollider2D>():null;
+            var platform=Find("plataforma");var surfaceCollider=platform!=null&&platform.prefab!=null?platform.prefab.GetComponent<BoxCollider2D>():null;
+            var surfaceTop=surfaceY+(surfaceCollider!=null?surfaceCollider.offset.y+surfaceCollider.size.y*.5f:.225f);
+            var localBottom=itemCollider!=null?itemCollider.offset.y-itemCollider.size.y*.5f:0;
+            return Starter(id,new Vector3(x,surfaceTop-localBottom),0,appearance);
+        }
+        RuntimeItemData StarterRamp(Vector2 firstEdge,Vector2 secondEdge)
+        {
+            var delta=secondEdge-firstEdge;var ramp=Starter("rampa",(firstEdge+secondEdge)*.5f,delta.magnitude,"creajuego-ramp");if(ramp==null)return null;
+            var angle=Mathf.Atan2(delta.y,delta.x)*Mathf.Rad2Deg;if(angle>90)angle-=180;else if(angle<-90)angle+=180;ramp.rotationZ=angle;return ramp;
         }
         RuntimeItemData Seed(string id,Vector3 position,float width=0)
         {

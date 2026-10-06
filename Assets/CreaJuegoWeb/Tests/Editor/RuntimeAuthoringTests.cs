@@ -23,6 +23,14 @@ namespace CreaJuego.Web.Tests
             Assert.That(controller.Project.objects.Where(o=>o.definitionId=="premio").Select(o=>o.appearanceId),Is.EquivalentTo(new[]{"tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure","tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure"}));
             Assert.That(controller.Project.objects.Single(o=>o.definitionId=="jugador").appearanceId,Is.EqualTo("5b84b5bdbf244cecb12b976bbf0aa6c7"));
             Assert.That(controller.Project.objects.Where(o=>o.definitionId=="enemigo").All(o=>o.appearanceId.StartsWith("platformer-kit-")),Is.True);
+            var platforms=controller.Project.objects.Where(o=>o.definitionId=="plataforma").ToArray();
+            foreach(var ramp in controller.Project.objects.Where(o=>o.definitionId=="rampa"))
+            {
+                var direction=new Vector2(Mathf.Cos(ramp.rotationZ*Mathf.Deg2Rad),Mathf.Sin(ramp.rotationZ*Mathf.Deg2Rad));var half=direction*ramp.platformWidth*.5f;
+                foreach(var edge in new[]{(Vector2)ramp.position-half,(Vector2)ramp.position+half})Assert.That(platforms.Any(platform=>Mathf.Abs(platform.position.y-edge.y)<.05f&&Mathf.Abs(Mathf.Abs(platform.position.x-edge.x)-platform.platformWidth*.5f)<.05f),Is.True,$"La rampa en {ramp.position} no toca una plataforma en {edge}.");
+            }
+            var playerItem=controller.buildRoot.GetComponentsInChildren<GameItem>().Single(item=>item.definition.kind==ItemKind.Player);var playerCollider=playerItem.GetComponent<Collider2D>();var support=controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="plataforma").Select(item=>item.GetComponent<Collider2D>()).First(collider=>playerCollider.bounds.center.x>=collider.bounds.min.x&&playerCollider.bounds.center.x<=collider.bounds.max.x);
+            Assert.That(Mathf.Abs(playerCollider.bounds.min.y-support.bounds.max.y),Is.LessThan(.05f));
             controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.childCount,Is.EqualTo(0));
         }
         [Test] public void ManualSaveSurvivesNewProjectAndRecoveryAutosave()
