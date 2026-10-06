@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreaJuego.Web;
@@ -15,28 +16,48 @@ namespace CreaJuego.Web.Tests
         [Test] public void StarterLevelIsLayeredAndNewProjectIsCompletelyEmpty()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);
-            Assert.That(controller.Project.levelSize,Is.EqualTo(RuntimeLevelSize.Small));Assert.That(controller.Project.objects.Count,Is.GreaterThanOrEqualTo(35));
-            Assert.That(controller.Project.objects.Count(o=>o.definitionId=="jugador"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="meta"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="plataforma"),Is.GreaterThanOrEqualTo(12));
+            Assert.That(controller.Project.levelSize,Is.EqualTo(RuntimeLevelSize.Small));Assert.That(controller.Project.objects.Count,Is.GreaterThanOrEqualTo(60));
+            Assert.That(controller.Project.objects.Count(o=>o.definitionId=="jugador"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="meta"),Is.EqualTo(1));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="plataforma"),Is.GreaterThanOrEqualTo(12));Assert.That(controller.Project.objects.Count(o=>o.definitionId=="muro"),Is.GreaterThanOrEqualTo(12));
             Assert.That(controller.Project.objects.Where(o=>o.definitionId=="plataforma").Select(o=>o.position.y).Distinct().Count(),Is.GreaterThanOrEqualTo(4));
-            Assert.That(controller.Project.objects.Single(o=>o.definitionId=="fondo").appearanceId,Is.EqualTo("platformer-sky-evening"));
-            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="plataforma").Select(o=>o.appearanceId).Distinct().Count(),Is.GreaterThanOrEqualTo(3));
-            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="premio").Select(o=>o.appearanceId),Is.EquivalentTo(new[]{"tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure","tiny-dungeon-116","tiny-dungeon-1027","platformer-treasure"}));
+            Assert.That(controller.Project.objects.Single(o=>o.definitionId=="fondo").appearanceId,Is.EqualTo("workshop-forest-background"));
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="plataforma").All(o=>o.appearanceId=="workshop-grass-platform"),Is.True);
+            Assert.That(controller.Project.objects.Where(o=>o.definitionId=="premio").All(o=>o.appearanceId=="workshop-gold-coin"),Is.True);
+            foreach(var pair in new[]{(ItemKind.Background,"workshop-forest-background"),(ItemKind.Platform,"workshop-grass-platform"),(ItemKind.Platform,"workshop-grass-wall"),(ItemKind.Platform,"workshop-grass-ramp"),(ItemKind.MovingPlatform,"workshop-grass-moving"),(ItemKind.Prize,"workshop-gold-coin"),(ItemKind.Hazard,"workshop-grass-spikes"),(ItemKind.Goal,"workshop-red-flag"),(ItemKind.Decoration,"workshop-large-tree"),(ItemKind.Decoration,"workshop-flower-bush")})Assert.That(controller.contentPack.CategoryFor(pair.Item1)?.Find(pair.Item2),Is.Not.Null,$"Falta la apariencia {pair.Item2} en {pair.Item1}.");
             Assert.That(controller.Project.objects.Single(o=>o.definitionId=="jugador").appearanceId,Is.EqualTo("5b84b5bdbf244cecb12b976bbf0aa6c7"));
             Assert.That(controller.Project.objects.Where(o=>o.definitionId=="enemigo").All(o=>o.appearanceId.StartsWith("platformer-kit-")),Is.True);
             var platforms=controller.Project.objects.Where(o=>o.definitionId=="plataforma").ToArray();
             foreach(var ramp in controller.Project.objects.Where(o=>o.definitionId=="rampa"))
             {
                 var direction=new Vector2(Mathf.Cos(ramp.rotationZ*Mathf.Deg2Rad),Mathf.Sin(ramp.rotationZ*Mathf.Deg2Rad));var half=direction*ramp.platformWidth*.5f;
-                foreach(var edge in new[]{(Vector2)ramp.position-half,(Vector2)ramp.position+half})Assert.That(platforms.Any(platform=>Mathf.Abs(platform.position.y-edge.y)<.05f&&Mathf.Abs(Mathf.Abs(platform.position.x-edge.x)-platform.platformWidth*.5f)<.05f),Is.True,$"La rampa en {ramp.position} no toca una plataforma en {edge}.");
+                foreach(var edge in new[]{(Vector2)ramp.position-half,(Vector2)ramp.position+half})Assert.That(platforms.Any(platform=>Mathf.Abs(platform.position.y-edge.y)<.08f&&Mathf.Abs(Mathf.Abs(platform.position.x-edge.x)-platform.platformWidth*.5f)<.08f),Is.True,$"La rampa en {ramp.position} no toca una plataforma en {edge}.");
             }
             foreach(var platform in controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="plataforma"||item.definition.id=="movil"||item.definition.id=="rampa"))
             {
                 var collider=platform.GetComponent<Collider2D>();var effector=platform.GetComponent<PlatformEffector2D>();var oneWay=platform.GetComponent<OneWayPlatformSurface>();
                 Assert.That(oneWay,Is.Not.Null);Assert.That(collider.usedByEffector,Is.True);Assert.That(effector,Is.Not.Null);Assert.That(effector.useOneWay,Is.True);Assert.That(effector.useOneWayGrouping,Is.True);Assert.That(effector.surfaceArc,Is.EqualTo(160f));Assert.That(effector.useSideFriction,Is.False);Assert.That(effector.useSideBounce,Is.False);
             }
+            foreach(var wall in controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="muro"))
+            {
+                var collider=wall.GetComponent<Collider2D>();Assert.That(collider.usedByEffector,Is.False);Assert.That(wall.GetComponent<PlatformEffector2D>(),Is.Null);Assert.That(collider.bounds.size.y,Is.GreaterThanOrEqualTo(2.9f));Assert.That(collider.bounds.size.x,Is.GreaterThanOrEqualTo(5.9f));
+            }
             var playerItem=controller.buildRoot.GetComponentsInChildren<GameItem>().Single(item=>item.definition.kind==ItemKind.Player);var playerCollider=playerItem.GetComponent<Collider2D>();var support=controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="plataforma").Select(item=>item.GetComponent<Collider2D>()).First(collider=>playerCollider.bounds.center.x>=collider.bounds.min.x&&playerCollider.bounds.center.x<=collider.bounds.max.x);
             Assert.That(Mathf.Abs(playerCollider.bounds.min.y-support.bounds.max.y),Is.LessThan(.05f));
+            foreach(var marker in controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Where(value=>controller.Project.objects.Single(data=>data.instanceId==value.instanceId).appearanceId.StartsWith("workshop-")&&value.GetComponent<GameItem>().definition.kind!=ItemKind.Background)){var renderer=ItemVisual.Resolve(marker.GetComponent<GameItem>());Assert.That(renderer,Is.Not.Null);Assert.That(renderer.sprite,Is.Not.Null);Assert.That(renderer.bounds.size.x,Is.InRange(.05f,15f));Assert.That(renderer.bounds.size.y,Is.InRange(.05f,15f));}
+            AssertStarterRouteIsConnected(controller.Project);
             controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.childCount,Is.EqualTo(0));
+        }
+        static void AssertStarterRouteIsConnected(CreaJuegoProjectData project)
+        {
+            var platforms=project.objects.Where(item=>item.definitionId=="plataforma").ToArray();var ramps=project.objects.Where(item=>item.definitionId=="rampa").ToArray();var start=platforms.OrderBy(item=>Mathf.Abs(item.position.x+22)+Mathf.Abs(item.position.y+8)).First();var goal=platforms.OrderBy(item=>Mathf.Abs(item.position.x-21)+Mathf.Abs(item.position.y-14)).First();
+            bool Touches(RuntimeItemData platform,Vector2 edge)=>Mathf.Abs(platform.position.y-edge.y)<.08f&&Mathf.Abs(Mathf.Abs(platform.position.x-edge.x)-platform.platformWidth*.5f)<.08f;
+            bool Linked(RuntimeItemData a,RuntimeItemData b)
+            {
+                var overlap=Mathf.Min(a.position.x+a.platformWidth*.5f,b.position.x+b.platformWidth*.5f)-Mathf.Max(a.position.x-a.platformWidth*.5f,b.position.x-b.platformWidth*.5f);if(overlap>=0&&Mathf.Abs(a.position.y-b.position.y)<=2.1f)return true;
+                foreach(var ramp in ramps){var direction=new Vector2(Mathf.Cos(ramp.rotationZ*Mathf.Deg2Rad),Mathf.Sin(ramp.rotationZ*Mathf.Deg2Rad));var half=direction*ramp.platformWidth*.5f;var first=(Vector2)ramp.position-half;var second=(Vector2)ramp.position+half;if(Touches(a,first)&&Touches(b,second)||Touches(a,second)&&Touches(b,first))return true;}return false;
+            }
+            var visited=new HashSet<string>{start.instanceId};var pending=new Queue<RuntimeItemData>();pending.Enqueue(start);
+            while(pending.Count>0){var current=pending.Dequeue();foreach(var next in platforms)if(!visited.Contains(next.instanceId)&&Linked(current,next)){visited.Add(next.instanceId);pending.Enqueue(next);}}
+            Assert.That(visited.Contains(goal.instanceId),Is.True,"No existe una ruta continua desde Gino hasta la bandera.");Assert.That(visited.Count,Is.EqualTo(platforms.Length),"Hay una superficie del mapa inicial aislada del recorrido principal.");
         }
         [Test] public void ManualSaveSurvivesNewProjectAndRecoveryAutosave()
         {

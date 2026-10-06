@@ -127,3 +127,51 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
+  - id: workshop-grass-platform
+    definitionIds:
+    - plataforma
+    displayName: "Tierra con c\xE9sped"
+    sprite: {fileID: 21300000, guid: 8d55ffc0d4bd4ea41b346d36482d9d5b, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: workshop-grass-wall
+    definitionIds:
+    - muro
+    displayName: Tierra profunda
+    sprite: {fileID: 21300000, guid: 0a8d94987ebb3f14b89adf1bb78218c8, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: workshop-grass-ramp
+    definitionIds:
+    - rampa
+    displayName: "Pendiente con c\xE9sped"
+    sprite: {fileID: 21300000, guid: 4a6851d3d9b3a184d9b2a7018207996e, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0

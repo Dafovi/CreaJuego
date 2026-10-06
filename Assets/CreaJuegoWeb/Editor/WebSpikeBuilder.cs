@@ -11,6 +11,8 @@ namespace CreaJuego.Web.Editor
     {
         public const string ScenePath="Assets/CreaJuegoWeb/Scenes/WebAuthoringSpike.unity";
         const string ContentDirectory="Assets/CreaJuegoWeb/Content";
+        const string WorkshopSourceDirectory="Assets/Sprites para prueba";
+        const string WorkshopSpriteDirectory=ContentDirectory+"/WorkshopSprites";
         [MenuItem("CreaJuego/Web/Preparar Parity 1")]
         public static void Prepare()
         {
@@ -32,6 +34,11 @@ namespace CreaJuego.Web.Editor
             if(!controller.CaptureEditableScene(true))throw new InvalidOperationException("No se pudo capturar el nivel inicial.");controller.ui.RefreshEditableLayout();
             EditorUtility.SetDirty(controller);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_STARTER_LEVEL_READY "+controller.Project.objects.Count);
         }
+        [MenuItem("CreaJuego/Web/Actualizar contenido y nivel inicial")]
+        public static void RefreshContentAndStarterLevel()
+        {
+            EnsureRuntimePack();ApplyStarterLevelToScene();Debug.Log("CREAJUEGO_WEB_CONTENT_AND_STARTER_READY");
+        }
         [MenuItem("CreaJuego/Web/Configurar plataformas atravesables")]
         public static void ApplyOneWayPlatformCollision()
         {
@@ -47,7 +54,7 @@ namespace CreaJuego.Web.Editor
         }
         public static RuntimeContentPack EnsureRuntimePack()
         {
-            EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");RemoveLegacyStairs();
+            EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");EnsureFolder(ContentDirectory,"WorkshopSprites");RemoveLegacyStairs();
             var kinds=new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Decoration,ItemKind.Background};
             var sources=AssetDatabase.FindAssets("t:GameItemDefinition",new[]{"Assets/CreaJuegoPacks/Starter/Content"}).Select(g=>AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(d=>d!=null&&kinds.Contains(d.kind)&&d.id!="piso").OrderBy(d=>d.order).ToArray();
             var baseDefinitions=sources.Select(PrepareDefinition).ToArray();var platform=baseDefinitions.First(d=>d.id=="plataforma");var preparedDefinitions=baseDefinitions.Concat(PrepareStructures(platform)).Concat(new[]{PrepareBackgroundDefinition(EnsureBackgroundSprite())}).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);PrepareSourceRecommendations(sourcePack);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();EnsureMinimumOptions(categories);
@@ -56,7 +63,7 @@ namespace CreaJuego.Web.Editor
             {
                 var category=Array.Find(categories,c=>c.kind==source.kind);var option=PreferredDefault(category,source);return new RuntimeAppearanceDefault{kind=source.kind,appearanceId=option?.id??""};
             }).Concat(new[]{new RuntimeAppearanceDefault{kind=ItemKind.Background,appearanceId="web-cielo-azul"}}).GroupBy(d=>d.kind).Select(g=>g.First()).ToArray();
-            var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;runtime.productName="CreaJuego Web";runtime.tagline="Crea, aprende y juega";runtime.brandIcon=preparedDefinitions.FirstOrDefault(d=>d.kind==ItemKind.Player)?.icon;EditorUtility.SetDirty(runtime);return runtime;
+            var runtime=LoadOrCreate<RuntimeContentPack>(ContentDirectory+"/WebRuntimePack.asset");runtime.id="web-parity-1";runtime.definitions=preparedDefinitions;runtime.preparedAppearances=preparedPack;runtime.defaults=defaults;runtime.sceneServices=AssetDatabase.LoadAssetAtPath<ContentPackDefinition>("Assets/CreaJuegoPacks/Starter/Content/StarterPack.asset").sceneServices;runtime.productName="Gamer";runtime.tagline="Crea tu propia aventura";runtime.brandIcon=preparedDefinitions.FirstOrDefault(d=>d.kind==ItemKind.Player)?.icon;EditorUtility.SetDirty(runtime);return runtime;
         }
         static AppearanceOption PreferredDefault(AppearanceCategory category,GameItemDefinition source)
         {
@@ -126,7 +133,31 @@ namespace CreaJuego.Web.Editor
             {
                 target.options.RemoveAll(o=>o!=null&&(o.id=="platformer-finish-chest"||o.id=="web-meta-cofre"));
                 AddPrepared(target,new AppearanceOption{id="skull-shrine-goal",displayName="Santuario",sprite=LoadSprite("Assets/NovaDevs/2D Platformer - Skull Garden  Tilesets Asset Pack/Architecture/Shrine 1.png","Shrine 1_0"),scale=new Vector2(.18f,.18f),preserveAspectWithoutPrefab=true});
-            }            target.EnsureIds();EditorUtility.SetDirty(target);return target;
+            }
+            AddWorkshopAppearances(target,kind);
+            target.EnsureIds();EditorUtility.SetDirty(target);return target;
+        }
+        static void AddWorkshopAppearances(AppearanceCategory target,ItemKind kind)
+        {
+            AppearanceOption Option(string id,string name,string source,string output,Vector2 scale,bool preserve=true,string[] definitionIds=null,int maxSize=512,bool crop=true)
+                =>new AppearanceOption{id=id,displayName=name,sprite=PrepareWorkshopSprite(source,output,maxSize,crop),scale=scale,preserveAspectWithoutPrefab=preserve,definitionIds=definitionIds};
+            switch(kind)
+            {
+                case ItemKind.Background:AddPrepared(target,Option("workshop-forest-background","Valle del castillo","Fondo.png","ForestBackground.png",Vector2.one,true,null,1024,false));break;
+                case ItemKind.Platform:
+                    AddPrepared(target,Option("workshop-grass-platform","Tierra con césped","Plataforma.png","GrassPlatform.png",Vector2.one,false,new[]{"plataforma"}));
+                    AddPrepared(target,Option("workshop-grass-wall","Tierra profunda","Muro.png","GrassWall.png",Vector2.one,false,new[]{"muro"}));
+                    AddPrepared(target,Option("workshop-grass-ramp","Pendiente con césped","Rampa.png","GrassRamp.png",Vector2.one,false,new[]{"rampa"}));
+                    break;
+                case ItemKind.MovingPlatform:AddPrepared(target,Option("workshop-grass-moving","Plataforma flotante","Plataforma movil.png","GrassMovingPlatform.png",Vector2.one,false));break;
+                case ItemKind.Prize:AddPrepared(target,Option("workshop-gold-coin","Moneda dorada","Moneda.png","GoldCoin.png",new Vector2(.18f,.18f)));break;
+                case ItemKind.Hazard:AddPrepared(target,Option("workshop-grass-spikes","Pinchos del bosque","Pincho.png","GrassSpikes.png",new Vector2(.4f,.4f)));break;
+                case ItemKind.Goal:AddPrepared(target,Option("workshop-red-flag","Bandera roja","Meta.png","RedFlag.png",new Vector2(.5f,.5f)));break;
+                case ItemKind.Decoration:
+                    AddPrepared(target,Option("workshop-large-tree","Árbol frondoso","Arbol.png","LargeTree.png",new Vector2(.7f,.7f)));
+                    AddPrepared(target,Option("workshop-flower-bush","Arbusto con flores","Arbusto.png","FlowerBush.png",new Vector2(.5f,.5f)));
+                    break;
+            }
         }
         static GameItemDefinition[] PrepareStructures(GameItemDefinition platform)
         {
@@ -139,7 +170,19 @@ namespace CreaJuego.Web.Editor
         }        static GameItemDefinition PrepareStructure(GameItemDefinition source,string id,string name,string description,float rotation,int order,Sprite icon)
         {
             var prefabPath=$"{ContentDirectory}/Prefabs/{id}.prefab";var contents=PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(source.prefab));
-            try{contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);if(id=="rampa")ConfigureOneWaySurface(contents);PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);}finally{PrefabUtility.UnloadPrefabContents(contents);}
+            try
+            {
+                contents.name=id;contents.transform.rotation=Quaternion.Euler(0,0,rotation);
+                if(id=="rampa")ConfigureOneWaySurface(contents);
+                else
+                {
+                    var oneWay=contents.GetComponent<OneWayPlatformSurface>();if(oneWay!=null)UnityEngine.Object.DestroyImmediate(oneWay);
+                    var effector=contents.GetComponent<PlatformEffector2D>();if(effector!=null)UnityEngine.Object.DestroyImmediate(effector);
+                    var collider=contents.GetComponent<Collider2D>();if(collider!=null)collider.usedByEffector=false;
+                }
+                PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);
+            }
+            finally{PrefabUtility.UnloadPrefabContents(contents);}
             var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint="Puedes cambiar su ancho, alto y dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
         }
         static void ConfigureOneWaySurface(GameObject platform)
@@ -174,7 +217,7 @@ namespace CreaJuego.Web.Editor
         }
         static Sprite EnsureGradientSprite(string fileName,Color bottom,Color top)
         {
-            var path=ContentDirectory+"/"+fileName;var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null){ImportSprite(path,16);return AssetDatabase.LoadAssetAtPath<Sprite>(path);}
+            var path=ContentDirectory+"/"+fileName;var sprite=AssetDatabase.LoadAssetAtPath<Sprite>(path);if(sprite!=null){ImportSprite(path,64);return AssetDatabase.LoadAssetAtPath<Sprite>(path);}
             var texture=new Texture2D(64,64,TextureFormat.RGBA32,false);for(int y=0;y<64;y++){var color=Color.Lerp(bottom,top,y/63f);for(int x=0;x<64;x++)texture.SetPixel(x,y,color);}texture.Apply();System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);ImportSprite(path,64);return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
         static Sprite EnsureWallSprite(string fileName,Color dark,Color light)
@@ -198,6 +241,29 @@ namespace CreaJuego.Web.Editor
         }        static Sprite LoadSprite(string path,string preferredName)
         {
             var sprites=AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().ToArray();return sprites.FirstOrDefault(sprite=>sprite.name.Equals(preferredName,StringComparison.OrdinalIgnoreCase))??sprites.FirstOrDefault();
+        }
+        static Sprite PrepareWorkshopSprite(string sourceFile,string outputFile,int maxSize,bool crop)
+        {
+            var sourcePath=WorkshopSourceDirectory+"/"+sourceFile;var outputPath=WorkshopSpriteDirectory+"/"+outputFile;
+            if(!System.IO.File.Exists(sourcePath))return null;
+            var sourceTime=System.IO.File.GetLastWriteTimeUtc(sourcePath);var outputTime=System.IO.File.Exists(outputPath)?System.IO.File.GetLastWriteTimeUtc(outputPath):DateTime.MinValue;
+            if(sourceTime>outputTime)
+            {
+                var source=new Texture2D(2,2,TextureFormat.RGBA32,false);source.LoadImage(System.IO.File.ReadAllBytes(sourcePath),false);
+                var minX=0;var minY=0;var maxX=source.width-1;var maxY=source.height-1;
+                if(crop)
+                {
+                    minX=source.width;minY=source.height;maxX=-1;maxY=-1;var pixels=source.GetPixels32();
+                    for(var y=0;y<source.height;y++)for(var x=0;x<source.width;x++)if(pixels[y*source.width+x].a>4){minX=Mathf.Min(minX,x);minY=Mathf.Min(minY,y);maxX=Mathf.Max(maxX,x);maxY=Mathf.Max(maxY,y);}
+                    if(maxX<minX){minX=0;minY=0;maxX=source.width-1;maxY=source.height-1;}
+                    const int margin=2;minX=Mathf.Max(0,minX-margin);minY=Mathf.Max(0,minY-margin);maxX=Mathf.Min(source.width-1,maxX+margin);maxY=Mathf.Min(source.height-1,maxY+margin);
+                }
+                var width=maxX-minX+1;var height=maxY-minY+1;var factor=Mathf.Min(1,maxSize/(float)Mathf.Max(width,height));var outputWidth=Mathf.Max(1,Mathf.RoundToInt(width*factor));var outputHeight=Mathf.Max(1,Mathf.RoundToInt(height*factor));
+                var result=new Texture2D(outputWidth,outputHeight,TextureFormat.RGBA32,false);
+                for(var y=0;y<outputHeight;y++)for(var x=0;x<outputWidth;x++){var sampleX=minX+Mathf.Min(width-1,Mathf.FloorToInt((x+.5f)/outputWidth*width));var sampleY=minY+Mathf.Min(height-1,Mathf.FloorToInt((y+.5f)/outputHeight*height));result.SetPixel(x,y,source.GetPixel(sampleX,sampleY));}
+                result.Apply();System.IO.File.WriteAllBytes(outputPath,result.EncodeToPNG());UnityEngine.Object.DestroyImmediate(source);UnityEngine.Object.DestroyImmediate(result);
+            }
+            ImportSprite(outputPath,100);return AssetDatabase.LoadAssetAtPath<Sprite>(outputPath);
         }
         static void AddPrepared(AppearanceCategory category,AppearanceOption option)
         {

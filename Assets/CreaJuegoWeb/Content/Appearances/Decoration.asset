@@ -285,3 +285,33 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 1
+  - id: workshop-large-tree
+    definitionIds: []
+    displayName: "\xC1rbol frondoso"
+    sprite: {fileID: 21300000, guid: 3de1461c39856f140954bf3353377d85, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.7, y: 0.7}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
+  - id: workshop-flower-bush
+    definitionIds: []
+    displayName: Arbusto con flores
+    sprite: {fileID: 21300000, guid: a2d94a15e53277a4593c44c85bb1b8dc, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.5, y: 0.5}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1

@@ -75,3 +75,18 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 1
+  - id: workshop-grass-moving
+    definitionIds: []
+    displayName: Plataforma flotante
+    sprite: {fileID: 21300000, guid: df6542dd73d126b479ef1e6a32a4e5e9, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0

@@ -60,3 +60,18 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 1
+  - id: workshop-red-flag
+    definitionIds: []
+    displayName: Bandera roja
+    sprite: {fileID: 21300000, guid: 5502bc0221169db4eb0e5a95ce9fc933, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 0.5, y: 0.5}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 1
