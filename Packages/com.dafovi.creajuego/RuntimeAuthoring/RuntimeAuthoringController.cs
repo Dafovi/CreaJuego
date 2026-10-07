@@ -194,10 +194,26 @@ namespace CreaJuego.Web
         {
             var data=SelectedData();if(data==null||Project.mediaAssets.All(asset=>asset==null||asset.id!=id))return;data.mediaAssetId=id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
-        public void DeleteMediaAsset(string id)
+        public long MediaBytes=>Project.mediaAssets.Where(asset=>asset!=null).Sum(asset=>(long)RuntimeImageImport.DataBytes(asset.dataUrl));
+        public int MediaUsageCount(string id)=>Project.objects.Count(item=>item.mediaAssetId==id);
+        public void RenameMediaAsset(string id,string displayName)
         {
-            if(string.IsNullOrEmpty(id))return;if(Project.objects.Any(item=>item.mediaAssetId==id)){ui?.SetStatus("Esta imagen está en uso. Cambia la apariencia de esos elementos antes de eliminarla.");return;}
+            var asset=FindMedia(id);if(asset==null||string.IsNullOrWhiteSpace(displayName))return;displayName=displayName.Trim();if(asset.displayName==displayName)return;asset.displayName=displayName;History.Record(Project);Changed();ui?.SetStatus("Imagen renombrada.");
+        }
+        public void CycleMediaCategory(string id)
+        {
+            var asset=FindMedia(id);if(asset==null)return;string[] categories={"personajes","enemigos","escenarios","objetos","fondos","otros"};int index=Array.IndexOf(categories,asset.categoryId);asset.categoryId=categories[(index+1+categories.Length)%categories.Length];History.Record(Project);Changed();
+        }
+        public void DeleteMediaAsset(string id,bool force=false)
+        {
+            if(string.IsNullOrEmpty(id))return;int uses=MediaUsageCount(id);if(uses>0&&!force){ui?.SetStatus("Esta imagen está en uso por "+uses+" elemento"+(uses==1?".":"s."));return;}
+            if(force)foreach(var item in Project.objects.Where(item=>item.mediaAssetId==id)){item.mediaAssetId=null;item.customImageBase64=null;item.appearanceId="";item.appearanceChosen=false;}
             if(Project.mediaAssets.RemoveAll(asset=>asset!=null&&asset.id==id)==0)return;History.Record(Project);Rebuild(SelectedId());Changed();ui?.SetStatus("Imagen eliminada de Mi biblioteca.");
+        }
+        string MediaCategoryForTarget()
+        {
+            var target=string.IsNullOrEmpty(pendingImageTarget)?null:Project.objects.FirstOrDefault(item=>item.instanceId==pendingImageTarget);var kind=target!=null?Find(target.definitionId)?.kind:null;
+            if(kind==ItemKind.Player)return "personajes";if(kind==ItemKind.Enemy)return "enemigos";if(kind==ItemKind.Background)return "fondos";if(kind==ItemKind.Platform||kind==ItemKind.MovingPlatform)return "escenarios";if(kind==ItemKind.Prize||kind==ItemKind.Hazard||kind==ItemKind.Goal||kind==ItemKind.Decoration)return "objetos";return "otros";
         }
         public void SetSnap(bool value)
         {
@@ -318,7 +334,7 @@ namespace CreaJuego.Web
                 if(asset==null)
                 {
                     var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl));if(total+RuntimeImageImport.DataBytes(payload.dataUrl)>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
-                    asset=MediaAssetData.Create(payload.name,payload.dataUrl,pendingMediaSource);Project.mediaAssets.Add(asset);importChanged=true;importedImageCount++;
+                    asset=MediaAssetData.Create(payload.name,payload.dataUrl,pendingMediaSource);asset.categoryId=MediaCategoryForTarget();Project.mediaAssets.Add(asset);importChanged=true;importedImageCount++;
                 }
             }
             if(!string.IsNullOrEmpty(pendingImageTarget)&&!importedAppliedToTarget)

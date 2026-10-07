@@ -29,9 +29,9 @@ namespace CreaJuego.Web.Tests
         [Test] public void CurrentSchemaRoundTripPreservesWidthSnapBoundsAndAppearance()
         {
             var data=new CreaJuegoProjectData{alignAutomatically=false,levelSize=RuntimeLevelSize.Large,bounds=RuntimeLevelBounds.For(RuntimeLevelSize.Large)};data.objects.Add(new RuntimeItemData{definitionId="plataforma",platformWidth=8.25f,appearanceId="stone"});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));
-            Assert.That(restored.schemaVersion,Is.EqualTo(6));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(100));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
+            Assert.That(restored.schemaVersion,Is.EqualTo(7));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(100));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
         }
-        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(6));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
+        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(7));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
         [Test] public void PlatformWidthChangesVisualColliderPersistsAndUndoRedo()
         {
             var c=Open();var marker=Select(c,"plataforma");var data=c.SelectedData();float original=data.platformWidth;float height=marker.GetComponent<BoxCollider2D>().size.y;c.ResizeSelected(8,data.position.x,true);
@@ -75,6 +75,13 @@ namespace CreaJuego.Web.Tests
             c.EditMediaAsset(id);c.ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Dibujo recortado",dataUrl=edited}));c.ReceiveImageBatchComplete("1");
             Assert.That(c.Project.mediaAssets.Count,Is.EqualTo(1));Assert.That(media.id,Is.EqualTo(id));Assert.That(media.displayName,Is.EqualTo("Dibujo recortado"));Assert.That(media.dataUrl,Is.EqualTo(edited));Assert.That(media.source,Is.EqualTo(MediaAssetSource.Camera));Assert.That(c.Project.objects.Count(item=>item.mediaAssetId==id),Is.EqualTo(2));
             var users=c.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.customSprite!=null&&c.Project.objects.Any(data=>data.instanceId==item.GetComponent<RuntimeAuthoredItem>()?.instanceId&&data.mediaAssetId==id)).ToArray();Assert.That(users.Length,Is.EqualTo(2));Assert.That(users[0].customSprite,Is.SameAs(users[1].customSprite));
+        }
+        [Test] public void MediaLibraryCategorizesRenamesMeasuresAndProtectsUsedImages()
+        {
+            var c=Open();Select(c,"jugador");c.CaptureImage();c.ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Mi héroe",dataUrl=Image(Color.magenta)}));c.ReceiveImageBatchComplete("1");var media=c.Project.mediaAssets.Single();var id=media.id;
+            Assert.That(media.categoryId,Is.EqualTo("personajes"));Assert.That(c.MediaBytes,Is.GreaterThan(0));Assert.That(c.MediaUsageCount(id),Is.EqualTo(1));c.RenameMediaAsset(id,"Heroína");Assert.That(media.displayName,Is.EqualTo("Heroína"));c.CycleMediaCategory(id);Assert.That(media.categoryId,Is.EqualTo("enemigos"));
+            c.DeleteMediaAsset(id);Assert.That(c.Project.mediaAssets.Count,Is.EqualTo(1),"Una imagen usada no debe borrarse sin confirmación.");c.DeleteMediaAsset(id,true);Assert.That(c.Project.mediaAssets,Is.Empty);Assert.That(c.Project.objects.All(item=>item.mediaAssetId!=id));
+            var restored=ProjectSerializer.FromJson("{\"schemaVersion\":6,\"mediaAssets\":[{\"id\":\"old\",\"displayName\":\"Anterior\",\"dataUrl\":\"data:image/png;base64,YWJj\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(7));Assert.That(restored.mediaAssets.Single().categoryId,Is.EqualTo("otros"));
         }
         [Test] public void FallRecoveryClearsVelocityAndAngularVelocity()
         {

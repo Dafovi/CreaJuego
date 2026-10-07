@@ -17,7 +17,7 @@ namespace CreaJuego.Web
         [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,newProjectDialog;
         [SerializeField] Text hudObjective,hudScore,hudEnemies,newProjectHint;
         [SerializeField, Tooltip("Recalcula paneles y cámara según la resolución. Déjalo desactivado para respetar el layout guardado en el Canvas.")] bool adaptLayoutAtRuntime;
-        RuntimeAuthoringController c;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
+        RuntimeAuthoringController c;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",mediaSearch="",mediaCategory="todas",renamingMediaId,pendingMediaDeleteId,statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
 
         static readonly Color Background=Hex("171D27"),Header=Hex("111822"),Panel=Hex("222B39"),Soft=Hex("273344"),Selected=Hex("304D73"),TextColor=Hex("EDF2FA"),Muted=Hex("AFBDD1"),Accent=Hex("80B4FF"),Border=Hex("45556C"),Success=Hex("08743F"),SuccessBright=Hex("48C78A"),Warning=Hex("3B3020"),WarningText=Hex("F2C778"),Danger=Hex("5A2731"),DangerText=Hex("FF8C9C");
         static Color Hex(string value){ColorUtility.TryParseHtmlString("#"+value,out var color);return color;}
@@ -239,15 +239,36 @@ namespace CreaJuego.Web
             ButtonAt(properties,"Añadir y recortar…",new Vector2(6,-y),c.PickImage,new Vector2(116,38),null,Soft,TextColor,12);
             ButtonAt(properties,"Tomar foto…",new Vector2(128,-y),c.CaptureImage,new Vector2(116,38),null,Soft,TextColor,12);y+=43;
             Label(properties,data==null?"Después podrás aplicar cada imagen a un elemento.":"La imagen nueva se aplicará al elemento elegido.",11,new Vector2(6,-y),new Vector2(238,32),Muted);y+=36;
+            var used=c.MediaBytes;Label(properties,$"Espacio usado: {used/1048576f:0.0} de {RuntimeImageImport.MaxProjectBytes/1048576} MB",11,new Vector2(6,-y),new Vector2(238,24),used>RuntimeImageImport.MaxProjectBytes*.8f?WarningText:Muted);y+=28;
             if(c.Project.mediaAssets.Count==0){Label(properties,"Las imágenes que añadas aparecerán aquí para reutilizarlas.",12,new Vector2(6,-y),new Vector2(238,48),Muted);y+=54;return;}
-            foreach(var media in c.Project.mediaAssets.Where(value=>value!=null).Take(24))
+            MediaSearch(ref y);ButtonAt(properties,"Categoría: "+MediaCategoryName(mediaCategory),new Vector2(6,-y),CycleMediaFilter,new Vector2(238,34),null,Soft,TextColor,11);y+=39;
+            var filtered=c.Project.mediaAssets.Where(value=>value!=null&&(mediaCategory=="todas"||value.categoryId==mediaCategory)&&(string.IsNullOrWhiteSpace(mediaSearch)||value.displayName.IndexOf(mediaSearch,StringComparison.OrdinalIgnoreCase)>=0)).ToArray();
+            if(filtered.Length==0){Label(properties,"No hay imágenes que coincidan con este filtro.",12,new Vector2(6,-y),new Vector2(238,44),Muted);y+=50;return;}
+            foreach(var media in filtered.Take(24))
             {
                 var captured=media;bool selected=data!=null&&data.mediaAssetId==media.id;UnityEngine.Events.UnityAction action=data!=null?()=>c.SetMediaAsset(captured.id):()=>SetStatus("Selecciona un elemento para usar esta imagen.");
-                ButtonAt(properties,media.displayName,new Vector2(6,-y),action,new Vector2(140,46),c.MediaPreview(media.id),selected?Selected:Soft,TextColor,12);
-                ButtonAt(properties,"Editar",new Vector2(151,-y),()=>c.EditMediaAsset(captured.id),new Vector2(55,46),null,Soft,TextColor,10);
-                ButtonAt(properties,"×",new Vector2(211,-y),()=>c.DeleteMediaAsset(captured.id),new Vector2(33,46),null,Danger,DangerText,17);y+=51;
+                if(renamingMediaId==media.id)MediaNameInput(media,ref y);else{ButtonAt(properties,media.displayName,new Vector2(6,-y),action,new Vector2(238,42),c.MediaPreview(media.id),selected?Selected:Soft,TextColor,12);y+=46;}
+                ButtonAt(properties,MediaCategoryName(media.categoryId),new Vector2(6,-y),()=>c.CycleMediaCategory(captured.id),new Vector2(76,32),null,Soft,Muted,9);
+                ButtonAt(properties,"Nombre",new Vector2(86,-y),()=>{renamingMediaId=captured.id;Refresh();},new Vector2(52,32),null,Soft,TextColor,9);
+                ButtonAt(properties,"Editar",new Vector2(142,-y),()=>c.EditMediaAsset(captured.id),new Vector2(48,32),null,Soft,TextColor,9);
+                bool confirming=pendingMediaDeleteId==media.id;ButtonAt(properties,confirming?"Sí, borrar":"Borrar",new Vector2(194,-y),()=>RequestMediaDelete(captured.id),new Vector2(50,32),null,Danger,DangerText,confirming?8:9);y+=38;
             }
-            if(c.Project.mediaAssets.Count>24){Label(properties,"Se muestran las primeras 24 imágenes.",12,new Vector2(6,-y),new Vector2(238,30),Muted);y+=34;}
+            if(filtered.Length>24){Label(properties,"Se muestran las primeras 24 imágenes. Usa la búsqueda para encontrar otra.",12,new Vector2(6,-y),new Vector2(238,42),Muted);y+=46;}
+        }
+        void MediaSearch(ref int y)
+        {
+            var go=New("Buscar en Mi biblioteca",properties);var background=go.AddComponent<Image>();background.color=TextColor;var input=go.AddComponent<InputField>();var text=Label(go.transform,string.IsNullOrEmpty(mediaSearch)?"":mediaSearch,12,new Vector2(9,0),new Vector2(220,32),Header);input.textComponent=text;input.text=mediaSearch;var placeholder=Label(go.transform,"Buscar por nombre…",12,new Vector2(9,0),new Vector2(220,32),Muted);input.placeholder=placeholder;input.onEndEdit.AddListener(value=>{mediaSearch=value??"";Refresh();});Rect(go.transform).anchoredPosition=new Vector2(6,-y);Rect(go.transform).sizeDelta=new Vector2(238,32);AddOutline(go,Border);y+=37;
+        }
+        void MediaNameInput(MediaAssetData media,ref int y)
+        {
+            var go=New("Renombrar imagen",properties);var background=go.AddComponent<Image>();background.color=TextColor;var input=go.AddComponent<InputField>();var text=Label(go.transform,media.displayName,12,new Vector2(9,0),new Vector2(220,38),Header);input.textComponent=text;input.text=media.displayName;input.onEndEdit.AddListener(value=>{c.RenameMediaAsset(media.id,value);renamingMediaId=null;Refresh();});Rect(go.transform).anchoredPosition=new Vector2(6,-y);Rect(go.transform).sizeDelta=new Vector2(238,38);AddOutline(go,Accent);y+=46;
+        }
+        void CycleMediaFilter(){string[] categories={"todas","personajes","enemigos","escenarios","objetos","fondos","otros"};int index=Array.IndexOf(categories,mediaCategory);mediaCategory=categories[(index+1+categories.Length)%categories.Length];Refresh();}
+        static string MediaCategoryName(string id)=>id=="personajes"?"Personajes":id=="enemigos"?"Enemigos":id=="escenarios"?"Escenarios":id=="objetos"?"Objetos":id=="fondos"?"Fondos":id=="otros"?"Otras":"Todas";
+        void RequestMediaDelete(string id)
+        {
+            if(pendingMediaDeleteId!=id){pendingMediaDeleteId=id;int uses=c.MediaUsageCount(id);SetStatus(uses>0?"Esta imagen se usa en "+uses+" elemento"+(uses==1?". Pulsa otra vez para eliminarla.":"s. Pulsa otra vez para eliminarla."):"Pulsa Borrar otra vez para confirmar.");Refresh();return;}
+            pendingMediaDeleteId=null;c.DeleteMediaAsset(id,true);
         }
         void Search(RuntimeItemData data,ref int y)
         {

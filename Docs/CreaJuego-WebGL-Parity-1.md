@@ -73,7 +73,7 @@ Desde `schemaVersion` 5 cada imagen se almacena una sola vez en `mediaAssets`; l
 
 ## Schema y migración
 
-`CreaJuegoProjectData.schemaVersion` actual es 6. Incluye:
+`CreaJuegoProjectData.schemaVersion` actual es 7. Incluye:
 
 - `platformWidth`;
 - `alignAutomatically`;
@@ -197,3 +197,13 @@ El botón **Nuevo** abre un selector de tipo de juego en lugar de borrar inmedia
 **Juego de plataformas** crea un nivel completamente vacío y es la única opción habilitada. **Juego de naves y disparos** aparece como siguiente posibilidad, pero permanece marcado como «Próximamente» y no modifica el proyecto actual. Antes de habilitarlo necesita su propio movimiento, cámara, proyectiles, spawning, preflight y catálogo; mostrarlo de esta forma valida la navegación sin prometer una plantilla incompleta.
 
 Los tipos se declaran en `RuntimeContentPack.gameTypes`; si el pack aún no define la lista, se usan los descriptores base. Validación acumulada: **54/54 pruebas EditMode** de `CreaJuego.Web.Tests`.
+
+## Estabilización de Mi biblioteca
+
+Schema 7 añade una categoría persistente a cada imagen. La interfaz permite buscar por nombre, filtrar y cambiar entre Personajes, Enemigos, Escenarios, Objetos, Fondos y Otras. Las imágenes importadas mientras hay un elemento seleccionado reciben una categoría inicial apropiada; un lote general entra en Otras. También muestra el espacio usado frente al límite de 24 MB.
+
+El nombre puede cambiarse desde la propia biblioteca o al volver a abrir el editor. Borrar requiere dos acciones explícitas. Si la imagen está en uso, la interfaz indica cuántos elementos la utilizan y, al confirmar, esos elementos vuelven a su apariencia predeterminada.
+
+El editor local incluye ahora **Quitar fondo** para colores uniformes. El participante selecciona el color de fondo y ajusta una tolerancia; el procesamiento conserva transparencia y ocurre en el navegador. Esta herramienta cubre fotografías de papel o dibujos sobre fondos planos, pero no sustituye todavía la segmentación inteligente por silueta.
+
+Validación acumulada tras este bloque: **55/55 pruebas EditMode** de `CreaJuego.Web.Tests` y comprobación sintáctica del plugin WebGL.
