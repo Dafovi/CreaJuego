@@ -28,11 +28,13 @@ http.createServer((request, response) => {
       response.writeHead(404);
       return response.end("No encontrado");
     }
-    response.writeHead(200, {
+    const headers = {
       "Content-Type": mime[path.extname(file)] || "application/octet-stream",
       "Content-Length": data.length,
       "Cache-Control": "no-store"
-    });
+    };
+    if (file.endsWith(".unityweb")) headers["Content-Encoding"] = "br";
+    response.writeHead(200, headers);
     response.end(data);
   });
 }).listen(8000, "127.0.0.1", () => {
