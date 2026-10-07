@@ -25,9 +25,10 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=8;
+        public int schemaVersion=9;
         public string projectName="Mi juego", teamName="Mi equipo";
         public string gameTypeId="platformer";
+        public int targetScore=10;
         public bool alignAutomatically=true;
         public RuntimeLevelSize levelSize=RuntimeLevelSize.Medium;
         public RuntimeLevelBounds bounds=new RuntimeLevelBounds();
@@ -107,7 +108,7 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>8)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>9)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
             int sourceSchemaVersion=data.schemaVersion;
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
@@ -116,6 +117,7 @@ namespace CreaJuego.Web
             if(data.mediaAssets==null)data.mediaAssets=new List<MediaAssetData>();
             if(data.objects==null)data.objects=new List<RuntimeItemData>();
             if(string.IsNullOrWhiteSpace(data.gameTypeId))data.gameTypeId="platformer";
+            if(data.targetScore<=0)data.targetScore=10;
             int importedNumber=data.mediaAssets.Count+1;
             foreach(var item in data.objects)
             {
@@ -139,7 +141,7 @@ namespace CreaJuego.Web
                 if(string.IsNullOrWhiteSpace(asset.backgroundColor))asset.backgroundColor="#ffffff";
                 asset.backgroundTolerance=Mathf.Clamp(sourceSchemaVersion<8&&asset.backgroundTolerance<=0?18:asset.backgroundTolerance,0,100);
             }
-            data.schemaVersion=8;
+            data.schemaVersion=9;
             return data;
         }
     }

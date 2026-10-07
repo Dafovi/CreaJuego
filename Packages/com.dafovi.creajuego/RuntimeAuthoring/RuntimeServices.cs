@@ -84,6 +84,7 @@ namespace CreaJuego.Web
         {
             var kinds=new Dictionary<RuntimeItemData,GameItemDefinition>();
             foreach(var item in data.objects){var def=find(item.definitionId);if(def==null||def.prefab==null)return "Hay un elemento sin contenido disponible.";kinds[item]=def;}
+            if(data.gameTypeId=="catch-and-dodge")return ValidateCatch(data,kinds,context);
             var players=kinds.Where(p=>p.Value.kind==ItemKind.Player).ToArray();var platforms=kinds.Where(p=>p.Value.kind==ItemKind.Platform).ToArray();var goals=kinds.Count(p=>p.Value.kind==ItemKind.Goal);
             if(players.Length!=1)return players.Length==0?"Añade un Jugador antes de jugar.":"Tu juego debe tener un solo Jugador.";
             if(platforms.Length==0)return "Agrega al menos una Plataforma para comenzar.";
@@ -93,6 +94,17 @@ namespace CreaJuego.Web
             if(!context.cameraAvailable)return "Prepara la vista de juego antes de jugar.";
             if(context.requireRecovery&&players[0].Value.prefab.GetComponent<PlayerFallRecovery>()==null)return "El personaje necesita volver al inicio si cae. Créalo de nuevo desde el catálogo.";
             if(context.validateSupport&&!SeemsSupported(players[0].Key,players[0].Value,platforms))return "El personaje parece estar en el aire. Ponlo sobre una plataforma.";
+            return null;
+        }
+        static string ValidateCatch(CreaJuegoProjectData data,Dictionary<RuntimeItemData,GameItemDefinition> kinds,RuntimePreflightContext context)
+        {
+            int players=kinds.Count(pair=>pair.Value.kind==ItemKind.Player),prizes=kinds.Count(pair=>pair.Value.kind==ItemKind.Prize);
+            if(players!=1)return players==0?"Añade un Jugador antes de jugar.":"Tu juego debe tener un solo Jugador.";
+            if(prizes==0)return "Añade al menos un Premio para atrapar.";
+            if(data.targetScore<=0)return "El objetivo de puntos debe ser mayor que cero.";
+            if(context==null)return null;
+            if(data.bounds==null||!data.bounds.IsValid)return "El tamaño del nivel no es válido.";
+            if(!context.cameraAvailable)return "Prepara la vista de juego antes de jugar.";
             return null;
         }
         static bool SeemsSupported(RuntimeItemData player,GameItemDefinition definition,KeyValuePair<RuntimeItemData,GameItemDefinition>[] platforms)

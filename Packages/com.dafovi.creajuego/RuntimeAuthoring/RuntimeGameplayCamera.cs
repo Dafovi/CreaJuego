@@ -16,6 +16,12 @@ namespace CreaJuego.Web
             var rig=go.GetComponent<WorkshopCameraRig>();rig.output=output;rig.cameraController=ActiveCamera;
             brain.enabled=true;output.enabled=true;
         }
+        public void ActivateStatic(Camera output,RuntimeLevelBounds bounds)
+        {
+            var brain=output.GetComponent<CinemachineBrain>();if(brain!=null)brain.enabled=false;ActiveCamera=null;
+            float aspect=Mathf.Max(.1f,output.pixelWidth/(float)Mathf.Max(1,output.pixelHeight));float width=bounds.right-bounds.left,height=bounds.top-bounds.bottom;
+            output.transform.position=new Vector3((bounds.left+bounds.right)*.5f,(bounds.bottom+bounds.top)*.5f,-10);output.orthographic=true;output.orthographicSize=Mathf.Max(3,Mathf.Max(height*.5f,width/(2*aspect))*1.05f);output.enabled=true;
+        }
         public void Deactivate(Camera output)
         {
             if(output==null)return;output.enabled=false;var brain=output.GetComponent<CinemachineBrain>();if(brain!=null)brain.enabled=false;ActiveCamera=null;

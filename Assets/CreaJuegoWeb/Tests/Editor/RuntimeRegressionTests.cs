@@ -133,7 +133,7 @@ namespace CreaJuego.Web.Tests
             var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.First(o=>o.definitionId=="enemigo");var enemyId=enemy.instanceId;
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(8));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
+            Assert.That(migrated.schemaVersion,Is.EqualTo(9));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));

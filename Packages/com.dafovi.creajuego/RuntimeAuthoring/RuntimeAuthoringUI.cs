@@ -142,7 +142,7 @@ namespace CreaJuego.Web
         public void Refresh()
         {
             if(c==null||catalog==null)return;ApplyBranding();float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);Clear(list);Clear(properties);
-            var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(d=>d!=null&&d.availableInWorkshop).OrderBy(d=>d.order).ToArray();
+            var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(c.DefinitionAvailable).OrderBy(d=>d.order).ToArray();
             for(int i=0;i<defs.Length;i++)
             {
                 var definition=defs[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,-row*58),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,52),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
@@ -173,7 +173,7 @@ namespace CreaJuego.Web
             if(readinessPanel==null)return;var error=RuntimePreflight.Validate(c.Project,c.Find,new RuntimePreflightContext{cameraAvailable=c.gameCamera!=null});bool ready=string.IsNullOrEmpty(error);
             readinessPanel.GetComponent<Image>().color=ready?Hex("183B30"):Warning;readinessTitle.text=ready?"¡Todo listo para jugar!":"Tu juego necesita un ajuste";readinessTitle.color=ready?SuccessBright:WarningText;
             bool player=Has(ItemKind.Player),platform=Has(ItemKind.Platform),interaction=Has(ItemKind.Prize)||Has(ItemKind.Hazard)||Has(ItemKind.Enemy),goal=Has(ItemKind.Goal);
-            readinessChecks.text=(player?"[OK]":"[ ]")+" Jugador    "+(platform?"[OK]":"[ ]")+" Plataforma\n"+(interaction?"[OK]":"[ ]")+" Algo con qué interactuar    "+(goal?"[OK]":"[ ]")+" Meta";
+            readinessChecks.text=c.IsCatchMode?(player?"[OK]":"[ ]")+" Jugador    "+(Has(ItemKind.Prize)?"[OK]":"[ ]")+" Premio que cae\n"+(Has(ItemKind.Hazard)?"[OK]":"[ ]")+" Peligro opcional    META "+c.Project.targetScore+" puntos":(player?"[OK]":"[ ]")+" Jugador    "+(platform?"[OK]":"[ ]")+" Plataforma\n"+(interaction?"[OK]":"[ ]")+" Algo con qué interactuar    "+(goal?"[OK]":"[ ]")+" Meta";
             status.text=!string.IsNullOrEmpty(statusOverride)?statusOverride:ready?"Tu juego tiene los elementos necesarios.":error;
         }
         bool Has(ItemKind kind)=>c.Project.objects.Any(data=>c.Find(data.definitionId)?.kind==kind);
@@ -191,9 +191,18 @@ namespace CreaJuego.Web
         void Group(string title,ref int y){Label(properties,title,15,new Vector2(6,-y),new Vector2(244,28),Accent,FontStyle.Bold);y+=34;}
         void WorldProperties(ref int y)
         {
-            Group("NIVEL",ref y);Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
-            foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}
-            var help=PanelRect("Ayuda del nivel",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(help,"El marco amarillo muestra la zona válida. Si el personaje cae, vuelve al inicio.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+            Group("NIVEL",ref y);
+            if(c.IsCatchMode)
+            {
+                ProjectSlider("Puntos para ganar",c.Project.targetScore,1,100,ref y);
+                var catchHelp=PanelRect("Ayuda de Atrapa y esquiva",properties,new Vector2(6,-y),new Vector2(238,88),Hex("263B55"),true);Label(catchHelp,"Coloca premios y peligros en la parte alta. Al jugar caerán y volverán a aparecer.",12,new Vector2(10,7),new Vector2(218,74),TextColor);y+=96;
+            }
+            else
+            {
+                Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
+                foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}
+                var help=PanelRect("Ayuda del nivel",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(help,"El marco amarillo muestra la zona válida. Si el personaje cae, vuelve al inicio.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+            }
             Group("ARCHIVO DEL NIVEL",ref y);
             ButtonAt(properties,"Descargar copia JSON",new Vector2(6,-y),c.DownloadProject,new Vector2(238,40),null,Soft,TextColor,13);y+=46;
             ButtonAt(properties,"Importar copia JSON",new Vector2(6,-y),c.PickProjectFile,new Vector2(238,40),null,Soft,TextColor,13);y+=46;
@@ -202,12 +211,12 @@ namespace CreaJuego.Web
         void ItemProperties(ItemKind kind,RuntimeItemData data,ref int y)
         {
             if(kind!=ItemKind.Background){var size=c.SelectedWorldSize;Group("TAMAÑO",ref y);Slider("Ancho","sizeX",size.x,.25f,30,ref y);Slider("Alto","sizeY",size.y,.25f,30,ref y);}
-            if(kind==ItemKind.Player){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,5,ref y);Slider("Fuerza de salto","jump",data.jump,5,18,ref y);Group("PUNTOS DE VIDA",ref y);Slider("Puntos de vida","health",data.health,1,10,ref y);}
+            if(kind==ItemKind.Player){Group("MOVIMIENTO",ref y);Slider(c.IsCatchMode?"Velocidad lateral":"Velocidad","speed",data.speed,.2f,5,ref y);if(!c.IsCatchMode)Slider("Fuerza de salto","jump",data.jump,5,18,ref y);Group("PUNTOS DE VIDA",ref y);Slider("Puntos de vida","health",data.health,1,10,ref y);}
             else if(kind==ItemKind.Platform){if(data.definitionId=="muro"||data.definitionId=="rampa")Direction(data,ref y);}
             else if(kind==ItemKind.MovingPlatform){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);}
             else if(kind==ItemKind.Background){Group("FONDO",ref y);Label(properties,"El fondo cubre todo el lienzo visible y sólo puede haber uno.",13,new Vector2(6,-y),new Vector2(238,46),Muted);y+=52;}
-            else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);}
-            else if(kind==ItemKind.Hazard){Group("PELIGRO",ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
+            else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);if(c.IsCatchMode)Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);}
+            else if(kind==ItemKind.Hazard){Group("PELIGRO",ref y);Slider("Daño","damage",data.damage,1,10,ref y);if(c.IsCatchMode)Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);}
             else if(kind==ItemKind.Enemy){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);Group("COMBATE",ref y);Slider("Vida","health",data.health,1,10,ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
             else if(kind==ItemKind.Goal){Group("MENSAJE FINAL",ref y);Input("Mensaje",data.message,ref y);}
             else{Group("POSICIÓN",ref y);Label(properties,"Arrastra para mover este elemento por el nivel.",13,new Vector2(6,-y),new Vector2(238,44),Muted);y+=50;}
@@ -279,6 +288,11 @@ namespace CreaJuego.Web
             Label(properties,label,13,new Vector2(6,-y),new Vector2(170,22),TextColor);var number=Label(properties,value.ToString("0.#"),13,new Vector2(180,-y),new Vector2(64,22),Accent,FontStyle.Bold);number.alignment=TextAnchor.MiddleRight;y+=26;
             var go=New("Slider "+label,properties);var image=go.AddComponent<Image>();image.color=Border;var slider=go.AddComponent<Slider>();slider.minValue=min;slider.maxValue=max;slider.value=value;slider.wholeNumbers=path=="health"||path=="damage"||path=="points";var fill=New("Fill",go.transform).AddComponent<Image>();fill.color=Accent;slider.fillRect=Rect(fill.transform);Anchor(slider.fillRect);var handle=New("Handle",go.transform).AddComponent<Image>();handle.color=TextColor;slider.handleRect=Rect(handle.transform);slider.handleRect.sizeDelta=new Vector2(16,24);Rect(go.transform).anchoredPosition=new Vector2(6,-y);Rect(go.transform).sizeDelta=new Vector2(238,18);slider.onValueChanged.AddListener(v=>{number.text=v.ToString("0.#");c.SetFloat(path,v,false);});go.AddComponent<RuntimeSliderCommit>().commit=c.CommitEdit;y+=34;
         }
+        void ProjectSlider(string label,float value,float min,float max,ref int y)
+        {
+            Label(properties,label,13,new Vector2(6,-y),new Vector2(170,22),TextColor);var number=Label(properties,value.ToString("0"),13,new Vector2(180,-y),new Vector2(64,22),Accent,FontStyle.Bold);number.alignment=TextAnchor.MiddleRight;y+=26;
+            var go=New("Slider "+label,properties);var image=go.AddComponent<Image>();image.color=Border;var slider=go.AddComponent<Slider>();slider.minValue=min;slider.maxValue=max;slider.value=value;slider.wholeNumbers=true;var fill=New("Fill",go.transform).AddComponent<Image>();fill.color=Accent;slider.fillRect=Rect(fill.transform);Anchor(slider.fillRect);var handle=New("Handle",go.transform).AddComponent<Image>();handle.color=TextColor;slider.handleRect=Rect(handle.transform);slider.handleRect.sizeDelta=new Vector2(16,24);Rect(go.transform).anchoredPosition=new Vector2(6,-y);Rect(go.transform).sizeDelta=new Vector2(238,18);slider.onValueChanged.AddListener(v=>{number.text=v.ToString("0");c.SetTargetScore(v,false);});go.AddComponent<RuntimeSliderCommit>().commit=c.CommitEdit;y+=34;
+        }
         void Input(string label,string value,ref int y)
         {
             Label(properties,label,13,new Vector2(6,-y),new Vector2(238,22),TextColor);y+=27;var go=New("Mensaje",properties);var background=go.AddComponent<Image>();background.color=Soft;var input=go.AddComponent<InputField>();var text=Label(go.transform,value,13,new Vector2(8,4),new Vector2(222,54),TextColor);text.alignment=TextAnchor.UpperLeft;input.textComponent=text;input.text=value;Rect(go.transform).anchoredPosition=new Vector2(6,-y);Rect(go.transform).sizeDelta=new Vector2(238,62);AddOutline(go,Border);input.onEndEdit.AddListener(c.SetMessage);y+=69;
@@ -346,7 +360,7 @@ namespace CreaJuego.Web
             if(metrics==null)return;
             if(lastHudHealth!=metrics.CurrentHealth){lastHudHealth=metrics.CurrentHealth;Clear(hearts);Label(hearts,"VIDAS",14,new Vector2(0,0),new Vector2(58,44),Muted,FontStyle.Bold);for(int i=0;i<Mathf.Min(10,lastHudHealth);i++){var heart=New("Vida "+(i+1),hearts).AddComponent<Image>();heart.sprite=RuntimeIconLibrary.Heart;heart.color=DangerText;heart.preserveAspect=true;heart.raycastTarget=false;Rect(heart.transform).anchoredPosition=new Vector2(62+i*27,9);Rect(heart.transform).sizeDelta=new Vector2(24,24);}}
             if(lastHudScore!=metrics.Score){lastHudScore=metrics.Score;hudScore.text="PUNTOS  "+metrics.Score;}
-            if(lastHudEnemies!=metrics.EnemiesRemaining){lastHudEnemies=metrics.EnemiesRemaining;hudEnemies.text="ENEMIGOS  "+metrics.EnemiesRemaining;}
+            if(c.IsCatchMode)hudEnemies.text="META  "+c.Project.targetScore;else if(lastHudEnemies!=metrics.EnemiesRemaining){lastHudEnemies=metrics.EnemiesRemaining;hudEnemies.text="ENEMIGOS  "+metrics.EnemiesRemaining;}
             hudObjective.text=metrics.State==GameSessionState.Won?"META COMPLETADA · "+metrics.Objective:metrics.State==GameSessionState.Lost?"SIN VIDAS · Vuelve a construir para ajustar el nivel.":"OBJETIVO · "+metrics.Objective;hudObjective.color=metrics.State==GameSessionState.Won?SuccessBright:metrics.State==GameSessionState.Lost?DangerText:Accent;
         }
         void ApplyResponsiveLayout(bool force=false)

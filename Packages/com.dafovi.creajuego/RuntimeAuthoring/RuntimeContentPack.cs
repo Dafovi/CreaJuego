@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     {
         static readonly RuntimeGameTypeDefinition[] defaults={
             new RuntimeGameTypeDefinition{id="platformer",displayName="Juego de plataformas",description="Crea caminos, saltos, premios, peligros y una meta.",learningHint="Empieza con un nivel vacío y construye el recorrido a tu manera.",available=true},
-            new RuntimeGameTypeDefinition{id="shoot-em-up",displayName="Juego de naves y disparos",description="Mueve un personaje o nave mientras aparecen enemigos y proyectiles.",learningHint="Este tipo necesita controles, cámara y reglas propias. Llegará en un siguiente sprint.",available=false}
+            new RuntimeGameTypeDefinition{id="catch-and-dodge",displayName="Atrapa y esquiva",description="Muévete de lado a lado, recoge lo bueno que cae y evita los peligros.",learningHint="Añade un personaje, premios y peligros. Su posición marca desde dónde caerán.",available=true}
         };
         public static RuntimeGameTypeDefinition[] Defaults=>defaults;
     }

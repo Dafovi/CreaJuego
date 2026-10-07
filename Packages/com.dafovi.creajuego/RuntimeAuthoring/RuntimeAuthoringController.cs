@@ -22,6 +22,7 @@ namespace CreaJuego.Web
         public RuntimeHistory History{get;}=new RuntimeHistory();
         public RuntimeGameplayCamera GameplayCamera=>GetComponent<RuntimeGameplayCamera>();
         public RuntimeGameTypeDefinition[] GameTypes=>contentPack!=null?contentPack.GameTypes:RuntimeGameTypeCatalog.Defaults;
+        public bool IsCatchMode=>Project!=null&&Project.gameTypeId=="catch-and-dodge";
         public Transform PlayRoot=>playRoot;
         public GameItem PlayPlayer=>playPlayer;
         public event Action ProjectChanged;
@@ -70,8 +71,14 @@ namespace CreaJuego.Web
             var type=GameTypes.FirstOrDefault(value=>value!=null&&value.id==gameTypeId);if(type==null||!type.available)return false;
             ExitPlay(false);Project=new CreaJuegoProjectData();Project.bounds=RuntimeLevelBounds.For(Project.levelSize);
             Project.gameTypeId=type.id;
-            History.Reset(Project);Rebuild();if(notify)Changed(false);
+            if(type.id=="catch-and-dodge"){Project.levelSize=RuntimeLevelSize.Small;Project.bounds=new RuntimeLevelBounds{left=-9,right=9,bottom=-5,top=7};}
+            History.Reset(Project);Rebuild();if(type.id=="catch-and-dodge")Frame(new Bounds(new Vector3(0,1,0),new Vector3(18,12,1)));if(notify)Changed(false);
             return true;
+        }
+        public bool DefinitionAvailable(GameItemDefinition definition)
+        {
+            if(definition==null||!definition.availableInWorkshop)return false;if(!IsCatchMode)return true;
+            return definition.kind==ItemKind.Player||definition.kind==ItemKind.Prize||definition.kind==ItemKind.Hazard||definition.kind==ItemKind.Decoration||definition.kind==ItemKind.Background;
         }
         public void LoadStarterLevel(bool notify=true)
         {
@@ -149,7 +156,10 @@ namespace CreaJuego.Web
         {
             if(Mode!=AuthoringMode.Build)return null;var definition=Find(id);if(definition==null||definition.prefab==null)return null;
             if(!definition.allowMultiple&&Project.objects.Any(o=>o.definitionId==id)){ui?.SetStatus("Este juego usa un solo "+definition.displayName+".");return null;}
-            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);EnsureDefaultAppearance(data,definition);data.position=definition.kind==ItemKind.Background?Vector3.zero:RuntimeSnap.Position(position,Project.alignAutomatically);Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
+            var data=RuntimeItemData.From(definition.prefab.GetComponent<GameItem>(),id);EnsureDefaultAppearance(data,definition);data.position=definition.kind==ItemKind.Background?Vector3.zero:RuntimeSnap.Position(position,Project.alignAutomatically);
+            if(IsCatchMode&&definition.kind==ItemKind.Player)data.position.y=Project.bounds.bottom+1;
+            else if(IsCatchMode&&(definition.kind==ItemKind.Prize||definition.kind==ItemKind.Hazard))data.position.y=Project.bounds.top-1;
+            Project.objects.Add(data);History.Record(Project);Rebuild(data.instanceId);Changed();return Selection.SelectedItem;
         }
         public void DeleteSelected(){var id=SelectedId();if(id==null)return;Project.objects.RemoveAll(o=>o.instanceId==id);History.Record(Project);Rebuild();Changed();}
         public void DuplicateSelected(){var source=SelectedData();if(source==null)return;var definition=Find(source.definitionId);if(definition==null||!definition.allowMultiple)return;var copy=source.Clone();copy.instanceId=Guid.NewGuid().ToString("N");copy.position=RuntimeSnap.Position(copy.position+new Vector3(1,.5f),Project.alignAutomatically);Project.objects.Add(copy);History.Record(Project);Rebuild(copy.instanceId);Changed();}
@@ -230,6 +240,7 @@ namespace CreaJuego.Web
             ApplySelected(data);CommitEdit();
         }
         public void SetLevelSize(RuntimeLevelSize value){if(Project.levelSize==value)return;Project.levelSize=value;Project.bounds=RuntimeLevelBounds.For(value);Rebuild(SelectedId());CommitEdit();}
+        public void SetTargetScore(float value,bool record=true){Project.targetScore=Mathf.Clamp(Mathf.RoundToInt(value),1,100);if(record)CommitEdit();}
         public void CommitEdit(){History.Record(Project);Changed();}
         void ApplySelected(RuntimeItemData data){var item=Selection.SelectedItem;if(item!=null&&SelectedId()==data.instanceId){ApplyData(item,data);item.GetComponent<RuntimeCanvasBackground>()?.Configure(buildCamera);}}
         public void Undo(){var value=History.Undo();if(value!=null){Project=value;Rebuild();Changed();}}
@@ -273,12 +284,29 @@ namespace CreaJuego.Web
         public string EnterPlay()
         {
             if(Mode==AuthoringMode.Play)return null;var error=RuntimePreflight.Validate(Project,Find,new RuntimePreflightContext{cameraAvailable=gameCamera!=null});if(error!=null){ui?.SetStatus(error);return error;}
-            Selection.Clear();buildRoot.gameObject.SetActive(false);services=sceneServicesPrefab!=null?Instantiate(sceneServicesPrefab):null;
+            bool catchMode=IsCatchMode;Selection.Clear();buildRoot.gameObject.SetActive(false);services=!catchMode&&sceneServicesPrefab!=null?Instantiate(sceneServicesPrefab):null;
             if(services!=null){foreach(var camera in services.GetComponentsInChildren<Camera>(true))camera.enabled=false;foreach(var listener in services.GetComponentsInChildren<AudioListener>(true))listener.enabled=false;foreach(var serviceCanvas in services.GetComponentsInChildren<Canvas>(true))serviceCanvas.enabled=false;}
-            playRoot=new GameObject("Partida temporal").transform;playRoot.gameObject.SetActive(false);foreach(var data in Project.objects)InstantiateItem(data,playRoot,false);
-            CreatePlayBoundaries(playRoot,Project.bounds);playRoot.gameObject.SetActive(true);playPlayer=playRoot.GetComponentsInChildren<GameItem>().First(i=>i.definition.kind==ItemKind.Player);
-            var authored=Project.objects.First(o=>o.definitionId==playPlayer.definition.id);var recovery=playPlayer.GetComponent<PlayerFallRecovery>();recovery.ConfigureWorldLimit(authored.position,Project.bounds.bottom);
-            Mode=AuthoringMode.Play;if(buildCamera!=null){buildCamera.enabled=false;var buildListener=buildCamera.GetComponent<AudioListener>();if(buildListener!=null)buildListener.enabled=false;}var gameListener=gameCamera.GetComponent<AudioListener>();if(gameListener!=null)gameListener.enabled=true;GameplayCamera.Activate(gameCamera,playPlayer,playRoot);ui?.Refresh();Debug.Log($"CREAJUEGO_WEB_MODE PLAY objects={Project.objects.Count}");return null;
+            playRoot=new GameObject("Partida temporal").transform;playRoot.gameObject.SetActive(false);var instances=new List<(GameItem item,RuntimeItemData data)>();foreach(var data in Project.objects)instances.Add((InstantiateItem(data,playRoot,false),data));
+            playPlayer=instances.First(pair=>pair.item.definition.kind==ItemKind.Player).item;
+            if(catchMode)ConfigureCatchMode(instances);else
+            {
+                CreatePlayBoundaries(playRoot,Project.bounds);var authored=Project.objects.First(o=>o.definitionId==playPlayer.definition.id);var recovery=playPlayer.GetComponent<PlayerFallRecovery>();recovery.ConfigureWorldLimit(authored.position,Project.bounds.bottom);
+            }
+            playRoot.gameObject.SetActive(true);Mode=AuthoringMode.Play;if(buildCamera!=null){buildCamera.enabled=false;var buildListener=buildCamera.GetComponent<AudioListener>();if(buildListener!=null)buildListener.enabled=false;}var gameListener=gameCamera.GetComponent<AudioListener>();if(gameListener!=null)gameListener.enabled=true;if(catchMode)GameplayCamera.ActivateStatic(gameCamera,Project.bounds);else GameplayCamera.Activate(gameCamera,playPlayer,playRoot);ui?.Refresh();Debug.Log($"CREAJUEGO_WEB_MODE PLAY type={Project.gameTypeId} objects={Project.objects.Count}");return null;
+        }
+        void ConfigureCatchMode(List<(GameItem item,RuntimeItemData data)> instances)
+        {
+            var sessionObject=new GameObject("Reglas de Atrapa y esquiva",typeof(RuntimeCatchSession));sessionObject.transform.SetParent(playRoot,false);var session=sessionObject.GetComponent<RuntimeCatchSession>();var playerData=instances.First(pair=>pair.item.definition.kind==ItemKind.Player).data;session.Configure(playerData.health,Project.targetScore);
+            foreach(var pair in instances)
+            {
+                var item=pair.item;var kind=item.definition.kind;
+                foreach(var behaviour in item.GetComponents<MonoBehaviour>())if(behaviour!=item&&!(behaviour is ItemVisual)&&!(behaviour is RuntimeCanvasBackground))behaviour.enabled=false;
+                foreach(var motion in item.GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().ToArray())DestroySafe((Component)motion);
+                var body=item.GetComponent<Rigidbody2D>();var collider=item.GetComponent<Collider2D>();
+                if(kind==ItemKind.Player){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var player=item.gameObject.AddComponent<RuntimeCatchPlayer>();player.Configure(session,Project.bounds);}
+                else if(kind==ItemKind.Prize||kind==ItemKind.Hazard){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var falling=item.gameObject.AddComponent<RuntimeFallingObject>();falling.Configure(session,Project.bounds);}
+                else if(collider!=null)collider.enabled=false;
+            }
         }
         public void ExitPlay(bool rebuild=true)
         {
