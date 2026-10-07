@@ -9,6 +9,26 @@ namespace CreaJuego.Web
     {
         public string name;
         public string dataUrl;
+        public string originalDataUrl;
+        public float cropX, cropY, cropWidth=1, cropHeight=1;
+        public bool paintEnabled, removeBackground;
+        public string paintColor="#4f8cff", backgroundColor="#ffffff";
+        public int backgroundTolerance=18;
+    }
+
+    [Serializable]
+    public sealed class RuntimeImageEditSettings
+    {
+        public float cropX, cropY, cropWidth=1, cropHeight=1;
+        public bool paintEnabled, removeBackground;
+        public string paintColor="#4f8cff", backgroundColor="#ffffff";
+        public int backgroundTolerance=18;
+
+        public static RuntimeImageEditSettings From(MediaAssetData asset)
+        {
+            return new RuntimeImageEditSettings{cropX=asset.cropX,cropY=asset.cropY,cropWidth=asset.cropWidth,cropHeight=asset.cropHeight,paintEnabled=asset.paintEnabled,
+                removeBackground=asset.removeBackground,paintColor=asset.paintColor,backgroundColor=asset.backgroundColor,backgroundTolerance=asset.backgroundTolerance};
+        }
     }
 
     public static class RuntimeImageImport
@@ -17,7 +37,7 @@ namespace CreaJuego.Web
         public const string TooLargeMessage="Esta imagen es demasiado grande. Elige una imagen más pequeña.";
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void CreaJuegoPickImages(string target,int maxInputBytes,int maxOutputBytes,int maxDimension);
-        [DllImport("__Internal")] static extern void CreaJuegoOpenImageEditor(string target,string mode,string imageName,string dataUrl,int maxInputBytes,int maxOutputBytes,int maxDimension);
+        [DllImport("__Internal")] static extern void CreaJuegoOpenImageEditor(string target,string mode,string imageName,string dataUrl,string settingsJson,int maxInputBytes,int maxOutputBytes,int maxDimension);
 #endif
         public static bool PickMany(string receiver)
         {
@@ -28,10 +48,10 @@ namespace CreaJuego.Web
 #endif
         }
         public static bool Pick(string receiver)=>PickMany(receiver);
-        public static bool OpenEditor(string receiver,string mode,string imageName=null,string dataUrl=null)
+        public static bool OpenEditor(string receiver,string mode,string imageName=null,string dataUrl=null,RuntimeImageEditSettings settings=null)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            CreaJuegoOpenImageEditor(receiver,mode??"file",imageName??"Mi imagen",dataUrl??"",MaxInputBytes,MaxBytes,PreferredDimension);return true;
+            CreaJuegoOpenImageEditor(receiver,mode??"file",imageName??"Mi imagen",dataUrl??"",settings==null?"":JsonUtility.ToJson(settings),MaxInputBytes,MaxBytes,PreferredDimension);return true;
 #else
             return false;
 #endif

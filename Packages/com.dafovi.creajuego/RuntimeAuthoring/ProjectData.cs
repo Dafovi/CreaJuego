@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=7;
+        public int schemaVersion=8;
         public string projectName="Mi juego", teamName="Mi equipo";
         public string gameTypeId="platformer";
         public bool alignAutomatically=true;
@@ -43,12 +43,17 @@ namespace CreaJuego.Web
         public string id;
         public string displayName;
         public string dataUrl;
+        public string originalDataUrl;
         public string categoryId="otros";
         public MediaAssetSource source;
+        public float cropX, cropY, cropWidth=1, cropHeight=1;
+        public bool paintEnabled, removeBackground;
+        public string paintColor="#4f8cff", backgroundColor="#ffffff";
+        public int backgroundTolerance=18;
 
         public static MediaAssetData Create(string displayName,string dataUrl,MediaAssetSource source=MediaAssetSource.File)
         {
-            return new MediaAssetData{id=Guid.NewGuid().ToString("N"),displayName=string.IsNullOrWhiteSpace(displayName)?"Mi imagen":displayName,dataUrl=dataUrl,categoryId="otros",source=source};
+            return new MediaAssetData{id=Guid.NewGuid().ToString("N"),displayName=string.IsNullOrWhiteSpace(displayName)?"Mi imagen":displayName,dataUrl=dataUrl,originalDataUrl=dataUrl,categoryId="otros",source=source};
         }
     }
 
@@ -102,7 +107,8 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>7)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>8)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            int sourceSchemaVersion=data.schemaVersion;
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
             if(data.schemaVersion<4)data.bounds=RuntimeLevelBounds.For(data.levelSize);
@@ -122,8 +128,18 @@ namespace CreaJuego.Web
                 }
             }
             data.mediaAssets.RemoveAll(asset=>asset==null||string.IsNullOrWhiteSpace(asset.id)||string.IsNullOrWhiteSpace(asset.dataUrl));
-            foreach(var asset in data.mediaAssets)if(string.IsNullOrWhiteSpace(asset.categoryId))asset.categoryId="otros";
-            data.schemaVersion=7;
+            foreach(var asset in data.mediaAssets)
+            {
+                if(string.IsNullOrWhiteSpace(asset.categoryId))asset.categoryId="otros";
+                if(string.IsNullOrWhiteSpace(asset.originalDataUrl))asset.originalDataUrl=asset.dataUrl;
+                if(asset.cropWidth<=0||asset.cropWidth>1)asset.cropWidth=1;
+                if(asset.cropHeight<=0||asset.cropHeight>1)asset.cropHeight=1;
+                asset.cropX=Mathf.Clamp(asset.cropX,0,1-asset.cropWidth);asset.cropY=Mathf.Clamp(asset.cropY,0,1-asset.cropHeight);
+                if(string.IsNullOrWhiteSpace(asset.paintColor))asset.paintColor="#4f8cff";
+                if(string.IsNullOrWhiteSpace(asset.backgroundColor))asset.backgroundColor="#ffffff";
+                asset.backgroundTolerance=Mathf.Clamp(sourceSchemaVersion<8&&asset.backgroundTolerance<=0?18:asset.backgroundTolerance,0,100);
+            }
+            data.schemaVersion=8;
             return data;
         }
     }

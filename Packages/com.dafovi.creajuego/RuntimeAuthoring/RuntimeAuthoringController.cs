@@ -194,7 +194,7 @@ namespace CreaJuego.Web
         {
             var data=SelectedData();if(data==null||Project.mediaAssets.All(asset=>asset==null||asset.id!=id))return;data.mediaAssetId=id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
         }
-        public long MediaBytes=>Project.mediaAssets.Where(asset=>asset!=null).Sum(asset=>(long)RuntimeImageImport.DataBytes(asset.dataUrl));
+        public long MediaBytes=>Project.mediaAssets.Where(asset=>asset!=null).Sum(asset=>(long)RuntimeImageImport.DataBytes(asset.dataUrl)+(asset.originalDataUrl==asset.dataUrl?0:RuntimeImageImport.DataBytes(asset.originalDataUrl)));
         public int MediaUsageCount(string id)=>Project.objects.Count(item=>item.mediaAssetId==id);
         public void RenameMediaAsset(string id,string displayName)
         {
@@ -294,7 +294,7 @@ namespace CreaJuego.Web
         public void CaptureImage()=>BeginImageEditor("camera",SelectedId(),null,MediaAssetSource.Camera);
         public void EditMediaAsset(string id)
         {
-            var asset=FindMedia(id);if(asset==null)return;BeginImageEditor("edit",null,id,asset.source,asset.displayName,asset.dataUrl);
+            var asset=FindMedia(id);if(asset==null)return;BeginImageEditor("edit",null,id,asset.source,asset.displayName,asset.originalDataUrl??asset.dataUrl,RuntimeImageEditSettings.From(asset));
         }
         public void PickImages()=>BeginImageImport(null);
         void BeginImageImport(string targetId)
@@ -302,10 +302,10 @@ namespace CreaJuego.Web
             ResetImageImport(targetId);pendingMediaSource=MediaAssetSource.File;
             if(!RuntimeImageImport.PickMany(gameObject.name))ui?.SetStatus("La selección múltiple de imágenes se prueba dentro de la build WebGL.");
         }
-        void BeginImageEditor(string mode,string targetId,string mediaId=null,MediaAssetSource source=MediaAssetSource.File,string imageName=null,string dataUrl=null)
+        void BeginImageEditor(string mode,string targetId,string mediaId=null,MediaAssetSource source=MediaAssetSource.File,string imageName=null,string dataUrl=null,RuntimeImageEditSettings settings=null)
         {
             ResetImageImport(targetId);editingMediaId=mediaId;pendingMediaSource=source;
-            if(!RuntimeImageImport.OpenEditor(gameObject.name,mode,imageName,dataUrl))ui?.SetStatus("El recorte de imágenes y la cámara se prueban dentro de la versión web.");
+            if(!RuntimeImageImport.OpenEditor(gameObject.name,mode,imageName,dataUrl,settings))ui?.SetStatus("El recorte de imágenes y la cámara se prueban dentro de la versión web.");
         }
         void ResetImageImport(string targetId)
         {
@@ -320,27 +320,37 @@ namespace CreaJuego.Web
         {
             RuntimeImageImportPayload payload;try{payload=JsonUtility.FromJson<RuntimeImageImportPayload>(json);}catch{ui?.SetStatus("No se pudo leer esta imagen.");return;}
             if(payload==null){ui?.SetStatus("No se pudo leer esta imagen.");return;}if(!RuntimeImageImport.ValidateDataUrl(payload.dataUrl,out var error)){ui?.SetStatus(error??"No se pudo leer esta imagen.");return;}
+            if(!string.IsNullOrWhiteSpace(payload.originalDataUrl)&&!RuntimeImageImport.ValidateDataUrl(payload.originalDataUrl,out error)){ui?.SetStatus(error??"No se pudo conservar la imagen original.");return;}
             MediaAssetData asset=null;
             if(!string.IsNullOrEmpty(editingMediaId))
             {
                 asset=FindMedia(editingMediaId);if(asset==null){ui?.SetStatus("Esta imagen ya no está en Mi biblioteca.");return;}
-                var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl))-RuntimeImageImport.DataBytes(asset.dataUrl);
-                if(total+RuntimeImageImport.DataBytes(payload.dataUrl)>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
-                asset.dataUrl=payload.dataUrl;if(!string.IsNullOrWhiteSpace(payload.name))asset.displayName=payload.name;asset.source=pendingMediaSource;importChanged=true;updatedMediaAsset=true;
+                var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl)+(value.originalDataUrl==value.dataUrl?0:RuntimeImageImport.DataBytes(value.originalDataUrl)))-RuntimeImageImport.DataBytes(asset.dataUrl)-(asset.originalDataUrl==asset.dataUrl?0:RuntimeImageImport.DataBytes(asset.originalDataUrl));
+                var original=string.IsNullOrWhiteSpace(payload.originalDataUrl)?payload.dataUrl:payload.originalDataUrl;
+                var required=(long)RuntimeImageImport.DataBytes(payload.dataUrl)+(original==payload.dataUrl?0:RuntimeImageImport.DataBytes(original));
+                if(total+required>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
+                asset.dataUrl=payload.dataUrl;asset.originalDataUrl=original;ApplyImageEdits(asset,payload);if(!string.IsNullOrWhiteSpace(payload.name))asset.displayName=payload.name;asset.source=pendingMediaSource;importChanged=true;updatedMediaAsset=true;
             }
             else
             {
                 asset=Project.mediaAssets.FirstOrDefault(value=>value!=null&&value.dataUrl==payload.dataUrl);
                 if(asset==null)
                 {
-                    var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl));if(total+RuntimeImageImport.DataBytes(payload.dataUrl)>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
-                    asset=MediaAssetData.Create(payload.name,payload.dataUrl,pendingMediaSource);asset.categoryId=MediaCategoryForTarget();Project.mediaAssets.Add(asset);importChanged=true;importedImageCount++;
+                    var original=string.IsNullOrWhiteSpace(payload.originalDataUrl)?payload.dataUrl:payload.originalDataUrl;
+                    var total=MediaBytes;var required=(long)RuntimeImageImport.DataBytes(payload.dataUrl)+(original==payload.dataUrl?0:RuntimeImageImport.DataBytes(original));if(total+required>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
+                    asset=MediaAssetData.Create(payload.name,payload.dataUrl,pendingMediaSource);asset.originalDataUrl=original;ApplyImageEdits(asset,payload);asset.categoryId=MediaCategoryForTarget();Project.mediaAssets.Add(asset);importChanged=true;importedImageCount++;
                 }
             }
             if(!string.IsNullOrEmpty(pendingImageTarget)&&!importedAppliedToTarget)
             {
                 var data=Project.objects.FirstOrDefault(value=>value.instanceId==pendingImageTarget);if(data!=null){data.mediaAssetId=asset.id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;importChanged=true;importedAppliedToTarget=true;}
             }
+        }
+        static void ApplyImageEdits(MediaAssetData asset,RuntimeImageImportPayload payload)
+        {
+            asset.cropWidth=payload.cropWidth>0?Mathf.Clamp01(payload.cropWidth):1;asset.cropHeight=payload.cropHeight>0?Mathf.Clamp01(payload.cropHeight):1;asset.cropX=Mathf.Clamp(payload.cropX,0,1-asset.cropWidth);asset.cropY=Mathf.Clamp(payload.cropY,0,1-asset.cropHeight);
+            asset.paintEnabled=payload.paintEnabled;asset.removeBackground=payload.removeBackground;asset.paintColor=string.IsNullOrWhiteSpace(payload.paintColor)?"#4f8cff":payload.paintColor;
+            asset.backgroundColor=string.IsNullOrWhiteSpace(payload.backgroundColor)?"#ffffff":payload.backgroundColor;asset.backgroundTolerance=Mathf.Clamp(payload.backgroundTolerance,0,100);
         }
         public void ReceiveImageBatchComplete(string ignored)
         {
