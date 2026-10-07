@@ -21,6 +21,7 @@ namespace CreaJuego.Web
         public RuntimeSelectionService Selection{get;}=new RuntimeSelectionService();
         public RuntimeHistory History{get;}=new RuntimeHistory();
         public RuntimeGameplayCamera GameplayCamera=>GetComponent<RuntimeGameplayCamera>();
+        public RuntimeGameTypeDefinition[] GameTypes=>contentPack!=null?contentPack.GameTypes:RuntimeGameTypeCatalog.Defaults;
         public Transform PlayRoot=>playRoot;
         public GameItem PlayPlayer=>playPlayer;
         public event Action ProjectChanged;
@@ -62,8 +63,15 @@ namespace CreaJuego.Web
 
         public void NewProject(bool notify=true)
         {
+            NewProjectFor("platformer",notify);
+        }
+        public bool NewProjectFor(string gameTypeId,bool notify=true)
+        {
+            var type=GameTypes.FirstOrDefault(value=>value!=null&&value.id==gameTypeId);if(type==null||!type.available)return false;
             ExitPlay(false);Project=new CreaJuegoProjectData();Project.bounds=RuntimeLevelBounds.For(Project.levelSize);
+            Project.gameTypeId=type.id;
             History.Reset(Project);Rebuild();if(notify)Changed(false);
+            return true;
         }
         public void LoadStarterLevel(bool notify=true)
         {

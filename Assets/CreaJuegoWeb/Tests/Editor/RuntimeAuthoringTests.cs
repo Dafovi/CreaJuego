@@ -14,7 +14,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void SharedMediaRoundTripKeepsOneImageForSeveralObjects()
         {
             var data=new CreaJuegoProjectData();var media=MediaAssetData.Create("Dragón","data:image/png;base64,YWJj");data.mediaAssets.Add(media);data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",mediaAssetId=media.id});data.objects.Add(new RuntimeItemData{instanceId="2",definitionId="enemigo",mediaAssetId=media.id});
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(5));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(6));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
         }
         [Test] public void LegacyEmbeddedImagesMigrateAndDeduplicate()
         {
@@ -101,5 +101,12 @@ namespace CreaJuego.Web.Tests
             Assert.That(controller.EnterPlay(),Is.Null);Assert.That(controller.Mode,Is.EqualTo(AuthoringMode.Play));controller.ExitPlay();Assert.That(controller.Mode,Is.EqualTo(AuthoringMode.Build));Assert.That(controller.Project.objects.Single(o=>o.definitionId=="jugador").health,Is.EqualTo(7));
         }
         [Test] public void PreflightExplainsMissingPlayer(){var data=new CreaJuegoProjectData();Assert.That(RuntimePreflight.Validate(data,_=>null),Does.Contain("Jugador"));}
+        [Test] public void NewProjectTypeSelectionIsScalableAndDoesNotEraseWorkForUnavailableTypes()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=controller.GetComponent<RuntimeAuthoringUI>();ui.RefreshEditableLayout();controller.LoadStarterLevel(false);int previousCount=controller.Project.objects.Count;
+            ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));Assert.That(ui.ChooseGameType("shoot-em-up"),Is.False);Assert.That(controller.Project.objects.Count,Is.EqualTo(previousCount),"Una opción aún no disponible no debe borrar el nivel actual.");Assert.That(ui.NewProjectDialogVisible,Is.True);
+            Assert.That(ui.ChooseGameType("platformer"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(6));
+        }
     }
 }

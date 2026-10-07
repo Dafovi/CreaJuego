@@ -14,8 +14,8 @@ namespace CreaJuego.Web
         [SerializeField] Text status,save,flow,readinessTitle,readinessChecks,brandTitle,brandTagline;
         [SerializeField] Button newButton,saveButton,openButton,undoButton,redoButton,frameAllButton,frameSelectedButton,levelButton,duplicateButton,deleteButton,modeButton,returnButton;
         [SerializeField] Toggle snap;
-        [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel;
-        [SerializeField] Text hudObjective,hudScore,hudEnemies;
+        [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,newProjectDialog;
+        [SerializeField] Text hudObjective,hudScore,hudEnemies,newProjectHint;
         [SerializeField, Tooltip("Recalcula paneles y cámara según la resolución. Déjalo desactivado para respetar el layout guardado en el Canvas.")] bool adaptLayoutAtRuntime;
         RuntimeAuthoringController c;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
 
@@ -31,6 +31,8 @@ namespace CreaJuego.Web
         public string FlowText=>flow!=null?flow.text:"";
         public string ReadinessText=>readinessTitle!=null?readinessTitle.text:"";
         public bool GameplayHudVisible=>gameplayHudPanel!=null&&gameplayHudPanel.activeSelf;
+        public bool NewProjectDialogVisible=>newProjectDialog!=null&&newProjectDialog.activeSelf;
+        public int VisibleGameTypeCount=>newProjectDialog==null?0:newProjectDialog.GetComponentsInChildren<RuntimeGameTypeButton>(true).Length;
         public int GameplayHeartCount=>hearts==null?0:hearts.GetComponentsInChildren<Image>(false).Count(image=>image.sprite==RuntimeIconLibrary.Heart);
         public string GameplayHudText=>(hudObjective?.text??"")+" "+(hudScore?.text??"")+" "+(hudEnemies?.text??"")+" "+(hearts!=null?string.Join(" ",hearts.GetComponentsInChildren<Text>(false).Select(t=>t.text)):"");
         public bool HasPreparedLayout=>canvas!=null&&catalog!=null&&list!=null&&properties!=null&&status!=null&&modeButton!=null&&leftPanel!=null&&rightPanel!=null&&readinessPanel!=null;
@@ -100,16 +102,42 @@ namespace CreaJuego.Web
             status=Label(readinessPanel.transform,"Construye tu juego.",13,new Vector2(88,12),new Vector2(330,27),TextColor);
             readinessChecks=Label(readinessPanel.transform,"",12,new Vector2(420,13),new Vector2(390,54),TextColor);readinessChecks.alignment=TextAnchor.MiddleLeft;
             modeButton=ButtonAt(readinessPanel.transform,"JUGAR",new Vector2(820,15),null,new Vector2(185,52),RuntimeIconLibrary.Play,Success,TextColor,18);
-            BuildGameplayHud();ApplyResponsiveLayout(true);
+            BuildGameplayHud();BuildNewProjectDialog();ApplyResponsiveLayout(true);
         }
 
         void BindStaticActions()
         {
-            Bind(newButton,()=>{statusOverride="";c.NewProject();});Bind(saveButton,c.SaveNow);Bind(openButton,c.LoadLast);Bind(undoButton,c.Undo);Bind(redoButton,c.Redo);Bind(frameAllButton,c.FrameAll);Bind(frameSelectedButton,c.FrameSelected);
+            Bind(newButton,ShowNewProjectDialog);Bind(saveButton,c.SaveNow);Bind(openButton,c.LoadLast);Bind(undoButton,c.Undo);Bind(redoButton,c.Redo);Bind(frameAllButton,c.FrameAll);Bind(frameSelectedButton,c.FrameSelected);
             Bind(levelButton,()=>{worldSelected=true;c.Selection.Clear();Refresh();});Bind(duplicateButton,c.DuplicateSelected);Bind(deleteButton,c.DeleteSelected);Bind(modeButton,c.ToggleMode);Bind(returnButton,c.ToggleMode);
             snap.onValueChanged.RemoveAllListeners();snap.onValueChanged.AddListener(value=>c.SetSnap(value));
         }
         static void Bind(Button button,UnityEngine.Events.UnityAction action){if(button==null)return;button.onClick.RemoveAllListeners();button.onClick.AddListener(action);}
+
+        void BuildNewProjectDialog()
+        {
+            newProjectDialog=PanelRect("Elegir tipo de juego",canvas.transform,Vector2.zero,new Vector2(1280,720),new Color(.03f,.06f,.1f,.96f)).gameObject;newProjectDialog.transform.SetAsLastSibling();
+            var card=PanelRect("Tarjeta de nuevo proyecto",newProjectDialog.transform,new Vector2(300,118),new Vector2(680,484),Panel,true);
+            Label(card,"¿QUÉ TIPO DE JUEGO QUIERES CREAR?",23,new Vector2(28,420),new Vector2(624,42),Accent,FontStyle.Bold);
+            Label(card,"Elige una base. Después podrás cambiar imágenes, construir el nivel y añadir tus propias reglas.",14,new Vector2(28,370),new Vector2(624,50),Muted);
+            int row=0;foreach(var type in c.GameTypes.Where(value=>value!=null))
+            {
+                var captured=type;var option=PanelRect(type.displayName,card,new Vector2(28,238-row*132),new Vector2(624,116),type.available?Soft:new Color(Soft.r,Soft.g,Soft.b,.55f),true);option.gameObject.AddComponent<RuntimeGameTypeButton>().gameTypeId=type.id;
+                Label(option,type.displayName.ToUpperInvariant(),17,new Vector2(18,72),new Vector2(370,30),type.available?TextColor:Muted,FontStyle.Bold);
+                Label(option,type.description,12,new Vector2(18,18),new Vector2(390,56),Muted);
+                ButtonAt(option,type.available?"CREAR":"PRÓXIMAMENTE",new Vector2(424,30),()=>ChooseGameType(captured.id),new Vector2(178,54),null,type.available?Selected:Background,type.available?TextColor:Muted,13);row++;
+            }
+            newProjectHint=Label(card,"El proyecto nuevo comenzará completamente vacío.",12,new Vector2(28,54),new Vector2(440,36),Muted);
+            ButtonAt(card,"Cancelar",new Vector2(500,48),HideNewProjectDialog,new Vector2(124,38),null,Soft,TextColor,12);
+            newProjectDialog.SetActive(false);
+        }
+        public void ShowNewProjectDialog(){if(newProjectDialog==null)BuildNewProjectDialog();newProjectHint.text="El proyecto nuevo comenzará completamente vacío.";newProjectDialog.SetActive(true);newProjectDialog.transform.SetAsLastSibling();}
+        public void HideNewProjectDialog(){if(newProjectDialog!=null)newProjectDialog.SetActive(false);}
+        public bool ChooseGameType(string id)
+        {
+            var type=c.GameTypes.FirstOrDefault(value=>value!=null&&value.id==id);if(type==null)return false;
+            if(!type.available){newProjectHint.text=type.learningHint;return false;}
+            statusOverride="";if(!c.NewProjectFor(id))return false;HideNewProjectDialog();return true;
+        }
 
         public void Refresh()
         {
@@ -334,6 +362,8 @@ namespace CreaJuego.Web
         void TryItemProperties(ItemKind kind,RuntimeItemData data,ref int y){try{ItemProperties(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudieron mostrar algunos ajustes.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}
         void TryAppearance(ItemKind kind,RuntimeItemData data,ref int y){try{Appearance(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudo mostrar Apariencia.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}
     }
+
+    public sealed class RuntimeGameTypeButton:MonoBehaviour{public string gameTypeId;}
 
     public static class RuntimeIconLibrary
     {

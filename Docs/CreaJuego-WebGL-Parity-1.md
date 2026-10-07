@@ -73,7 +73,7 @@ Desde `schemaVersion` 5 cada imagen se almacena una sola vez en `mediaAssets`; l
 
 ## Schema y migración
 
-`CreaJuegoProjectData.schemaVersion` actual es 5. Incluye:
+`CreaJuegoProjectData.schemaVersion` actual es 6. Incluye:
 
 - `platformWidth`;
 - `alignAutomatically`;
@@ -176,7 +176,7 @@ Las regresiones de lista, Propiedades, selección y rueda detectadas en revisió
 
 ## Biblioteca de medios y suelo — preparación posterior al primer taller
 
-La autoría runtime guarda ahora una biblioteca compartida en el proyecto (`mediaAssets`) y cada objeto conserva únicamente un `mediaAssetId`. Esto permite importar varias imágenes una sola vez, reutilizarlas, sustituir una imagen sin romper los objetos que la usan y migrar los antiguos campos `customImageBase64`. El proyecto usa schema 5 y limita la biblioteca a 24 MB.
+La autoría runtime guarda ahora una biblioteca compartida en el proyecto (`mediaAssets`) y cada objeto conserva únicamente un `mediaAssetId`. Esto permite importar varias imágenes una sola vez, reutilizarlas, sustituir una imagen sin romper los objetos que la usan y migrar los antiguos campos `customImageBase64`. La biblioteca se introdujo en schema 5 y limita el proyecto a 24 MB.
 
 La interfaz ofrece tres entradas:
 
@@ -189,3 +189,11 @@ El editor de imagen se ejecuta localmente en el navegador, sin subir archivos ni
 También se añadió **Suelo** como bloque sólido, escalable en ambos ejes y visualmente distinto de una plataforma atravesable. Sirve para sostener el nivel y evitar que toda la composición parezca flotar.
 
 Validación enfocada: **53/53 pruebas EditMode** de `CreaJuego.Web.Tests`, además de comprobación sintáctica del plugin JavaScript. No se generó build en este bloque.
+
+## Selección de tipo de juego
+
+El botón **Nuevo** abre un selector de tipo de juego en lugar de borrar inmediatamente el trabajo actual. El catálogo de tipos pertenece al pack runtime y cada opción declara identificador estable, nombre, explicación pedagógica, ayuda y disponibilidad. El proyecto guarda `gameTypeId` desde schema 6.
+
+**Juego de plataformas** crea un nivel completamente vacío y es la única opción habilitada. **Juego de naves y disparos** aparece como siguiente posibilidad, pero permanece marcado como «Próximamente» y no modifica el proyecto actual. Antes de habilitarlo necesita su propio movimiento, cámara, proyectiles, spawning, preflight y catálogo; mostrarlo de esta forma valida la navegación sin prometer una plantilla incompleta.
+
+Los tipos se declaran en `RuntimeContentPack.gameTypes`; si el pack aún no define la lista, se usan los descriptores base. Validación acumulada: **54/54 pruebas EditMode** de `CreaJuego.Web.Tests`.
