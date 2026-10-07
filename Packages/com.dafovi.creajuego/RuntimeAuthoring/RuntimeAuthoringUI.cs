@@ -119,7 +119,8 @@ namespace CreaJuego.Web
             {
                 var definition=defs[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,-row*58),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,52),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
             }
-            ResizeContent(catalog,Mathf.CeilToInt(defs.Length/2f)*58);
+            int catalogRows=Mathf.CeilToInt(defs.Length/2f);var mediaButton=ButtonAt(catalog,"Añadir imágenes",new Vector2(0,-catalogRows*58),c.PickImages,new Vector2(226,44),null,Selected,TextColor,12);mediaButton.name="Abrir biblioteca de imágenes";
+            ResizeContent(catalog,catalogRows*58+50);
             int itemRow=0;foreach(var data in c.Project.objects)
             {
                 var captured=data;var definition=c.Find(data.definitionId);bool selected=data.instanceId==c.SelectedId();var button=ButtonAt(list,definition!=null?definition.displayName:data.definitionId,new Vector2(0,itemRow++*-35),()=>Select(captured.instanceId),new Vector2(230,33),Preview(data,definition),selected?Selected:Panel,TextColor,13);button.gameObject.AddComponent<RuntimeItemRow>().instanceId=data.instanceId;
@@ -152,6 +153,7 @@ namespace CreaJuego.Web
         void EmptyProperties(ref int y)
         {
             var card=PanelRect("Ayuda de selección",properties,new Vector2(4,-y),new Vector2(248,112),Soft,true);Label(card,"Selecciona un elemento",17,new Vector2(14,66),new Vector2(220,30),TextColor,FontStyle.Bold);Label(card,"Elige algo de Mi juego o haz clic en el nivel para cambiar sus propiedades.",13,new Vector2(14,12),new Vector2(220,56),Muted);y+=124;
+            MediaLibrary(null,ref y);
         }
         void SelectionHeader(GameItem item,RuntimeItemData data,ref int y)
         {
@@ -197,10 +199,27 @@ namespace CreaJuego.Web
             else
             {
                 if(category.options.Count>8)Search(data,ref y);
-                var options=c.contentPack.OptionsFor(kind,appearanceSearch,data.definitionId);foreach(var option in options.Take(24)){var captured=option;bool selected=data.appearanceId==option.id&&string.IsNullOrEmpty(data.customImageBase64);ButtonAt(properties,option.displayName,new Vector2(6,-y),()=>c.SetAppearance(captured.id),new Vector2(238,46),option.Preview,selected?Selected:Soft,TextColor,13);y+=51;}
+                var options=c.contentPack.OptionsFor(kind,appearanceSearch,data.definitionId);foreach(var option in options.Take(24)){var captured=option;bool selected=data.appearanceId==option.id&&string.IsNullOrEmpty(data.mediaAssetId)&&string.IsNullOrEmpty(data.customImageBase64);ButtonAt(properties,option.displayName,new Vector2(6,-y),()=>c.SetAppearance(captured.id),new Vector2(238,46),option.Preview,selected?Selected:Soft,TextColor,13);y+=51;}
                 if(options.Length>24){Label(properties,"Refina la búsqueda para ver más opciones.",12,new Vector2(6,-y),new Vector2(238,34),Muted);y+=38;}
             }
-            var custom=ButtonAt(properties,"Elegir imagen…",new Vector2(6,-y),c.PickImage,new Vector2(238,40),null,!string.IsNullOrEmpty(data.customImageBase64)?Selected:Soft,TextColor,13);y+=46;Label(properties,"PNG o JPG · máximo 2 MB y 2048 × 2048",11,new Vector2(6,-y),new Vector2(238,30),Muted);y+=34;
+            MediaLibrary(data,ref y);
+        }
+        void MediaLibrary(RuntimeItemData data,ref int y)
+        {
+            Group("MI BIBLIOTECA",ref y);
+            ButtonAt(properties,"Añadir varias imágenes…",new Vector2(6,-y),c.PickImages,new Vector2(238,38),null,Selected,TextColor,12);y+=43;
+            ButtonAt(properties,"Añadir y recortar…",new Vector2(6,-y),c.PickImage,new Vector2(116,38),null,Soft,TextColor,12);
+            ButtonAt(properties,"Tomar foto…",new Vector2(128,-y),c.CaptureImage,new Vector2(116,38),null,Soft,TextColor,12);y+=43;
+            Label(properties,data==null?"Después podrás aplicar cada imagen a un elemento.":"La imagen nueva se aplicará al elemento elegido.",11,new Vector2(6,-y),new Vector2(238,32),Muted);y+=36;
+            if(c.Project.mediaAssets.Count==0){Label(properties,"Las imágenes que añadas aparecerán aquí para reutilizarlas.",12,new Vector2(6,-y),new Vector2(238,48),Muted);y+=54;return;}
+            foreach(var media in c.Project.mediaAssets.Where(value=>value!=null).Take(24))
+            {
+                var captured=media;bool selected=data!=null&&data.mediaAssetId==media.id;UnityEngine.Events.UnityAction action=data!=null?()=>c.SetMediaAsset(captured.id):()=>SetStatus("Selecciona un elemento para usar esta imagen.");
+                ButtonAt(properties,media.displayName,new Vector2(6,-y),action,new Vector2(140,46),c.MediaPreview(media.id),selected?Selected:Soft,TextColor,12);
+                ButtonAt(properties,"Editar",new Vector2(151,-y),()=>c.EditMediaAsset(captured.id),new Vector2(55,46),null,Soft,TextColor,10);
+                ButtonAt(properties,"×",new Vector2(211,-y),()=>c.DeleteMediaAsset(captured.id),new Vector2(33,46),null,Danger,DangerText,17);y+=51;
+            }
+            if(c.Project.mediaAssets.Count>24){Label(properties,"Se muestran las primeras 24 imágenes.",12,new Vector2(6,-y),new Vector2(238,30),Muted);y+=34;}
         }
         void Search(RuntimeItemData data,ref int y)
         {

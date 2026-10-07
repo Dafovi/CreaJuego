@@ -67,16 +67,20 @@ Opciones preparadas:
 
 Propiedades muestra thumbnail y nombre. Cambiar opción afecta sólo a `ItemVisual`, conserva gameplay, persiste `appearanceId` y participa en Undo/Redo. Decoración usa scroll y búsqueda; la vista limita resultados visibles para no crear decenas de botones gigantes.
 
-`Elegir imagen…` está integrado en el mismo bloque. El bridge Web acepta únicamente PNG/JPG de hasta 2 MB y 2048 × 2048. JavaScript valida extensión, MIME, bytes y dimensiones antes de enviar; C# vuelve a validar cabecera, tamaño y dimensiones antes de crear `Texture2D`.
+`Mi biblioteca` está integrada en Propiedades y permite importar varios PNG/JPG en una sola selección. El navegador reduce cada original a un máximo preferido de 1024 px y 2 MB antes de enviarlo; C# vuelve a validar cabecera, bytes y dimensiones antes de crear `Texture2D`. El proyecto admite hasta 24 MB de medios compartidos.
+
+Desde `schemaVersion` 5 cada imagen se almacena una sola vez en `mediaAssets`; los objetos guardan `mediaAssetId`. Al abrir un proyecto anterior, `ProjectSerializer` migra y deduplica automáticamente los antiguos `customImageBase64`.
 
 ## Schema y migración
 
-`CreaJuegoProjectData.schemaVersion` actual es 2. Añade:
+`CreaJuegoProjectData.schemaVersion` actual es 5. Incluye:
 
 - `platformWidth`;
 - `alignAutomatically`;
 - `levelSize` y bounds;
-- `appearanceId` y custom image existentes.
+- `appearanceId`;
+- `mediaAssets` compartidos y `mediaAssetId` por objeto;
+- `customImageBase64` únicamente como campo de migración.
 
 `ProjectSerializer` detecta JSON v1 sin `schemaVersion`, aplica ancho 3, snap activado y límites medianos, y conserva objetos/metadata. Rechaza versiones futuras con un mensaje explícito.
 
@@ -169,3 +173,19 @@ Piloto técnico en los equipos LabCo: navegador visible, sesión de 60 minutos, 
 ## Hotfix posterior
 
 Las regresiones de lista, Propiedades, selección y rueda detectadas en revisión humana se corrigieron y validaron en [CreaJuego-WebGL-Regression-Fix.md](CreaJuego-WebGL-Regression-Fix.md).
+
+## Biblioteca de medios y suelo — preparación posterior al primer taller
+
+La autoría runtime guarda ahora una biblioteca compartida en el proyecto (`mediaAssets`) y cada objeto conserva únicamente un `mediaAssetId`. Esto permite importar varias imágenes una sola vez, reutilizarlas, sustituir una imagen sin romper los objetos que la usan y migrar los antiguos campos `customImageBase64`. El proyecto usa schema 5 y limita la biblioteca a 24 MB.
+
+La interfaz ofrece tres entradas:
+
+- **Añadir varias imágenes**, para cargar rápidamente un lote desde el computador;
+- **Añadir y recortar**, para encuadrar, girar y aplicar un color antes de guardar;
+- **Tomar foto**, para usar la cámara del dispositivo y pasar la captura por el mismo editor.
+
+El editor de imagen se ejecuta localmente en el navegador, sin subir archivos ni depender de una conexión externa. La cámara requiere un origen seguro (HTTPS o localhost) y permiso del navegador. La eliminación automática de fondo y los recortes por silueta quedan fuera de este bloque: necesitan una evaluación separada de rendimiento, privacidad y funcionamiento sin conexión.
+
+También se añadió **Suelo** como bloque sólido, escalable en ambos ejes y visualmente distinto de una plataforma atravesable. Sirve para sostener el nivel y evitar que toda la composición parezca flotar.
+
+Validación enfocada: **53/53 pruebas EditMode** de `CreaJuego.Web.Tests`, además de comprobación sintáctica del plugin JavaScript. No se generó build en este bloque.

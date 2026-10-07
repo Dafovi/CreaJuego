@@ -133,7 +133,7 @@ namespace CreaJuego.Web.Tests
             var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.First(o=>o.definitionId=="enemigo");var enemyId=enemy.instanceId;
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(4));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
+            Assert.That(migrated.schemaVersion,Is.EqualTo(5));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
@@ -229,11 +229,11 @@ namespace CreaJuego.Web.Tests
         {
             var c=Open();var ui=c.GetComponent<RuntimeAuthoringUI>();ui.PrepareEditableLayout();c.LoadStarterLevel(false);ui.Refresh();
             var background=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.Background);var item=c.Selection.Select(background.instanceId);ui.Refresh();
-            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("APARIENCIA").And.Contain("Elegir imagen"));
+            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("APARIENCIA").And.Contain("MI BIBLIOTECA").And.Contain("Añadir varias imágenes"));
             Assert.That(ui.VisibleSelectionIcon,Is.SameAs(item.SelectedAppearance.sprite));
             c.DeleteSelected();Assert.That(c.Project.objects.Any(o=>c.Find(o.definitionId)?.kind==ItemKind.Background),Is.False);
             var recreated=c.Create("fondo",Vector3.zero);Assert.That(recreated,Is.Not.Null);ui.Refresh();
-            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("Elegir imagen"));Assert.That(ui.VisibleSelectionIcon,Is.Not.Null);
+            Assert.That(ui.VisiblePropertiesText,Does.Contain("FONDO").And.Contain("Añadir varias imágenes"));Assert.That(ui.VisibleSelectionIcon,Is.Not.Null);
         }
 
         [Test]

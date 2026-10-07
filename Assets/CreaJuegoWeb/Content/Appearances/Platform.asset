@@ -111,6 +111,38 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
     flipX: 0
     preserveAspectWithoutPrefab: 0
+  - id: creajuego-soil-light
+    definitionIds:
+    - suelo
+    displayName: Terreno de piedra
+    sprite: {fileID: 21300000, guid: 1524ac31150677c41bea6b7f6b521e6d, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
+  - id: creajuego-soil-dark
+    definitionIds:
+    - suelo
+    displayName: Terreno oscuro
+    sprite: {fileID: 21300000, guid: bdc65afd51718cb46ab0d3252bdd5403, type: 3}
+    prefab: {fileID: 0}
+    controller: {fileID: 0}
+    animationProfile: {fileID: 0}
+    idleClip: {fileID: 0}
+    moveClip: {fileID: 0}
+    jumpClip: {fileID: 0}
+    attackClip: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    flipX: 0
+    preserveAspectWithoutPrefab: 0
   - id: creajuego-ramp
     definitionIds:
     - rampa
@@ -146,6 +178,7 @@ MonoBehaviour:
   - id: workshop-grass-wall
     definitionIds:
     - muro
+    - suelo
     displayName: Tierra profunda
     sprite: {fileID: 21300000, guid: 0a8d94987ebb3f14b89adf1bb78218c8, type: 3}
     prefab: {fileID: 0}

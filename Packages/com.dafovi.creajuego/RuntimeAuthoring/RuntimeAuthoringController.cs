@@ -25,7 +25,9 @@ namespace CreaJuego.Web
         public GameItem PlayPlayer=>playPlayer;
         public event Action ProjectChanged;
         readonly List<UnityEngine.Object> imageAssets=new List<UnityEngine.Object>();
+        readonly Dictionary<string,Sprite> mediaSprites=new Dictionary<string,Sprite>();
         Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage,recoveryStorage;bool dirty;float saveAt;
+        string pendingImageTarget,editingMediaId;MediaAssetSource pendingMediaSource;bool importChanged,importedAppliedToTarget,updatedMediaAsset;int importedImageCount;
 
         void Awake()
         {
@@ -45,10 +47,11 @@ namespace CreaJuego.Web
         public CreaJuegoProjectData ReadEditableSceneProject()
         {
             if(editableSceneProject==null||buildRoot==null)return null;var markers=buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true);if(markers.Length==0)return null;
-            var data=CloneProject(editableSceneProject);data.objects.Clear();
+            var data=CloneProject(editableSceneProject);var previousItems=data.objects.Where(value=>value!=null&&!string.IsNullOrEmpty(value.instanceId)).ToDictionary(value=>value.instanceId);data.objects.Clear();
             foreach(var marker in markers)
             {
                 var item=marker.GetComponent<GameItem>();if(item==null||item.definition==null)continue;var authored=RuntimeItemData.From(item,item.definition.id);authored.instanceId=marker.instanceId;
+                if(previousItems.TryGetValue(marker.instanceId,out var previous)){authored.mediaAssetId=previous.mediaAssetId;authored.customImageBase64=previous.customImageBase64;}
                 if(item.definition.kind==ItemKind.Platform){var box=item.GetComponent<BoxCollider2D>();if(box!=null)authored.platformWidth=box.size.x;}
                 data.objects.Add(authored);
             }
@@ -177,7 +180,16 @@ namespace CreaJuego.Web
         }        public void SetMessage(string value){var data=SelectedData();if(data==null)return;data.message=value;ApplySelected(data);CommitEdit();}
         public void SetAppearance(string id)
         {
-            var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
+            var data=SelectedData();if(data==null)return;data.appearanceId=id??"";data.mediaAssetId=null;data.customImageBase64=null;data.appearanceChosen=true;ApplySelected(data);CommitEdit();
+        }
+        public void SetMediaAsset(string id)
+        {
+            var data=SelectedData();if(data==null||Project.mediaAssets.All(asset=>asset==null||asset.id!=id))return;data.mediaAssetId=id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
+        }
+        public void DeleteMediaAsset(string id)
+        {
+            if(string.IsNullOrEmpty(id))return;if(Project.objects.Any(item=>item.mediaAssetId==id)){ui?.SetStatus("Esta imagen está en uso. Cambia la apariencia de esos elementos antes de eliminarla.");return;}
+            if(Project.mediaAssets.RemoveAll(asset=>asset!=null&&asset.id==id)==0)return;History.Record(Project);Rebuild(SelectedId());Changed();ui?.SetStatus("Imagen eliminada de Mi biblioteca.");
         }
         public void SetSnap(bool value)
         {
@@ -254,11 +266,67 @@ namespace CreaJuego.Web
             void Wall(string name,Vector2 position,Vector2 size){var go=new GameObject(name,typeof(BoxCollider2D),typeof(RuntimeLevelBoundary));go.transform.SetParent(parent,false);go.transform.position=position;go.GetComponent<BoxCollider2D>().size=size;}
             var height=bounds.top-bounds.bottom;var width=bounds.right-bounds.left;Wall("Límite izquierdo",new Vector2(bounds.left-.25f,(bounds.top+bounds.bottom)*.5f),new Vector2(.5f,height));Wall("Límite derecho",new Vector2(bounds.right+.25f,(bounds.top+bounds.bottom)*.5f),new Vector2(.5f,height));Wall("Límite superior",new Vector2((bounds.left+bounds.right)*.5f,bounds.top+.25f),new Vector2(width,.5f));
         }
-        public void PickImage(){if(SelectedData()==null)return;if(!RuntimeImageImport.Pick(gameObject.name))ui?.SetStatus("La selección de archivos se prueba dentro de la build WebGL.");}
+        public void PickImage()=>BeginImageEditor("file",SelectedId());
+        public void CaptureImage()=>BeginImageEditor("camera",SelectedId(),null,MediaAssetSource.Camera);
+        public void EditMediaAsset(string id)
+        {
+            var asset=FindMedia(id);if(asset==null)return;BeginImageEditor("edit",null,id,asset.source,asset.displayName,asset.dataUrl);
+        }
+        public void PickImages()=>BeginImageImport(null);
+        void BeginImageImport(string targetId)
+        {
+            ResetImageImport(targetId);pendingMediaSource=MediaAssetSource.File;
+            if(!RuntimeImageImport.PickMany(gameObject.name))ui?.SetStatus("La selección múltiple de imágenes se prueba dentro de la build WebGL.");
+        }
+        void BeginImageEditor(string mode,string targetId,string mediaId=null,MediaAssetSource source=MediaAssetSource.File,string imageName=null,string dataUrl=null)
+        {
+            ResetImageImport(targetId);editingMediaId=mediaId;pendingMediaSource=source;
+            if(!RuntimeImageImport.OpenEditor(gameObject.name,mode,imageName,dataUrl))ui?.SetStatus("El recorte de imágenes y la cámara se prueban dentro de la versión web.");
+        }
+        void ResetImageImport(string targetId)
+        {
+            pendingImageTarget=targetId;editingMediaId=null;importChanged=false;importedAppliedToTarget=false;updatedMediaAsset=false;importedImageCount=0;
+        }
         public void ReceiveImageError(string message)=>ui?.SetStatus(string.IsNullOrWhiteSpace(message)?RuntimeImageImport.TooLargeMessage:message);
         public void ReceiveImageDataUrl(string value)
         {
-            var data=SelectedData();if(data==null)return;if(!RuntimeImageImport.ValidateDataUrl(value,out var error)){ui?.SetStatus(error);return;}data.customImageBase64=value;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
+            ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Mi imagen",dataUrl=value}));ReceiveImageBatchComplete("1");
+        }
+        public void ReceiveImageImport(string json)
+        {
+            RuntimeImageImportPayload payload;try{payload=JsonUtility.FromJson<RuntimeImageImportPayload>(json);}catch{ui?.SetStatus("No se pudo leer esta imagen.");return;}
+            if(payload==null){ui?.SetStatus("No se pudo leer esta imagen.");return;}if(!RuntimeImageImport.ValidateDataUrl(payload.dataUrl,out var error)){ui?.SetStatus(error??"No se pudo leer esta imagen.");return;}
+            MediaAssetData asset=null;
+            if(!string.IsNullOrEmpty(editingMediaId))
+            {
+                asset=FindMedia(editingMediaId);if(asset==null){ui?.SetStatus("Esta imagen ya no está en Mi biblioteca.");return;}
+                var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl))-RuntimeImageImport.DataBytes(asset.dataUrl);
+                if(total+RuntimeImageImport.DataBytes(payload.dataUrl)>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
+                asset.dataUrl=payload.dataUrl;if(!string.IsNullOrWhiteSpace(payload.name))asset.displayName=payload.name;asset.source=pendingMediaSource;importChanged=true;updatedMediaAsset=true;
+            }
+            else
+            {
+                asset=Project.mediaAssets.FirstOrDefault(value=>value!=null&&value.dataUrl==payload.dataUrl);
+                if(asset==null)
+                {
+                    var total=Project.mediaAssets.Where(value=>value!=null).Sum(value=>(long)RuntimeImageImport.DataBytes(value.dataUrl));if(total+RuntimeImageImport.DataBytes(payload.dataUrl)>RuntimeImageImport.MaxProjectBytes){ui?.SetStatus("Mi biblioteca llegó a su límite de 24 MB. Usa imágenes más pequeñas o elimina algunas.");return;}
+                    asset=MediaAssetData.Create(payload.name,payload.dataUrl,pendingMediaSource);Project.mediaAssets.Add(asset);importChanged=true;importedImageCount++;
+                }
+            }
+            if(!string.IsNullOrEmpty(pendingImageTarget)&&!importedAppliedToTarget)
+            {
+                var data=Project.objects.FirstOrDefault(value=>value.instanceId==pendingImageTarget);if(data!=null){data.mediaAssetId=asset.id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;importChanged=true;importedAppliedToTarget=true;}
+            }
+        }
+        public void ReceiveImageBatchComplete(string ignored)
+        {
+            if(importChanged){History.Record(Project);Rebuild(pendingImageTarget);Changed();ui?.SetStatus(updatedMediaAsset?"Imagen actualizada en Mi biblioteca.":importedImageCount==0?"Imagen aplicada desde Mi biblioteca.":importedImageCount==1?"Imagen añadida a Mi biblioteca.":importedImageCount+" imágenes añadidas a Mi biblioteca.");}
+            ResetImageImport(null);
+        }
+        public MediaAssetData FindMedia(string id)=>string.IsNullOrEmpty(id)?null:Project.mediaAssets.FirstOrDefault(asset=>asset!=null&&asset.id==id);
+        public Sprite MediaPreview(string id)
+        {
+            if(string.IsNullOrEmpty(id))return null;if(mediaSprites.TryGetValue(id,out var existing)&&existing!=null)return existing;var asset=FindMedia(id);if(asset==null||!RuntimeImageImport.TryDecodeDataUrl(asset.dataUrl,out var sprite,out var texture,out _))return null;imageAssets.Add(sprite);imageAssets.Add(texture);mediaSprites[id]=sprite;return sprite;
         }
         public void ToggleMode(){if(Mode==AuthoringMode.Build)EnterPlay();else ExitPlay();}
 
@@ -279,7 +347,7 @@ namespace CreaJuego.Web
         void ApplyData(GameItem item,RuntimeItemData data)
         {
             EnsureDefaultAppearance(data,item.definition);data.Apply(item);item.appearanceCategory=contentPack!=null?contentPack.CategoryFor(item.definition.kind):null;
-            item.customSprite=null;if(!string.IsNullOrEmpty(data.customImageBase64)&&RuntimeImageImport.TryDecodeDataUrl(data.customImageBase64,out var sprite,out var texture,out _)){imageAssets.Add(sprite);imageAssets.Add(texture);item.customSprite=sprite;}
+            item.customSprite=null;var shared=MediaPreview(data.mediaAssetId);if(shared!=null)item.customSprite=shared;else if(!string.IsNullOrEmpty(data.customImageBase64)&&RuntimeImageImport.TryDecodeDataUrl(data.customImageBase64,out var sprite,out var texture,out _)){imageAssets.Add(sprite);imageAssets.Add(texture);item.customSprite=sprite;}
             var visual=EnsureVisual(item);if(visual!=null)visual.Apply();if(item.definition.kind==ItemKind.Platform)RuntimePlatformGeometry.Apply(item,data.platformWidth);item.GetComponent<RuntimeCanvasBackground>()?.Refresh();foreach(var backend in item.GetComponents<MonoBehaviour>().OfType<IItemBackend>())backend.ApplyConfiguration();
         }
         static ItemVisual EnsureVisual(GameItem item)
@@ -296,8 +364,8 @@ namespace CreaJuego.Web
         }
         void EnsureDefaultAppearance(RuntimeItemData data,GameItemDefinition definition)
         {
-            if(data==null||definition==null||data.appearanceChosen||!string.IsNullOrEmpty(data.customImageBase64)||contentPack==null)return;
-            if(string.IsNullOrEmpty(data.appearanceId)){var preferred=definition.id=="plataforma"?"platformer-stone-tile":definition.id=="muro"?"creajuego-wall-light":definition.id=="rampa"?"creajuego-ramp":null;if(preferred!=null&&contentPack.CategoryFor(definition.kind)?.Find(preferred)!=null){data.appearanceId=preferred;return;}}
+            if(data==null||definition==null||data.appearanceChosen||!string.IsNullOrEmpty(data.mediaAssetId)||!string.IsNullOrEmpty(data.customImageBase64)||contentPack==null)return;
+            if(string.IsNullOrEmpty(data.appearanceId)){var preferred=definition.id=="plataforma"?"platformer-stone-tile":definition.id=="suelo"?"creajuego-soil-light":definition.id=="muro"?"creajuego-wall-light":definition.id=="rampa"?"creajuego-ramp":null;if(preferred!=null&&contentPack.CategoryFor(definition.kind)?.Find(preferred)!=null){data.appearanceId=preferred;return;}}
             bool missing=string.IsNullOrEmpty(data.appearanceId);
             bool formerPlayerDefault=definition.kind==ItemKind.Player&&data.appearanceId=="tiny-dungeon-84";
             bool formerEnemyDefault=definition.kind==ItemKind.Enemy&&data.appearanceId=="tiny-dungeon-120";
@@ -315,7 +383,7 @@ namespace CreaJuego.Web
         public RuntimeItemData SelectedData(){var id=SelectedId();return id==null?null:Project.objects.FirstOrDefault(o=>o.instanceId==id);}
         void Changed(bool notify=true){MarkDirty();if(notify)ProjectChanged?.Invoke();ui?.Refresh();}
         void MarkDirty(){dirty=true;saveAt=Time.unscaledTime+1;ui?.SetSaveState("Guardando…");}
-        void ReleaseImages(){foreach(var value in imageAssets)if(value!=null)DestroySafe(value);imageAssets.Clear();}
+        void ReleaseImages(){foreach(var value in imageAssets)if(value!=null)DestroySafe(value);imageAssets.Clear();mediaSprites.Clear();}
         static void DestroySafe(UnityEngine.Object value){if(Application.isPlaying)Destroy(value);else DestroyImmediate(value);}
         void OnApplicationQuit(){if(dirty)SaveRecovery();}
     }

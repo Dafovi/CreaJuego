@@ -127,6 +127,8 @@ namespace CreaJuego.Web.Editor
                 AddPrepared(target,new AppearanceOption{id="platformer-stone-tile",displayName="Bloques de piedra",sprite=LoadTiledSprite("Assets/PlatformerTileset/TileSet/SprTiles.png","Sprites 1_0"),scale=Vector2.one,definitionIds=new[]{"plataforma"}});
                 AddPrepared(target,new AppearanceOption{id="creajuego-wall-light",displayName="Muro de piedra",sprite=EnsureWallSprite("WallSurface.png",new Color(.25f,.31f,.38f),new Color(.48f,.57f,.64f)),scale=Vector2.one,definitionIds=new[]{"muro"}});
                 AddPrepared(target,new AppearanceOption{id="creajuego-wall-dark",displayName="Muro oscuro",sprite=EnsureWallSprite("WallSurfaceDark.png",new Color(.12f,.15f,.2f),new Color(.3f,.38f,.46f)),scale=Vector2.one,definitionIds=new[]{"muro"}});
+                AddPrepared(target,new AppearanceOption{id="creajuego-soil-light",displayName="Terreno de piedra",sprite=EnsureWallSprite("WallSurface.png",new Color(.25f,.31f,.38f),new Color(.48f,.57f,.64f)),scale=Vector2.one,definitionIds=new[]{"suelo"}});
+                AddPrepared(target,new AppearanceOption{id="creajuego-soil-dark",displayName="Terreno oscuro",sprite=EnsureWallSprite("WallSurfaceDark.png",new Color(.12f,.15f,.2f),new Color(.3f,.38f,.46f)),scale=Vector2.one,definitionIds=new[]{"suelo"}});
                 AddPrepared(target,new AppearanceOption{id="creajuego-ramp",displayName="Rampa de madera",sprite=EnsureRampSprite(),scale=Vector2.one,definitionIds=new[]{"rampa"}});
             }
             if(kind==ItemKind.Goal)
@@ -146,7 +148,7 @@ namespace CreaJuego.Web.Editor
                 case ItemKind.Background:AddPrepared(target,Option("workshop-forest-background","Valle del castillo","Fondo.png","ForestBackground.png",Vector2.one,true,null,1024,false));break;
                 case ItemKind.Platform:
                     AddPrepared(target,Option("workshop-grass-platform","Tierra con césped","Plataforma.png","GrassPlatform.png",Vector2.one,false,new[]{"plataforma"}));
-                    AddPrepared(target,new AppearanceOption{id="workshop-grass-wall",displayName="Tierra profunda",sprite=PrepareWorkshopSquareTile("Muro.png","GrassWall.png"),scale=Vector2.one,preserveAspectWithoutPrefab=false,definitionIds=new[]{"muro"}});
+                    AddPrepared(target,new AppearanceOption{id="workshop-grass-wall",displayName="Tierra profunda",sprite=PrepareWorkshopSquareTile("Muro.png","GrassWall.png"),scale=Vector2.one,preserveAspectWithoutPrefab=false,definitionIds=new[]{"muro","suelo"}});
                     AddPrepared(target,Option("workshop-grass-ramp","Pendiente con césped","Rampa.png","GrassRamp.png",Vector2.one,false,new[]{"rampa"}));
                     break;
                 case ItemKind.MovingPlatform:AddPrepared(target,Option("workshop-grass-moving","Plataforma flotante","Plataforma movil.png","GrassMovingPlatform.png",Vector2.one,false));break;
@@ -164,6 +166,7 @@ namespace CreaJuego.Web.Editor
             var wall=EnsureWallSprite("WallSurface.png",new Color(.25f,.31f,.38f),new Color(.48f,.57f,.64f));
             var ramp=EnsureRampSprite();
             return new[]{
+                PrepareStructure(platform,"suelo","Suelo","Una base sólida para apoyar el recorrido y evitar plataformas flotantes.",0,23,wall!=null?wall:platform.icon),
                 PrepareStructure(platform,"muro","Muro","Una pared firme que limita o divide el recorrido.",90,24,wall!=null?wall:platform.icon),
                 PrepareStructure(platform,"rampa","Rampa","Una superficie inclinada para subir o bajar.",18,25,ramp!=null?ramp:platform.icon)
             };
@@ -183,7 +186,7 @@ namespace CreaJuego.Web.Editor
                 PrefabUtility.SaveAsPrefabAsset(contents,prefabPath);
             }
             finally{PrefabUtility.UnloadPrefabContents(contents);}
-            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint="Puedes cambiar su ancho, alto y dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
+            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{id}.asset");EditorUtility.CopySerialized(source,target);target.name=id;target.id=id;target.displayName=name;target.description=description;target.learningHint=id=="suelo"?"Hazlo ancho y alto para construir una base sólida bajo tu nivel.":"Puedes cambiar su ancho, alto y dirección desde Propiedades.";target.icon=icon;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);target.order=order;target.allowMultiple=true;EditorUtility.SetDirty(target);return target;
         }
         static void ConfigureOneWaySurface(GameObject platform)
         {

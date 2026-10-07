@@ -21,13 +21,17 @@ namespace CreaJuego.Web.Tests
         {
             var data=controller.Project.objects.First(o=>o.definitionId==id);var marker=UnityEngine.Object.FindObjectsByType<RuntimeAuthoredItem>(FindObjectsInactive.Exclude).First(m=>m.instanceId==data.instanceId);controller.Selection.Select(marker.gameObject);return marker;
         }
+        static string Image(Color color)
+        {
+            var texture=new Texture2D(2,2,TextureFormat.RGBA32,false);texture.SetPixels(new[]{color,color,color,color});texture.Apply();var data="data:image/png;base64,"+Convert.ToBase64String(texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);return data;
+        }
         [Test] public void SafePrefabCreatesDataWithExplicitDefinition(){var c=Open();var def=c.Find("jugador");Assert.That(def.prefab.GetComponent<GameItem>().definition,Is.Null);var data=RuntimeItemData.From(def.prefab.GetComponent<GameItem>(),def.id);Assert.That(data.definitionId,Is.EqualTo("jugador"));}
         [Test] public void CurrentSchemaRoundTripPreservesWidthSnapBoundsAndAppearance()
         {
             var data=new CreaJuegoProjectData{alignAutomatically=false,levelSize=RuntimeLevelSize.Large,bounds=RuntimeLevelBounds.For(RuntimeLevelSize.Large)};data.objects.Add(new RuntimeItemData{definitionId="plataforma",platformWidth=8.25f,appearanceId="stone"});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));
-            Assert.That(restored.schemaVersion,Is.EqualTo(4));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(100));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
+            Assert.That(restored.schemaVersion,Is.EqualTo(5));Assert.That(restored.alignAutomatically,Is.False);Assert.That(restored.bounds.right,Is.EqualTo(100));Assert.That(restored.objects[0].platformWidth,Is.EqualTo(8.25f));Assert.That(restored.objects[0].appearanceId,Is.EqualTo("stone"));
         }
-        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(4));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
+        [Test] public void SpikeV1JsonMigratesWithoutSilentLoss(){var restored=ProjectSerializer.FromJson("{\"version\":1,\"projectName\":\"Anterior\",\"objects\":[{\"definitionId\":\"plataforma\"}]}");Assert.That(restored.schemaVersion,Is.EqualTo(5));Assert.That(restored.alignAutomatically,Is.True);Assert.That(restored.bounds.IsValid);Assert.That(restored.objects[0].platformWidth,Is.EqualTo(3));}
         [Test] public void PlatformWidthChangesVisualColliderPersistsAndUndoRedo()
         {
             var c=Open();var marker=Select(c,"plataforma");var data=c.SelectedData();float original=data.platformWidth;float height=marker.GetComponent<BoxCollider2D>().size.y;c.ResizeSelected(8,data.position.x,true);
@@ -56,6 +60,21 @@ namespace CreaJuego.Web.Tests
         {
             const string onePixel="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nWQAAAAASUVORK5CYII=";Assert.That(RuntimeImageImport.ValidateDataUrl(onePixel,out _),Is.True);
             var bytes=new byte[24];bytes[0]=137;bytes[1]=80;bytes[2]=78;bytes[3]=71;bytes[16]=0;bytes[17]=0;bytes[18]=16;bytes[19]=0;bytes[20]=0;bytes[21]=0;bytes[22]=0;bytes[23]=1;var huge="data:image/png;base64,"+Convert.ToBase64String(bytes);Assert.That(RuntimeImageImport.ValidateDataUrl(huge,out var error),Is.False);Assert.That(error,Does.Contain("demasiado grande"));
+        }
+        [Test] public void ImportedImageEntersLibraryAppliesToSelectionAndPersists()
+        {
+            var texture=new Texture2D(2,2,TextureFormat.RGBA32,false);texture.SetPixels(new[]{Color.red,Color.green,Color.blue,Color.white});texture.Apply();var image="data:image/png;base64,"+Convert.ToBase64String(texture.EncodeToPNG());UnityEngine.Object.DestroyImmediate(texture);
+            var c=Open();Select(c,"jugador");var selectedId=c.SelectedData().instanceId;c.PickImage();c.ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Héroe dibujado",dataUrl=image}));c.ReceiveImageBatchComplete("1");
+            Assert.That(c.Project.mediaAssets.Count,Is.EqualTo(1));Assert.That(c.Project.mediaAssets[0].displayName,Is.EqualTo("Héroe dibujado"));Assert.That(c.Project.objects.Single(item=>item.instanceId==selectedId).mediaAssetId,Is.EqualTo(c.Project.mediaAssets[0].id));Assert.That(c.Selection.SelectedItem.customSprite,Is.Not.Null);
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Single(item=>item.instanceId==selectedId).mediaAssetId,Is.EqualTo(restored.mediaAssets[0].id));
+        }
+        [Test] public void CameraImageCanBeEditedWithoutBreakingSharedReferences()
+        {
+            var original=Image(Color.red);var edited=Image(Color.cyan);var c=Open();Select(c,"jugador");c.CaptureImage();c.ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Dibujo fotografiado",dataUrl=original}));c.ReceiveImageBatchComplete("1");
+            var media=c.Project.mediaAssets.Single();var id=media.id;var enemy=c.Project.objects.First(item=>item.definitionId=="enemigo");enemy.mediaAssetId=id;c.Rebuild();
+            c.EditMediaAsset(id);c.ReceiveImageImport(JsonUtility.ToJson(new RuntimeImageImportPayload{name="Dibujo recortado",dataUrl=edited}));c.ReceiveImageBatchComplete("1");
+            Assert.That(c.Project.mediaAssets.Count,Is.EqualTo(1));Assert.That(media.id,Is.EqualTo(id));Assert.That(media.displayName,Is.EqualTo("Dibujo recortado"));Assert.That(media.dataUrl,Is.EqualTo(edited));Assert.That(media.source,Is.EqualTo(MediaAssetSource.Camera));Assert.That(c.Project.objects.Count(item=>item.mediaAssetId==id),Is.EqualTo(2));
+            var users=c.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.customSprite!=null&&c.Project.objects.Any(data=>data.instanceId==item.GetComponent<RuntimeAuthoredItem>()?.instanceId&&data.mediaAssetId==id)).ToArray();Assert.That(users.Length,Is.EqualTo(2));Assert.That(users[0].customSprite,Is.SameAs(users[1].customSprite));
         }
         [Test] public void FallRecoveryClearsVelocityAndAngularVelocity()
         {

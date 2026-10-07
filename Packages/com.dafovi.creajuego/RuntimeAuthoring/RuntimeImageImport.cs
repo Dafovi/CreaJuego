@@ -4,17 +4,34 @@ using UnityEngine;
 
 namespace CreaJuego.Web
 {
+    [Serializable]
+    public sealed class RuntimeImageImportPayload
+    {
+        public string name;
+        public string dataUrl;
+    }
+
     public static class RuntimeImageImport
     {
-        public const int MaxBytes=2*1024*1024,MaxDimension=2048;
+        public const int MaxBytes=2*1024*1024,MaxInputBytes=12*1024*1024,MaxProjectBytes=24*1024*1024,MaxDimension=2048,PreferredDimension=1024;
         public const string TooLargeMessage="Esta imagen es demasiado grande. Elige una imagen más pequeña.";
 #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")] static extern void CreaJuegoPickImage(string target,int maxBytes,int maxDimension);
+        [DllImport("__Internal")] static extern void CreaJuegoPickImages(string target,int maxInputBytes,int maxOutputBytes,int maxDimension);
+        [DllImport("__Internal")] static extern void CreaJuegoOpenImageEditor(string target,string mode,string imageName,string dataUrl,int maxInputBytes,int maxOutputBytes,int maxDimension);
 #endif
-        public static bool Pick(string receiver)
+        public static bool PickMany(string receiver)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            CreaJuegoPickImage(receiver,MaxBytes,MaxDimension);return true;
+            CreaJuegoPickImages(receiver,MaxInputBytes,MaxBytes,PreferredDimension);return true;
+#else
+            return false;
+#endif
+        }
+        public static bool Pick(string receiver)=>PickMany(receiver);
+        public static bool OpenEditor(string receiver,string mode,string imageName=null,string dataUrl=null)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            CreaJuegoOpenImageEditor(receiver,mode??"file",imageName??"Mi imagen",dataUrl??"",MaxInputBytes,MaxBytes,PreferredDimension);return true;
 #else
             return false;
 #endif
@@ -29,10 +46,14 @@ namespace CreaJuego.Web
         public static bool TryDecodeDataUrl(string dataUrl,out Sprite sprite,out Texture2D texture,out string error)
         {
             sprite=null;texture=null;if(!ValidateDataUrl(dataUrl,out error))return false;var bytes=Convert.FromBase64String(dataUrl.Substring(dataUrl.IndexOf(',')+1));texture=new Texture2D(2,2,TextureFormat.RGBA32,false);
-            if(!texture.LoadImage(bytes)){UnityEngine.Object.Destroy(texture);texture=null;error="No se pudo leer esta imagen.";return false;}
+            if(!texture.LoadImage(bytes)){if(Application.isPlaying)UnityEngine.Object.Destroy(texture);else UnityEngine.Object.DestroyImmediate(texture);texture=null;error="No se pudo leer esta imagen.";return false;}
             sprite=Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(.5f,.5f),Mathf.Max(texture.width,texture.height)/2f);return true;
         }
         public static Sprite DecodeDataUrl(string dataUrl,out Texture2D texture){return TryDecodeDataUrl(dataUrl,out var sprite,out texture,out _)?sprite:null;}
+        public static int DataBytes(string dataUrl)
+        {
+            if(string.IsNullOrEmpty(dataUrl))return 0;var comma=dataUrl.IndexOf(',');if(comma<0)return 0;var encoded=dataUrl.Length-comma-1;return Mathf.Max(0,encoded*3/4);
+        }
         static bool Dimensions(byte[] bytes,bool png,out int width,out int height)
         {
             width=height=0;if(png){if(bytes.Length<24)return false;width=ReadBig(bytes,16);height=ReadBig(bytes,20);return width>0&&height>0;}
