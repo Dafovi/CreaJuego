@@ -24,7 +24,7 @@ namespace CreaJuego
             var visual=item.GetComponent<ItemVisual>();
             return visual != null && visual.renderer != null ? visual.renderer : item.GetComponentInChildren<SpriteRenderer>(true);
         }
-        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().OfType<IVisualActionState>().FirstOrDefault(); }
+        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().Where(component=>component.isActiveAndEnabled).OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().Where(component=>component.isActiveAndEnabled).OfType<IVisualActionState>().FirstOrDefault(); }
         void OnDestroy() { if(graph.IsValid()) graph.Destroy(); }
         public void Apply()
         {

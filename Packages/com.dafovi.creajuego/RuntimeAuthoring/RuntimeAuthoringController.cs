@@ -301,7 +301,6 @@ namespace CreaJuego.Web
             {
                 var item=pair.item;var kind=item.definition.kind;
                 foreach(var behaviour in item.GetComponents<MonoBehaviour>())if(behaviour!=item&&!(behaviour is ItemVisual)&&!(behaviour is RuntimeCanvasBackground))behaviour.enabled=false;
-                foreach(var motion in item.GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().ToArray())DestroySafe((Component)motion);
                 var body=item.GetComponent<Rigidbody2D>();var collider=item.GetComponent<Collider2D>();
                 if(kind==ItemKind.Player){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var player=item.gameObject.AddComponent<RuntimeCatchPlayer>();player.Configure(session,Project.bounds);}
                 else if(kind==ItemKind.Prize||kind==ItemKind.Hazard){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var falling=item.gameObject.AddComponent<RuntimeFallingObject>();falling.Configure(session,Project.bounds);}
