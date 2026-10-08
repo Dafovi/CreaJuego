@@ -54,22 +54,26 @@ namespace CreaJuego.Web
     [RequireComponent(typeof(Rigidbody2D),typeof(Collider2D),typeof(GameItem))]
     public sealed class RuntimeFallingObject:MonoBehaviour
     {
-        Rigidbody2D body;GameItem item;RuntimeCatchSession session;RuntimeLevelBounds bounds;float spawnX,spawnY;
-        public void Configure(RuntimeCatchSession game,RuntimeLevelBounds level)
+        Rigidbody2D body;GameItem item;RuntimeCatchSession session;RuntimeLevelBounds bounds;float spawnX,spawnY,readyAt,interval;Collider2D[] colliders;Renderer[] renderers;
+        public bool Waiting{get;private set;}
+        public float SecondsBetweenFalls=>interval;
+        public void Configure(RuntimeCatchSession game,RuntimeLevelBounds level,float secondsBetweenFalls=.8f)
         {
-            session=game;bounds=level;body=GetComponent<Rigidbody2D>();item=GetComponent<GameItem>();spawnX=Mathf.Clamp(transform.position.x,level.left+.25f,level.right-.25f);spawnY=Mathf.Max(transform.position.y,level.top-.75f);
+            session=game;bounds=level;interval=Mathf.Clamp(secondsBetweenFalls,.1f,5);body=GetComponent<Rigidbody2D>();item=GetComponent<GameItem>();spawnX=Mathf.Clamp(transform.position.x,level.left+.25f,level.right-.25f);spawnY=Mathf.Max(transform.position.y,level.top-.75f);
             body.bodyType=RigidbodyType2D.Kinematic;body.gravityScale=0;body.linearVelocity=Vector2.zero;body.simulated=true;
-            foreach(var collider in GetComponents<Collider2D>()){collider.enabled=true;collider.isTrigger=true;}
+            colliders=GetComponents<Collider2D>();renderers=GetComponentsInChildren<Renderer>(true);foreach(var collider in colliders){collider.enabled=true;collider.isTrigger=true;}SetVisible(true);
         }
         void FixedUpdate()
         {
-            if(body==null||session==null||session.State!=GameSessionState.Playing)return;body.MovePosition(body.position+Vector2.down*Mathf.Max(.5f,item.speed)*Time.fixedDeltaTime);if(body.position.y<bounds.bottom-.75f)Respawn();
+            if(body==null||session==null||session.State!=GameSessionState.Playing)return;if(Waiting){if(Time.time<readyAt)return;Waiting=false;SetVisible(true);}body.MovePosition(body.position+Vector2.down*Mathf.Max(.5f,item.speed)*Time.fixedDeltaTime);if(body.position.y<bounds.bottom-.75f)Respawn();
         }
         void OnTriggerEnter2D(Collider2D other)
         {
             if(session==null||session.State!=GameSessionState.Playing)return;var player=other.GetComponentInParent<RuntimeCatchPlayer>();if(player==null)return;
             if(item.definition.kind==ItemKind.Prize)session.Collect(item.points);else if(item.definition.kind==ItemKind.Hazard)player.ReceiveDamage(item.damage);else return;Respawn();
         }
-        public void Respawn(){if(body!=null)body.position=new Vector2(spawnX,spawnY);else transform.position=new Vector3(spawnX,spawnY,transform.position.z);}
+        public void Respawn(){if(body!=null){body.position=new Vector2(spawnX,spawnY);body.linearVelocity=Vector2.zero;}else transform.position=new Vector3(spawnX,spawnY,transform.position.z);Waiting=true;readyAt=Time.time+interval;SetVisible(false);}
+        void SetVisible(bool visible){if(renderers!=null)foreach(var renderer in renderers)renderer.enabled=visible;if(colliders!=null)foreach(var collider in colliders)collider.enabled=visible;}
     }
+
 }

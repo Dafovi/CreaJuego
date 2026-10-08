@@ -14,7 +14,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void SharedMediaRoundTripKeepsOneImageForSeveralObjects()
         {
             var data=new CreaJuegoProjectData();var media=MediaAssetData.Create("Dragón","data:image/png;base64,YWJj");data.mediaAssets.Add(media);data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",mediaAssetId=media.id});data.objects.Add(new RuntimeItemData{instanceId="2",definitionId="enemigo",mediaAssetId=media.id});
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(9));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(10));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
         }
         [Test] public void LegacyEmbeddedImagesMigrateAndDeduplicate()
         {
@@ -107,7 +107,7 @@ namespace CreaJuego.Web.Tests
             ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));Assert.That(ui.ChooseGameType("catch-and-dodge"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("catch-and-dodge"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.DefinitionAvailable(controller.Find("premio")));Assert.That(controller.DefinitionAvailable(controller.Find("peligro")));Assert.That(controller.DefinitionAvailable(controller.Find("plataforma")),Is.False);
             ui.ShowNewProjectDialog();
             Assert.That(ui.ChooseGameType("platformer"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(9));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(10));
         }
     }
 }

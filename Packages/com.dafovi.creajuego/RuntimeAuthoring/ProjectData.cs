@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=9;
+        public int schemaVersion=10;
         public string projectName="Mi juego", teamName="Mi equipo";
         public string gameTypeId="platformer";
         public int targetScore=10;
@@ -64,7 +64,7 @@ namespace CreaJuego.Web
         public string instanceId, definitionId;
         public Vector3 position, scale=Vector3.one;
         public float rotationZ;
-        public float speed=2,jump=10,distance=3,visualScale=1,platformWidth=3;
+        public float speed=2,jump=10,distance=3,visualScale=1,platformWidth=3,spawnInterval=.8f;
         public int health=3,damage=1,points=1,attackDamage=1;
         public bool canJump=true,canAttack=true,disappear=true;
         public string message="¡Llegaste a la meta!";
@@ -108,7 +108,7 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>9)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>10)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
             int sourceSchemaVersion=data.schemaVersion;
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
@@ -121,7 +121,7 @@ namespace CreaJuego.Web
             int importedNumber=data.mediaAssets.Count+1;
             foreach(var item in data.objects)
             {
-                if(item.platformWidth<=0)item.platformWidth=3;if(item.scale==Vector3.zero)item.scale=Vector3.one;if(migrateFormerDefaults&&(item.definitionId=="jugador"&&item.appearanceId=="tiny-dungeon-84"||item.definitionId=="enemigo"&&item.appearanceId=="tiny-dungeon-120"))item.appearanceChosen=false;
+                if(item.platformWidth<=0)item.platformWidth=3;if(item.spawnInterval<=0)item.spawnInterval=.8f;if(item.scale==Vector3.zero)item.scale=Vector3.one;if(migrateFormerDefaults&&(item.definitionId=="jugador"&&item.appearanceId=="tiny-dungeon-84"||item.definitionId=="enemigo"&&item.appearanceId=="tiny-dungeon-120"))item.appearanceChosen=false;
                 if(string.IsNullOrEmpty(item.mediaAssetId)&&!string.IsNullOrEmpty(item.customImageBase64))
                 {
                     var shared=data.mediaAssets.Find(asset=>asset!=null&&asset.dataUrl==item.customImageBase64);
@@ -141,7 +141,7 @@ namespace CreaJuego.Web
                 if(string.IsNullOrWhiteSpace(asset.backgroundColor))asset.backgroundColor="#ffffff";
                 asset.backgroundTolerance=Mathf.Clamp(sourceSchemaVersion<8&&asset.backgroundTolerance<=0?18:asset.backgroundTolerance,0,100);
             }
-            data.schemaVersion=9;
+            data.schemaVersion=10;
             return data;
         }
     }

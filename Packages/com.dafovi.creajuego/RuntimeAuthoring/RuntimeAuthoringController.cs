@@ -188,7 +188,7 @@ namespace CreaJuego.Web
             var data=SelectedData();if(data==null)return;
             switch(path)
             {
-                case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;
+                case "speed":data.speed=value;break;case "distance":data.distance=value;break;case "jump":data.jump=value;break;case "spawnInterval":data.spawnInterval=Mathf.Clamp(value,.1f,5);break;
                 case "health":data.health=Mathf.RoundToInt(value);break;case "points":data.points=Mathf.RoundToInt(value);break;case "damage":data.damage=Mathf.RoundToInt(value);break;
                 case "visualScale":data.visualScale=Mathf.Clamp(value,.1f,5f);break;case "width":ResizeSelected(value,data.position.x,record);return;
                 case "sizeX":{var size=SelectedWorldSize;size.x=value;var center=ItemBounds(Selection.SelectedItem).center;ResizeSelected(size,new Vector2(center.x,center.y),record);return;}
@@ -303,7 +303,7 @@ namespace CreaJuego.Web
                 foreach(var behaviour in item.GetComponents<MonoBehaviour>())if(behaviour!=item&&!(behaviour is ItemVisual)&&!(behaviour is RuntimeCanvasBackground))behaviour.enabled=false;
                 var body=item.GetComponent<Rigidbody2D>();var collider=item.GetComponent<Collider2D>();
                 if(kind==ItemKind.Player){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var player=item.gameObject.AddComponent<RuntimeCatchPlayer>();player.Configure(session,Project.bounds);}
-                else if(kind==ItemKind.Prize||kind==ItemKind.Hazard){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var falling=item.gameObject.AddComponent<RuntimeFallingObject>();falling.Configure(session,Project.bounds);}
+                else if(kind==ItemKind.Prize||kind==ItemKind.Hazard){if(body==null)body=item.gameObject.AddComponent<Rigidbody2D>();if(collider==null)collider=item.gameObject.AddComponent<BoxCollider2D>();var falling=item.gameObject.AddComponent<RuntimeFallingObject>();falling.Configure(session,Project.bounds,pair.data.spawnInterval);}
                 else if(collider!=null)collider.enabled=false;
             }
         }
@@ -390,6 +390,7 @@ namespace CreaJuego.Web
             if(string.IsNullOrEmpty(id))return null;if(mediaSprites.TryGetValue(id,out var existing)&&existing!=null)return existing;var asset=FindMedia(id);if(asset==null||!RuntimeImageImport.TryDecodeDataUrl(asset.dataUrl,out var sprite,out var texture,out _))return null;imageAssets.Add(sprite);imageAssets.Add(texture);mediaSprites[id]=sprite;return sprite;
         }
         public void ToggleMode(){if(Mode==AuthoringMode.Build)EnterPlay();else ExitPlay();}
+        public void Replay(){if(Mode!=AuthoringMode.Play)return;ExitPlay();EnterPlay();}
 
         public void Rebuild(string selectId=null)
         {

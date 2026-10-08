@@ -14,8 +14,8 @@ namespace CreaJuego.Web
         [SerializeField] Text status,save,flow,readinessTitle,readinessChecks,brandTitle,brandTagline;
         [SerializeField] Button newButton,saveButton,openButton,undoButton,redoButton,frameAllButton,frameSelectedButton,levelButton,duplicateButton,deleteButton,modeButton,returnButton;
         [SerializeField] Toggle snap;
-        [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,newProjectDialog;
-        [SerializeField] Text hudObjective,hudScore,hudEnemies,newProjectHint;
+        [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,gameResultPanel,newProjectDialog;
+        [SerializeField] Text hudObjective,hudScore,hudEnemies,gameResultTitle,gameResultMessage,newProjectHint;
         [SerializeField, Tooltip("Recalcula paneles y cámara según la resolución. Déjalo desactivado para respetar el layout guardado en el Canvas.")] bool adaptLayoutAtRuntime;
         RuntimeAuthoringController c;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",mediaSearch="",mediaCategory="todas",renamingMediaId,pendingMediaDeleteId,statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
 
@@ -31,13 +31,15 @@ namespace CreaJuego.Web
         public string FlowText=>flow!=null?flow.text:"";
         public string ReadinessText=>readinessTitle!=null?readinessTitle.text:"";
         public bool GameplayHudVisible=>gameplayHudPanel!=null&&gameplayHudPanel.activeSelf;
+        public bool GameplayResultVisible=>gameResultPanel!=null&&gameResultPanel.activeSelf;
+        public string GameplayResultText=>(gameResultTitle?.text??"")+" "+(gameResultMessage?.text??"");
         public bool NewProjectDialogVisible=>newProjectDialog!=null&&newProjectDialog.activeSelf;
         public int VisibleGameTypeCount=>newProjectDialog==null?0:newProjectDialog.GetComponentsInChildren<RuntimeGameTypeButton>(true).Length;
         public int GameplayHeartCount=>hearts==null?0:hearts.GetComponentsInChildren<Image>(false).Count(image=>image.sprite==RuntimeIconLibrary.Heart);
         public string GameplayHudText=>(hudObjective?.text??"")+" "+(hudScore?.text??"")+" "+(hudEnemies?.text??"")+" "+(hearts!=null?string.Join(" ",hearts.GetComponentsInChildren<Text>(false).Select(t=>t.text)):"");
         public bool HasPreparedLayout=>canvas!=null&&catalog!=null&&list!=null&&properties!=null&&status!=null&&modeButton!=null&&leftPanel!=null&&rightPanel!=null&&readinessPanel!=null;
 
-        void Start(){Initialize();if(!HasPreparedLayout)Build();BindStaticActions();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;Refresh();}
+        void Start(){Initialize();if(!HasPreparedLayout)Build();if(gameResultPanel==null)BuildGameResultPanel();BindStaticActions();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;Refresh();}
         void OnDestroy(){if(c!=null){if(selectionChanged!=null)c.Selection.SelectionChanged-=selectionChanged;c.ProjectChanged-=Refresh;}}
         void LateUpdate(){ApplyResponsiveLayout();UpdateGameplayHud();}
         void OnSelection(GameItem item){if(item!=null)worldSelected=false;if(item!=null&&item.definition!=null&&searchKind!=item.definition.kind){appearanceSearch="";searchKind=item.definition.kind;}Refresh();}
@@ -160,7 +162,7 @@ namespace CreaJuego.Web
                 var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,data,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
             }
             ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);
-            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);gameplayHudPanel?.SetActive(!build);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
+            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);gameplayHudPanel?.SetActive(!build);if(build)gameResultPanel?.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
         }
 
         void UpdateFlow()
@@ -215,13 +217,14 @@ namespace CreaJuego.Web
             else if(kind==ItemKind.Platform){if(data.definitionId=="muro"||data.definitionId=="rampa")Direction(data,ref y);}
             else if(kind==ItemKind.MovingPlatform){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);}
             else if(kind==ItemKind.Background){Group("FONDO",ref y);Label(properties,"El fondo cubre todo el lienzo visible y sólo puede haber uno.",13,new Vector2(6,-y),new Vector2(238,46),Muted);y+=52;}
-            else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);if(c.IsCatchMode)Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);}
-            else if(kind==ItemKind.Hazard){Group("PELIGRO",ref y);Slider("Daño","damage",data.damage,1,10,ref y);if(c.IsCatchMode)Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);}
+            else if(kind==ItemKind.Prize){Group("PREMIO",ref y);Slider("Puntos","points",data.points,1,100,ref y);if(c.IsCatchMode){Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);Slider("Pausa entre caídas","spawnInterval",data.spawnInterval,.1f,5,ref y);FallingHelp(ref y);}}
+            else if(kind==ItemKind.Hazard){Group("PELIGRO",ref y);Slider("Daño","damage",data.damage,1,10,ref y);if(c.IsCatchMode){Slider("Velocidad de caída","speed",data.speed,.5f,8,ref y);Slider("Pausa entre caídas","spawnInterval",data.spawnInterval,.1f,5,ref y);FallingHelp(ref y);}}
             else if(kind==ItemKind.Enemy){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);Group("COMBATE",ref y);Slider("Vida","health",data.health,1,10,ref y);Slider("Daño","damage",data.damage,1,10,ref y);}
             else if(kind==ItemKind.Goal){Group("MENSAJE FINAL",ref y);Input("Mensaje",data.message,ref y);}
             else{Group("POSICIÓN",ref y);Label(properties,"Arrastra para mover este elemento por el nivel.",13,new Vector2(6,-y),new Vector2(238,44),Muted);y+=50;}
         }
         void MovementHelp(ref int y){var help=PanelRect("Ayuda de recorrido",properties,new Vector2(6,-y),new Vector2(238,52),Hex("263B55"),true);Label(help,"La línea azul o naranja muestra el recorrido completo.",12,new Vector2(10,5),new Vector2(218,42),TextColor);y+=60;}
+        void FallingHelp(ref int y){var help=PanelRect("Ayuda de caída",properties,new Vector2(6,-y),new Vector2(238,52),Hex("263B55"),true);Label(help,"La línea amarilla o roja muestra por dónde caerá.",12,new Vector2(10,5),new Vector2(218,42),TextColor);y+=60;}
         void Direction(RuntimeItemData data,ref int y)
         {
             Label(properties,data.definitionId=="muro"?"Dirección del muro":"Dirección de subida",13,new Vector2(6,-y),new Vector2(238,22),TextColor);y+=27;
@@ -352,6 +355,18 @@ namespace CreaJuego.Web
             hudEnemies=Label(gameplayHudPanel.transform,"ENEMIGOS  0",17,new Vector2(470,13),new Vector2(190,44),TextColor,FontStyle.Bold);
             hudObjective=Label(gameplayHudPanel.transform,"OBJETIVO · Llega a la meta",15,new Vector2(675,13),new Vector2(380,44),Accent,FontStyle.Bold);
             gameplayHudPanel.SetActive(false);
+            BuildGameResultPanel();
+        }
+        void BuildGameResultPanel()
+        {
+            if(gameResultPanel!=null||canvas==null)return;
+            gameResultPanel=PanelRect("Resultado de la partida",canvas.transform,Vector2.zero,new Vector2(1280,720),new Color(.02f,.04f,.08f,.82f)).gameObject;gameResultPanel.transform.SetAsLastSibling();
+            var card=PanelRect("Tarjeta de resultado",gameResultPanel.transform,new Vector2(390,190),new Vector2(500,340),Panel,true);
+            gameResultTitle=Label(card,"¡GANASTE!",32,new Vector2(30,242),new Vector2(440,58),SuccessBright,FontStyle.Bold);gameResultTitle.alignment=TextAnchor.MiddleCenter;
+            gameResultMessage=Label(card,"Completaste el objetivo.",17,new Vector2(42,150),new Vector2(416,88),TextColor);gameResultMessage.alignment=TextAnchor.MiddleCenter;
+            ButtonAt(card,"JUGAR OTRA VEZ",new Vector2(42,54),c.Replay,new Vector2(200,58),RuntimeIconLibrary.Play,Success,TextColor,15);
+            ButtonAt(card,"VOLVER A CONSTRUIR",new Vector2(258,54),()=>c.ExitPlay(),new Vector2(200,58),RuntimeIconLibrary.Back,Selected,TextColor,14);
+            gameResultPanel.SetActive(false);
         }
         void UpdateGameplayHud()
         {
@@ -362,6 +377,7 @@ namespace CreaJuego.Web
             if(lastHudScore!=metrics.Score){lastHudScore=metrics.Score;hudScore.text="PUNTOS  "+metrics.Score;}
             if(c.IsCatchMode)hudEnemies.text="META  "+c.Project.targetScore;else if(lastHudEnemies!=metrics.EnemiesRemaining){lastHudEnemies=metrics.EnemiesRemaining;hudEnemies.text="ENEMIGOS  "+metrics.EnemiesRemaining;}
             hudObjective.text=metrics.State==GameSessionState.Won?"META COMPLETADA · "+metrics.Objective:metrics.State==GameSessionState.Lost?"SIN VIDAS · Vuelve a construir para ajustar el nivel.":"OBJETIVO · "+metrics.Objective;hudObjective.color=metrics.State==GameSessionState.Won?SuccessBright:metrics.State==GameSessionState.Lost?DangerText:Accent;
+            bool finished=metrics.State!=GameSessionState.Playing;if(gameResultPanel!=null)gameResultPanel.SetActive(finished);if(finished){bool won=metrics.State==GameSessionState.Won;gameResultTitle.text=won?"¡GANASTE!":"INTÉNTALO OTRA VEZ";gameResultTitle.color=won?SuccessBright:DangerText;gameResultMessage.text=won?"Conseguiste los puntos necesarios y completaste el reto.":"Te quedaste sin vidas. Puedes repetir o volver a construir para ajustar el nivel.";gameResultPanel.transform.SetAsLastSibling();}
         }
         void ApplyResponsiveLayout(bool force=false)
         {

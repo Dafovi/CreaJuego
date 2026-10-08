@@ -9,7 +9,7 @@ namespace CreaJuego.Web
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
         RuntimeAuthoringController controller;Camera View=>controller.buildCamera;
-        bool dragging,panning,resizing,resizeHorizontal,resizePositive,changed;Vector3 offset,last;float fixedEdge;
+        bool dragging,panning,resizing,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;float fixedEdge;
         LineRenderer outline,worldFrame,movementPath,movementArrow;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd;Material lineMaterial;Sprite handleSprite;
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
@@ -56,14 +56,15 @@ namespace CreaJuego.Web
         {
             DestroySelection();if(item==null)return;outline=Line("Selección",new Color(1,.85f,.1f),.06f,100);
             if(item.definition!=null&&item.definition.kind!=ItemKind.Background){leftHandle=Handle("Tamaño izquierdo");rightHandle=Handle("Tamaño derecho");topHandle=Handle("Tamaño superior");bottomHandle=Handle("Tamaño inferior");}
-            if(item.definition!=null&&(item.definition.kind==ItemKind.MovingPlatform||item.definition.kind==ItemKind.Enemy)){var color=item.definition.kind==ItemKind.Enemy?new Color(1f,.35f,.2f,.95f):new Color(.2f,.75f,1f,.95f);movementPath=Line("Recorrido",color,.075f,99);movementPath.positionCount=2;movementArrow=Line("Dirección",color,.075f,99);movementArrow.positionCount=3;movementStart=GuidePoint("Inicio del recorrido",color);movementEnd=GuidePoint("Final del recorrido",color);}
+            fallingGuide=controller.IsCatchMode&&item.definition!=null&&(item.definition.kind==ItemKind.Prize||item.definition.kind==ItemKind.Hazard);
+            if(item.definition!=null&&(item.definition.kind==ItemKind.MovingPlatform||item.definition.kind==ItemKind.Enemy)||fallingGuide){var color=fallingGuide?(item.definition.kind==ItemKind.Prize?new Color(1f,.8f,.15f,.95f):new Color(1f,.25f,.2f,.95f)):item.definition.kind==ItemKind.Enemy?new Color(1f,.35f,.2f,.95f):new Color(.2f,.75f,1f,.95f);movementPath=Line(fallingGuide?"Trayectoria de caída":"Recorrido",color,.075f,99);movementPath.positionCount=2;movementArrow=Line("Dirección",color,.075f,99);movementArrow.positionCount=3;movementStart=GuidePoint(fallingGuide?"Aparece aquí":"Inicio del recorrido",color);movementEnd=GuidePoint(fallingGuide?"Final de caída":"Final del recorrido",color);}
             UpdateSelectionVisuals();
         }
         void UpdateSelectionVisuals()
         {
             var item=controller.Selection.SelectedItem;if(item==null||outline==null)return;var bounds=ItemBounds(item);var z=item.transform.position.z-.1f;outline.SetPositions(new[]{new Vector3(bounds.min.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.min.y,z)});
             if(leftHandle!=null){float size=Mathf.Clamp(View.orthographicSize*.045f,.18f,.65f);leftHandle.transform.position=new Vector3(bounds.min.x,bounds.center.y,z-.01f);rightHandle.transform.position=new Vector3(bounds.max.x,bounds.center.y,z-.01f);topHandle.transform.position=new Vector3(bounds.center.x,bounds.max.y,z-.01f);bottomHandle.transform.position=new Vector3(bounds.center.x,bounds.min.y,z-.01f);leftHandle.transform.localScale=rightHandle.transform.localScale=topHandle.transform.localScale=bottomHandle.transform.localScale=Vector3.one*size;}
-            if(movementPath!=null){RuntimeMovementGuide.TryGetRoute(item,out var start,out var end);start.z=end.z=z-.02f;movementPath.SetPositions(new[]{start,end});float pointSize=Mathf.Clamp(View.orthographicSize*.035f,.14f,2f);movementStart.transform.position=start;movementEnd.transform.position=end;movementStart.transform.localScale=movementEnd.transform.localScale=Vector3.one*pointSize;float arrowSize=Mathf.Clamp(View.orthographicSize*.04f,.4f,3f);var direction=(end-start).normalized;var normal=new Vector3(-direction.y,direction.x);var tip=end;var basePoint=end-direction*arrowSize;movementArrow.SetPositions(new[]{basePoint+normal*arrowSize*.45f,tip,basePoint-normal*arrowSize*.45f});}
+            if(movementPath!=null){Vector3 start,end;if(fallingGuide)RuntimeCatchGuide.TryGetRoute(item,controller.Project.bounds,out start,out end);else RuntimeMovementGuide.TryGetRoute(item,out start,out end);start.z=end.z=z-.02f;movementPath.SetPositions(new[]{start,end});float pointSize=Mathf.Clamp(View.orthographicSize*.035f,.14f,2f);movementStart.transform.position=start;movementEnd.transform.position=end;movementStart.transform.localScale=movementEnd.transform.localScale=Vector3.one*pointSize;float arrowSize=Mathf.Clamp(View.orthographicSize*.04f,.4f,3f);var direction=(end-start).normalized;var normal=new Vector3(-direction.y,direction.x);var tip=end;var basePoint=end-direction*arrowSize;movementArrow.SetPositions(new[]{basePoint+normal*arrowSize*.45f,tip,basePoint-normal*arrowSize*.45f});}
         }
         void UpdateGuideScale()
         {
@@ -74,7 +75,7 @@ namespace CreaJuego.Web
             if(worldFrame==null||controller.Project?.bounds==null)return;var b=controller.Project.bounds;worldFrame.SetPositions(new[]{new Vector3(b.left,b.bottom,5),new Vector3(b.left,b.top,5),new Vector3(b.right,b.top,5),new Vector3(b.right,b.bottom,5)});UpdateGuideScale();UpdateSelectionVisuals();
         }
         void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(visible);if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
-        void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)Destroy(handle.gameObject);if(movementPath!=null)Destroy(movementPath.gameObject);if(movementArrow!=null)Destroy(movementArrow.gameObject);if(movementStart!=null)Destroy(movementStart.gameObject);if(movementEnd!=null)Destroy(movementEnd.gameObject);outline=movementPath=movementArrow=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=null;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
+        void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)Destroy(handle.gameObject);if(movementPath!=null)Destroy(movementPath.gameObject);if(movementArrow!=null)Destroy(movementArrow.gameObject);if(movementStart!=null)Destroy(movementStart.gameObject);if(movementEnd!=null)Destroy(movementEnd.gameObject);outline=movementPath=movementArrow=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=null;fallingGuide=false;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
         SpriteRenderer Handle(string name){var go=new GameObject(name,typeof(RuntimeResizeHandle),typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=new Color(1,.85f,.1f);renderer.sortingOrder=101;return renderer;}
         SpriteRenderer GuidePoint(string name,Color color){var go=new GameObject(name,typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=color;renderer.sortingOrder=100;return renderer;}
         static Sprite CreateHandleSprite(){var texture=new Texture2D(8,8,TextureFormat.RGBA32,false);var pixels=new Color[64];for(int i=0;i<pixels.Length;i++)pixels[i]=Color.white;texture.SetPixels(pixels);texture.Apply();return Sprite.Create(texture,new Rect(0,0,8,8),new Vector2(.5f,.5f),8);}
@@ -96,6 +97,14 @@ namespace CreaJuego.Web
             float worldPerPixel=2f*Mathf.Max(.01f,orthographicSize)/Mathf.Max(1,pixelHeight);
             float pixels=Mathf.Lerp(4f,8f,Mathf.InverseLerp(8f,100f,orthographicSize));
             return Mathf.Clamp(worldPerPixel*pixels,.04f,2f);
+        }
+    }
+    public static class RuntimeCatchGuide
+    {
+        public static bool TryGetRoute(GameItem item,RuntimeLevelBounds bounds,out Vector3 start,out Vector3 end)
+        {
+            start=end=Vector3.zero;if(item==null||item.definition==null||bounds==null||(item.definition.kind!=ItemKind.Prize&&item.definition.kind!=ItemKind.Hazard))return false;
+            start=item.transform.position;start.x=Mathf.Clamp(start.x,bounds.left+.25f,bounds.right-.25f);start.y=Mathf.Max(start.y,bounds.top-.75f);end=new Vector3(start.x,bounds.bottom,start.z);return true;
         }
     }
     public static class RuntimePointerContext
