@@ -11,6 +11,8 @@ namespace CreaJuego.Web.Editor
     {
         const string RequestPath = "Library/CreaJuegoWebBuild.request";
         const string ResultPath = "Library/CreaJuegoWebBuild.result";
+        // These files are copied after Unity generates the PWA shell so workshop branding survives every build.
+        const string BrandingDirectory = "Assets/CreaJuegoWeb/Content/Branding";
 
         [InitializeOnLoadMethod]
         static void RunRequestedBuild()
@@ -36,6 +38,15 @@ namespace CreaJuego.Web.Editor
 
         [MenuItem("CreaJuego/Web/Generar Web compatible en repositorio")]
         public static void BuildFromMenu() => Build(@"E:\Github\creajuego-web");
+
+        [MenuItem("CreaJuego/Web/Actualizar marca del taller")]
+        public static void RefreshWorkshopBranding()
+        {
+            const string outputPath = @"E:\Github\creajuego-web";
+            ApplyBranding(Path.Combine(outputPath, "index.html"), Path.Combine(outputPath, "manifest.webmanifest"));
+            BumpServiceWorkerCache(outputPath);
+            Debug.Log("CREAJUEGO_WEB_BRANDING_READY " + outputPath);
+        }
 
         public static void Build(string outputPath)
         {
@@ -130,6 +141,8 @@ namespace CreaJuego.Web.Editor
             var path = Path.Combine(outputPath, "ServiceWorker.js");
             if (!File.Exists(path)) return;
             var text = File.ReadAllText(path);
+            if (!text.Contains("TemplateData/biblored-logo.svg"))
+                text = text.Replace("\"TemplateData/style.css\"", "\"TemplateData/style.css\",\n    \"TemplateData/biblored-logo.svg\",\n    \"TemplateData/gino-icon.png\"");
             var firstLineEnd = text.IndexOf('\n');
             if (firstLineEnd < 0) return;
             File.WriteAllText(path,
@@ -143,17 +156,63 @@ namespace CreaJuego.Web.Editor
             var product = !string.IsNullOrWhiteSpace(pack != null ? pack.productName : null) ? pack.productName : CreaJuegoBranding.ProductName;
             var tagline = !string.IsNullOrWhiteSpace(pack != null ? pack.tagline : null) ? pack.tagline : CreaJuegoBranding.Tagline;
             var fullTitle = product + ": " + tagline;
+            var templateDirectory = Path.Combine(Path.GetDirectoryName(indexPath), "TemplateData");
+            Directory.CreateDirectory(templateDirectory);
+
+            var logoSource = Path.GetFullPath(BrandingDirectory + "/biblored-logo.svg");
+            if (!File.Exists(logoSource)) throw new FileNotFoundException("Falta el logo oficial de BibloRed.", logoSource);
+            File.Copy(logoSource, Path.Combine(templateDirectory, "biblored-logo.svg"), true);
+
+            var playerIcon = pack != null ? pack.CategoryFor(ItemKind.Player)?.Default?.Preview : null;
+            if (playerIcon == null) throw new InvalidOperationException("No se encontró la apariencia predeterminada de Gino para el favicon.");
+            ExportSquareIcon(playerIcon, Path.Combine(templateDirectory, "gino-icon.png"), 144, 14);
 
             var index = File.ReadAllText(indexPath);
             index = Regex.Replace(index, "<title>.*?</title>", "<title>" + fullTitle + "</title>", RegexOptions.Singleline);
+            index = Regex.Replace(index, "<link rel=\"shortcut icon\"[^>]*>", "<link rel=\"icon\" type=\"image/png\" href=\"TemplateData/gino-icon.png\">");
             File.WriteAllText(indexPath, index);
 
             var manifest = File.ReadAllText(manifestPath);
             manifest = Regex.Replace(manifest, "(\"name\"\\s*:\\s*\")[^\"]*(\")", "$1" + fullTitle + "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
             manifest = Regex.Replace(manifest, "(\"short_name\"\\s*:\\s*\")[^\"]*(\")", "$1" + product + "$2", RegexOptions.None, TimeSpan.FromSeconds(1));
+            manifest = Regex.Replace(manifest, "\"src\"\\s*:\\s*\"[^\"]+\"", "\"src\": \"TemplateData/gino-icon.png\"");
+            manifest = Regex.Replace(manifest, "\"type\"\\s*:\\s*\"image/[^\"]+\"", "\"type\": \"image/png\"");
             File.WriteAllText(manifestPath, manifest);
+
+            var stylePath = Path.Combine(templateDirectory, "style.css");
+            var style = File.ReadAllText(stylePath);
+            style = Regex.Replace(style, @"#unity-logo\s*\{[^}]*\}",
+                "#unity-logo { width: 342px; height: 90px; background: url('biblored-logo.svg') no-repeat center; background-size: contain; }", RegexOptions.Singleline);
+            if (!style.Contains("#unity-loading-bar::after"))
+                style += "\n#unity-loading-bar::after { content: '" + fullTitle.Replace("'", "\\'") + "'; display: block; margin-top: 18px; color: #fff; font: 600 18px Arial, sans-serif; text-align: center; letter-spacing: .2px; }\n";
+            File.WriteAllText(stylePath, style);
+        }
+
+        static void ExportSquareIcon(Sprite sprite, string outputPath, int size, int padding)
+        {
+            var preview = new PreviewRenderUtility();
+            try
+            {
+                var visual = new GameObject("Gino Web Icon");
+                var renderer = visual.AddComponent<SpriteRenderer>();
+                renderer.sprite = sprite;
+                renderer.color = Color.white;
+                preview.AddSingleGO(visual);
+                preview.camera.orthographic = true;
+                preview.camera.clearFlags = CameraClearFlags.Color;
+                preview.camera.backgroundColor = Color.clear;
+                var bounds = renderer.bounds;
+                var margin = size / Mathf.Max(1f, size - padding * 2f);
+                preview.camera.orthographicSize = Mathf.Max(bounds.extents.y, bounds.extents.x) * margin;
+                preview.camera.transform.position = new Vector3(bounds.center.x, bounds.center.y, -10f);
+                preview.camera.transform.rotation = Quaternion.identity;
+                preview.BeginStaticPreview(new Rect(0, 0, size, size));
+                preview.camera.Render();
+                var icon = preview.EndStaticPreview();
+                File.WriteAllBytes(outputPath, icon.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(icon);
+            }
+            finally { preview.Cleanup(); }
         }
     }
 }
-
-
