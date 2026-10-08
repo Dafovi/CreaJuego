@@ -186,6 +186,9 @@ namespace CreaJuego.Web.Tests
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath,OpenSceneMode.Single);
             yield return new EnterPlayMode();yield return null;
             var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var runtimeHeader=GameObject.Find("Cabecera").GetComponent<RectTransform>();
+            Assert.That(c.Project.objects.Any(value=>value.definitionId=="movil"),Is.False,"La plantilla debe retirar la plataforma móvil sin reconstruir el resto del nivel.");
+            var initialBackground=c.buildRoot.GetComponentsInChildren<GameItem>(true).Single(value=>value.definition.kind==ItemKind.Background).GetComponent<RuntimeCanvasBackground>();
+            Assert.That(initialBackground,Is.Not.Null);Assert.That(initialBackground.Image,Is.Not.Null);Assert.That(initialBackground.Image.gameObject.activeInHierarchy,Is.True,"Retirar contenido obsoleto no debe ocultar el fondo al entrar en Play Mode.");
             Assert.That(runtimeHeader.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(runtimeHeader.anchorMax,Is.EqualTo(Vector2.one));Assert.That(runtimeHeader.anchoredPosition,Is.EqualTo(new Vector2(0,334.54327f)).Using(Vector2ComparerWithEqualsOperator.Instance));Assert.That(runtimeHeader.sizeDelta,Is.EqualTo(new Vector2(0,-669.08655f)).Using(Vector2ComparerWithEqualsOperator.Instance),"Play Mode debe conservar el layout ajustado manualmente en WebAuthoringSpike.");
             var leftPanel=GameObject.Find("Panel de elementos").GetComponent<RectTransform>();var rightPanel=GameObject.Find("Panel de propiedades").GetComponent<RectTransform>();var canvasRect=leftPanel.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
             Assert.That(leftPanel.anchorMin.x,Is.EqualTo(0));Assert.That(leftPanel.anchorMax.x,Is.EqualTo(0));Assert.That(leftPanel.rect.width,Is.EqualTo(260).Within(.1f));
@@ -239,18 +242,18 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void MovingPlatformRowUsesItsSelectedAppearance()
         {
-            var c=Open();var moving=c.Project.objects.First(o=>c.Find(o.definitionId)?.kind==ItemKind.MovingPlatform);var definition=c.Find(moving.definitionId);var appearances=c.contentPack.CategoryFor(ItemKind.MovingPlatform);
+            var c=Open();Assert.That(c.Create("movil",Vector3.zero),Is.Not.Null);var moving=c.SelectedData();var definition=c.Find(moving.definitionId);var appearances=c.contentPack.CategoryFor(ItemKind.MovingPlatform);
             Assert.That(appearances,Is.Not.Null);var chosen=appearances.options.First(option=>option.Preview!=null&&option.id!=moving.appearanceId);moving.appearanceId=chosen.id;
             var marker=c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Single(value=>value.instanceId==moving.instanceId);var item=marker.GetComponent<GameItem>();
             Assert.That(RuntimeAuthoringUI.ResolvePreview(moving,definition,c.contentPack,item),Is.SameAs(chosen.Preview));
         }
 
         [Test]
-        public void PreparedPackIncludesUniqueBackgroundAndMovingPlatform()
+        public void PreparedPackKeepsMovingPlatformOnlyForCompatibility()
         {
             var c=Open();var backgroundDefinition=c.contentPack.definitions.Single(d=>d.kind==ItemKind.Background);var movingDefinition=c.contentPack.definitions.Single(d=>d.kind==ItemKind.MovingPlatform);
-            Assert.That(backgroundDefinition.allowMultiple,Is.False);Assert.That(backgroundDefinition.icon,Is.Not.Null);Assert.That(movingDefinition.prefab,Is.Not.Null);
-            Assert.That(c.Project.objects.Count(o=>o.definitionId==backgroundDefinition.id),Is.EqualTo(1));Assert.That(c.Project.objects.Count(o=>o.definitionId==movingDefinition.id),Is.EqualTo(1));
+            Assert.That(backgroundDefinition.allowMultiple,Is.False);Assert.That(backgroundDefinition.icon,Is.Not.Null);Assert.That(movingDefinition.prefab,Is.Not.Null);Assert.That(movingDefinition.availableInWorkshop,Is.False);Assert.That(c.DefinitionAvailable(movingDefinition),Is.False);
+            Assert.That(c.Project.objects.Count(o=>o.definitionId==backgroundDefinition.id),Is.EqualTo(1));Assert.That(c.Project.objects.Count(o=>o.definitionId==movingDefinition.id),Is.Zero);
             var background=c.buildRoot.GetComponentsInChildren<GameItem>().Single(i=>i.definition.kind==ItemKind.Background);var canvasBackground=background.GetComponent<RuntimeCanvasBackground>();
             Assert.That(background.GetComponent<SpriteRenderer>(),Is.Null);Assert.That(canvasBackground,Is.Not.Null);Assert.That(canvasBackground.TargetCamera,Is.SameAs(c.buildCamera));Assert.That(canvasBackground.Image,Is.Not.Null);Assert.That(canvasBackground.Image.sprite,Is.SameAs(background.SelectedAppearance.sprite));
             var imageRect=canvasBackground.Image.rectTransform;Assert.That(imageRect.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.anchorMax,Is.EqualTo(Vector2.one));Assert.That(imageRect.offsetMin,Is.EqualTo(Vector2.zero));Assert.That(imageRect.offsetMax,Is.EqualTo(Vector2.zero));
@@ -274,7 +277,7 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void ScaleAndStructureDirectionPersistInEducationalData()
         {
-            var c=Open();var moving=c.Project.objects.Single(o=>o.definitionId=="movil");c.Selection.Select(moving.instanceId);var visual=ItemVisual.Resolve(c.Selection.SelectedItem);float ratio=Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),beforeX=Mathf.Abs(visual.transform.localScale.x);c.SetFloat("visualScale",2.25f);
+            var c=Open();Assert.That(c.Create("movil",Vector3.zero),Is.Not.Null);var moving=c.SelectedData();var visual=ItemVisual.Resolve(c.Selection.SelectedItem);float ratio=Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),beforeX=Mathf.Abs(visual.transform.localScale.x);c.SetFloat("visualScale",2.25f);
             Assert.That(moving.visualScale,Is.EqualTo(2.25f));Assert.That(Mathf.Abs(visual.transform.localScale.x/visual.transform.localScale.y),Is.EqualTo(ratio).Within(.001f));Assert.That(Mathf.Abs(visual.transform.localScale.x),Is.EqualTo(beforeX*2.25f).Within(.01f));
             var ramp=c.Create("rampa",Vector3.zero);Assert.That(ramp,Is.Not.Null);var rampData=c.SelectedData();c.SetStructureDirection(false);
             Assert.That(rampData.rotationZ,Is.EqualTo(-18));Assert.That(c.Selection.SelectedItem.transform.eulerAngles.z,Is.EqualTo(342).Within(.01f));
@@ -291,8 +294,7 @@ namespace CreaJuego.Web.Tests
             Assert.That(c!=null,Is.True,"La escena debe conservar su controlador activo.");
             c.LoadStarterLevel(false);
 
-            var moving=c.Project.objects.Single(o=>o.definitionId=="movil");
-            c.Selection.Select(moving.instanceId);
+            Assert.That(c.Create("movil",Vector3.zero),Is.Not.Null);var moving=c.SelectedData();
             var movingOption=c.contentPack.OptionsFor(ItemKind.MovingPlatform)[1];
             c.SetAppearance(movingOption.id);
             yield return null;
@@ -450,7 +452,7 @@ namespace CreaJuego.Web.Tests
         [Test]
         public void MovementGuideMatchesConfiguredMovementDistance()
         {
-            var c=Open();var movingData=c.Project.objects.Single(o=>c.Find(o.definitionId)?.kind==ItemKind.MovingPlatform);
+            var c=Open();Assert.That(c.Create("movil",Vector3.zero),Is.Not.Null);var movingData=c.SelectedData();
             var moving=c.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Single(marker=>marker.instanceId==movingData.instanceId).GetComponent<GameItem>();
             Assert.That(RuntimeMovementGuide.TryGetRoute(moving,out var start,out var end),Is.True);Assert.That(end.x-start.x,Is.EqualTo(movingData.distance).Within(.01f));
             moving.distance=7;Assert.That(RuntimeMovementGuide.TryGetRoute(moving,out start,out end),Is.True);Assert.That(end.x-start.x,Is.EqualTo(7).Within(.01f));
@@ -463,6 +465,30 @@ namespace CreaJuego.Web.Tests
             Assert.That(RuntimeResizeHit.Resolve(new Vector2(100,50),handles,12),Is.EqualTo(-1),"El centro de una plataforma delgada debe quedar libre para arrastrarla.");
             Assert.That(RuntimeResizeHit.Resolve(new Vector2(100,58),handles,12),Is.EqualTo(3),"El borde superior debe conservar su control de tamaño.");
             Assert.That(RuntimeResizeHit.Resolve(new Vector2(18,50),handles,12),Is.EqualTo(0),"Los controles laterales deben seguir funcionando.");
+        }
+        [Test]
+        public void MoveGizmoSeparatesFreeHorizontalAndVerticalDragging()
+        {
+            var center=new Vector2(100,100);Assert.That(RuntimeMoveGizmoHit.Resolve(center,center,new Vector2(180,100),new Vector2(100,180),12),Is.EqualTo(RuntimeMoveAxis.Free));
+            Assert.That(RuntimeMoveGizmoHit.Resolve(new Vector2(155,104),center,new Vector2(180,100),new Vector2(100,180),12),Is.EqualTo(RuntimeMoveAxis.Horizontal));
+            Assert.That(RuntimeMoveGizmoHit.Resolve(new Vector2(96,45),center,new Vector2(180,100),new Vector2(100,180),12),Is.EqualTo(RuntimeMoveAxis.Vertical));
+            Assert.That(RuntimeMoveGizmoHit.Resolve(new Vector2(160,160),center,new Vector2(180,100),new Vector2(100,180),12),Is.EqualTo(RuntimeMoveAxis.None));
+        }
+        [Test]
+        public void WebBuildCacheNeverMixesFilesFromOlderBuilds()
+        {
+            const string source="const cacheName = \"old\";\nconst contentToCache = [\"TemplateData/style.css\"];\n\nself.addEventListener('install', function (e) {\n    console.log('[Service Worker] Install');\n});\n\nself.addEventListener('fetch', function (e) {\n    e.respondWith((async function () {\n      let response = await caches.match(e.request);\n      if (response) { return response; }\n      response = await fetch(e.request);\n      const cache = await caches.open(cacheName);\n      cache.put(e.request, response.clone());\n      return response;\n    })());\n});";
+            var upgraded=global::CreaJuego.Web.Editor.WebCompatibleBuild.UpgradeServiceWorker(source,"CreaJuego-Web-test");
+            Assert.That(upgraded,Does.Contain("const cacheName = \"CreaJuego-Web-test\";"));
+            Assert.That(upgraded,Does.Contain("self.skipWaiting()"));
+            Assert.That(upgraded,Does.Contain("self.addEventListener('activate'"));
+            Assert.That(upgraded,Does.Contain("self.clients.claim()"));
+            Assert.That(upgraded,Does.Contain("let response = await cache.match(e.request)"));
+            Assert.That(upgraded,Does.Not.Contain("caches.match(e.request)"));
+            Assert.That(upgraded,Does.Contain("name.startsWith('CreaJuego-Web-')"));
+            var upgradedAgain=global::CreaJuego.Web.Editor.WebCompatibleBuild.UpgradeServiceWorker(upgraded,"CreaJuego-Web-next");
+            Assert.That(upgradedAgain.Split(new[]{"self.skipWaiting()"},System.StringSplitOptions.None).Length-1,Is.EqualTo(1));
+            Assert.That(upgradedAgain.Split(new[]{"self.addEventListener('activate'"},System.StringSplitOptions.None).Length-1,Is.EqualTo(1));
         }
     }
 }

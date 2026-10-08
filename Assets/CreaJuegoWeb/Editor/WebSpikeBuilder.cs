@@ -96,7 +96,11 @@ namespace CreaJuego.Web.Editor
                 PrefabUtility.SaveAsPrefabAsset(contents,safePrefabPath);
             }
             finally{PrefabUtility.UnloadPrefabContents(contents);}
-            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{source.id}.asset");EditorUtility.CopySerialized(source,target);target.runtimeOnly=true;target.appearancePack=null;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(safePrefabPath);if(preparedDefault?.Preview!=null)target.icon=preparedDefault.Preview;EditorUtility.SetDirty(target);return target;
+            var target=LoadOrCreate<GameItemDefinition>($"{ContentDirectory}/{source.id}.asset");EditorUtility.CopySerialized(source,target);target.runtimeOnly=true;target.appearancePack=null;target.prefab=AssetDatabase.LoadAssetAtPath<GameObject>(safePrefabPath);
+            // Se conserva el backend para abrir niveles antiguos, pero la plataforma móvil
+            // queda fuera del catálogo del taller hasta tener una interacción estable.
+            if(source.kind==ItemKind.MovingPlatform){target.availableInWorkshop=false;target.extraInWorkshop=false;}
+            if(preparedDefault?.Preview!=null)target.icon=preparedDefault.Preview;EditorUtility.SetDirty(target);return target;
         }
         static void PrepareSourceRecommendations(ContentPackDefinition sourcePack)
         {

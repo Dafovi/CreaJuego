@@ -140,14 +140,52 @@ namespace CreaJuego.Web.Editor
         {
             var path = Path.Combine(outputPath, "ServiceWorker.js");
             if (!File.Exists(path)) return;
-            var text = File.ReadAllText(path);
+            var cacheName = $"CreaJuego-Web-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            File.WriteAllText(path, UpgradeServiceWorker(File.ReadAllText(path), cacheName));
+        }
+
+        // Unity's PWA template normally searches every Cache Storage entry. That can mix
+        // loader/framework/data/wasm files from different builds and execute incompatible code.
+        // Keep lookups scoped to this build and remove previous CreaJuego caches on activation.
+        public static string UpgradeServiceWorker(string text, string cacheName)
+        {
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("El Service Worker está vacío.", nameof(text));
+            if (string.IsNullOrWhiteSpace(cacheName)) throw new ArgumentException("La caché necesita un nombre.", nameof(cacheName));
+
             if (!text.Contains("TemplateData/biblored-logo.svg"))
                 text = text.Replace("\"TemplateData/style.css\"", "\"TemplateData/style.css\",\n    \"TemplateData/biblored-logo.svg\",\n    \"TemplateData/gino-icon.png\"");
-            var firstLineEnd = text.IndexOf('\n');
-            if (firstLineEnd < 0) return;
-            File.WriteAllText(path,
-                $"const cacheName = \"CreaJuego-Web-{DateTime.UtcNow:yyyyMMddHHmmss}\";\n" +
-                text.Substring(firstLineEnd + 1));
+
+            text = Regex.Replace(text, @"^const cacheName\s*=\s*[^;]+;", $"const cacheName = \"{cacheName}\";", RegexOptions.Multiline);
+            if (!text.Contains("self.skipWaiting()"))
+                text = text.Replace(
+                    "self.addEventListener('install', function (e) {\n    console.log('[Service Worker] Install');",
+                    "self.addEventListener('install', function (e) {\n    console.log('[Service Worker] Install');\n    self.skipWaiting();");
+            text = Regex.Replace(text, @"(?:\s*self\.skipWaiting\(\);){2,}", "\n    self.skipWaiting();");
+
+            if (!text.Contains("self.addEventListener('activate'"))
+            {
+                const string activate = @"
+self.addEventListener('activate', function (e) {
+    e.waitUntil((async function () {
+      const names = await caches.keys();
+      await Promise.all(names
+        .filter(name => name.startsWith('CreaJuego-Web-') && name !== cacheName)
+        .map(name => caches.delete(name)));
+      await self.clients.claim();
+    })());
+});
+
+";
+                text = text.Replace("self.addEventListener('fetch', function (e) {", activate + "self.addEventListener('fetch', function (e) {");
+            }
+
+            text = text.Replace(
+                "let response = await caches.match(e.request);",
+                "const cache = await caches.open(cacheName);\n      let response = await cache.match(e.request);");
+            text = text.Replace(
+                "response = await fetch(e.request);\n      const cache = await caches.open(cacheName);",
+                "response = await fetch(e.request);");
+            return text;
         }
 
         static void ApplyBranding(string indexPath, string manifestPath)

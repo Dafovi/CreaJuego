@@ -64,7 +64,6 @@ namespace CreaJuego.Starter
             Place("premio", -3,0);
             Place("peligro", 1,-1.7f);
             Place("meta", 7,-1.15f);
-            Place("movil", 3,.2f);
             Place("decoracion", -6,1.8f);
             MakeHUD();
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -99,6 +98,7 @@ namespace CreaJuego.Starter
             if (AssetDatabase.LoadAssetAtPath<GameItemDefinition>(path) != null) return;
             var definition = ScriptableObject.CreateInstance<GameItemDefinition>();
             definition.id = id; definition.displayName = title; definition.category = category; definition.description = description; definition.learningHint = hint; definition.kind = kind; definition.order = (int)kind; definition.properties = properties; definition.icon = sprite;
+            if (kind == ItemKind.MovingPlatform) { definition.availableInWorkshop = false; definition.extraInWorkshop = false; }
             AssetDatabase.CreateAsset(definition, path);
             var go = new GameObject(title);
             try

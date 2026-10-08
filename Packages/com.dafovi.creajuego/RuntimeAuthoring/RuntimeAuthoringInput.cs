@@ -7,13 +7,14 @@ using UnityEngine.InputSystem;
 namespace CreaJuego.Web
 {
     public enum RuntimeTransformTool{Move,Resize}
+    public enum RuntimeMoveAxis{None,Free,Horizontal,Vertical}
 
     [RequireComponent(typeof(RuntimeAuthoringController))]
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
         RuntimeAuthoringController controller;Camera View=>controller.buildCamera;
-        bool dragging,panning,resizing,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;float fixedEdge;
-        LineRenderer outline,worldFrame,movementPath,movementArrow;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd;Material lineMaterial;Sprite handleSprite;
+        bool dragging,panning,resizing,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;float fixedEdge;RuntimeMoveAxis moveAxis;
+        LineRenderer outline,worldFrame,movementPath,movementArrow,moveHorizontal,moveVertical;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd,moveCenter;Material lineMaterial;Sprite handleSprite;
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
         public Vector3 MovementGuideEnd=>movementEnd!=null?movementEnd.transform.position:Vector3.zero;
@@ -32,13 +33,14 @@ namespace CreaJuego.Web
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
                 if(TryBeginResize(screen)){changed=false;return;}
+                if(TryBeginMoveGizmo(screen,world)){changed=false;return;}
                 var hit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());var item=controller.Selection.Select(hit!=null?hit.GetComponent<RuntimeAuthoredItem>()?.instanceId:null);
-                if(item!=null&&Tool==RuntimeTransformTool.Move){dragging=true;changed=false;offset=item.transform.position-world;last=item.transform.position;}else if(item==null){panning=true;last=world;}
+                if(item!=null&&Tool==RuntimeTransformTool.Move)BeginMove(item,world,RuntimeMoveAxis.Free);else if(item==null){panning=true;last=world;}
             }
             if(mouse.leftButton.isPressed&&resizing)Resize(world);
-            else if(mouse.leftButton.isPressed&&dragging){var before=controller.Selection.SelectedItem.transform.position;controller.MoveSelected(world+offset,false);changed|=(before-controller.Selection.SelectedItem.transform.position).sqrMagnitude>.0001f;}
+            else if(mouse.leftButton.isPressed&&dragging)DragMove(world);
             else if(mouse.leftButton.isPressed&&panning){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
-            if(mouse.leftButton.wasReleasedThisFrame){if((dragging||resizing)&&changed)controller.CommitEdit();dragging=panning=resizing=changed=false;}
+            if(mouse.leftButton.wasReleasedThisFrame){if(dragging)EndMove();else if(resizing&&changed)controller.CommitEdit();panning=resizing=changed=false;moveAxis=RuntimeMoveAxis.None;}
             var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,100);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
             if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();
@@ -48,8 +50,30 @@ namespace CreaJuego.Web
         public void SetTool(RuntimeTransformTool tool)
         {
             if(Tool==tool){SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);return;}
-            Tool=tool;dragging=panning=resizing=changed=false;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
+            Tool=tool;dragging=panning=resizing=changed=false;moveAxis=RuntimeMoveAxis.None;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
         }
+        public bool BeginMoveHandle(Vector2 screen,Vector3 world)=>TryBeginMoveGizmo(screen,world);
+        public bool DragMove(Vector3 world)
+        {
+            if(!dragging)return false;var selected=controller.Selection.SelectedItem;if(selected==null){dragging=false;return false;}var before=selected.transform.position;var target=world+offset;if(moveAxis==RuntimeMoveAxis.Horizontal)target.y=last.y;else if(moveAxis==RuntimeMoveAxis.Vertical)target.x=last.x;controller.MoveSelected(target,false);bool moved=(before-selected.transform.position).sqrMagnitude>.0001f;changed|=moved;return moved;
+        }
+        public void EndMove(){if(dragging&&changed)controller.CommitEdit();dragging=changed=false;moveAxis=RuntimeMoveAxis.None;}
+        bool TryBeginMoveGizmo(Vector2 screen,Vector3 world)
+        {
+            var item=controller.Selection.SelectedItem;if(Tool!=RuntimeTransformTool.Move||item==null||moveCenter==null||moveHorizontal==null||moveVertical==null)return false;
+            var center=(Vector2)View.WorldToScreenPoint(moveCenter.transform.position);var xEnd=(Vector2)View.WorldToScreenPoint(moveHorizontal.GetPosition(4));var yEnd=(Vector2)View.WorldToScreenPoint(moveVertical.GetPosition(4));var axis=RuntimeMoveGizmoHit.Resolve(screen,center,xEnd,yEnd,14);
+            // La ruta azul/naranja es una guía, pero visualmente parece un control de movimiento.
+            // Aceptarla también como zona de agarre evita que el participante arrastre la flecha
+            // sin mover el objeto. La distancia del recorrido se sigue editando en Propiedades.
+            if(axis==RuntimeMoveAxis.None&&movementPath!=null&&movementPath.gameObject.activeInHierarchy)
+            {
+                var routeStart=(Vector2)View.WorldToScreenPoint(movementPath.GetPosition(0));
+                var routeEnd=(Vector2)View.WorldToScreenPoint(movementPath.GetPosition(1));
+                if(RuntimeMoveGizmoHit.IsNearSegment(screen,routeStart,routeEnd,18))axis=RuntimeMoveAxis.Free;
+            }
+            if(axis==RuntimeMoveAxis.None)return false;BeginMove(item,world,axis);return true;
+        }
+        void BeginMove(GameItem item,Vector3 world,RuntimeMoveAxis axis){dragging=true;changed=false;moveAxis=axis;offset=item.transform.position-world;last=item.transform.position;}
         bool TryBeginResize(Vector2 screen)
         {
             if(Tool!=RuntimeTransformTool.Resize)return false;
@@ -68,7 +92,7 @@ namespace CreaJuego.Web
         }        void Selected(GameItem item)
         {
             DestroySelection();if(item==null)return;outline=Line("Selección",new Color(1,.85f,.1f),.06f,100);
-            if(item.definition!=null&&item.definition.kind!=ItemKind.Background){leftHandle=Handle("Tamaño izquierdo");rightHandle=Handle("Tamaño derecho");topHandle=Handle("Tamaño superior");bottomHandle=Handle("Tamaño inferior");}
+            if(item.definition!=null&&item.definition.kind!=ItemKind.Background){leftHandle=Handle("Tamaño izquierdo");rightHandle=Handle("Tamaño derecho");topHandle=Handle("Tamaño superior");bottomHandle=Handle("Tamaño inferior");moveHorizontal=Line("Mover horizontal",new Color(.95f,.2f,.16f,.98f),.08f,103);moveHorizontal.positionCount=8;moveVertical=Line("Mover vertical",new Color(.25f,.9f,.28f,.98f),.08f,103);moveVertical.positionCount=8;moveCenter=GuidePoint("Mover libre",new Color(1f,.85f,.1f,.98f));moveCenter.sortingOrder=104;}
             fallingGuide=controller.IsCatchMode&&item.definition!=null&&(item.definition.kind==ItemKind.Prize||item.definition.kind==ItemKind.Hazard);
             if(item.definition!=null&&(item.definition.kind==ItemKind.MovingPlatform||item.definition.kind==ItemKind.Enemy)||fallingGuide){var color=fallingGuide?(item.definition.kind==ItemKind.Prize?new Color(1f,.8f,.15f,.95f):new Color(1f,.25f,.2f,.95f)):item.definition.kind==ItemKind.Enemy?new Color(1f,.35f,.2f,.95f):new Color(.2f,.75f,1f,.95f);movementPath=Line(fallingGuide?"Trayectoria de caída":"Recorrido",color,.075f,99);movementPath.positionCount=2;movementArrow=Line("Dirección",color,.075f,99);movementArrow.positionCount=3;movementStart=GuidePoint(fallingGuide?"Aparece aquí":"Inicio del recorrido",color);movementEnd=GuidePoint(fallingGuide?"Final de caída":"Final del recorrido",color);}
             UpdateSelectionVisuals();
@@ -77,18 +101,24 @@ namespace CreaJuego.Web
         {
             var item=controller.Selection.SelectedItem;if(item==null||outline==null)return;var bounds=ItemBounds(item);var z=item.transform.position.z-.1f;outline.SetPositions(new[]{new Vector3(bounds.min.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.max.y,z),new Vector3(bounds.max.x,bounds.min.y,z),new Vector3(bounds.min.x,bounds.min.y,z)});
             if(leftHandle!=null){float size=Mathf.Clamp(View.orthographicSize*.045f,.18f,.65f);leftHandle.transform.position=new Vector3(bounds.min.x,bounds.center.y,z-.01f);rightHandle.transform.position=new Vector3(bounds.max.x,bounds.center.y,z-.01f);topHandle.transform.position=new Vector3(bounds.center.x,bounds.max.y,z-.01f);bottomHandle.transform.position=new Vector3(bounds.center.x,bounds.min.y,z-.01f);leftHandle.transform.localScale=rightHandle.transform.localScale=topHandle.transform.localScale=bottomHandle.transform.localScale=Vector3.one*size;}
+            if(moveCenter!=null)
+            {
+                var center=new Vector3(bounds.center.x,bounds.center.y,z-.04f);float arm=Mathf.Clamp(View.orthographicSize*.14f,.8f,4f),head=arm*.22f;moveCenter.transform.position=center;moveCenter.transform.localScale=Vector3.one*Mathf.Clamp(View.orthographicSize*.025f,.16f,.5f);
+                var left=center+Vector3.left*arm;var right=center+Vector3.right*arm;moveHorizontal.SetPositions(new[]{left+Vector3.up*head,left,left+Vector3.down*head,left,right,right+Vector3.up*head,right,right+Vector3.down*head});
+                var bottom=center+Vector3.down*arm;var top=center+Vector3.up*arm;moveVertical.SetPositions(new[]{bottom+Vector3.left*head,bottom,bottom+Vector3.right*head,bottom,top,top+Vector3.left*head,top,top+Vector3.right*head});
+            }
             if(movementPath!=null){Vector3 start,end;if(fallingGuide)RuntimeCatchGuide.TryGetRoute(item,controller.Project.bounds,out start,out end);else RuntimeMovementGuide.TryGetRoute(item,out start,out end);start.z=end.z=z-.02f;movementPath.SetPositions(new[]{start,end});float pointSize=Mathf.Clamp(View.orthographicSize*.035f,.14f,2f);movementStart.transform.position=start;movementEnd.transform.position=end;movementStart.transform.localScale=movementEnd.transform.localScale=Vector3.one*pointSize;float arrowSize=Mathf.Clamp(View.orthographicSize*.04f,.4f,3f);var direction=(end-start).normalized;var normal=new Vector3(-direction.y,direction.x);var tip=end;var basePoint=end-direction*arrowSize;movementArrow.SetPositions(new[]{basePoint+normal*arrowSize*.45f,tip,basePoint-normal*arrowSize*.45f});}
         }
         void UpdateGuideScale()
         {
-            float width=RuntimeGuideScale.WorldWidth(View.orthographicSize,View.pixelHeight);if(worldFrame!=null)worldFrame.widthMultiplier=width;float guideWidth=Mathf.Clamp(View.orthographicSize*.012f,.06f,1.2f);if(outline!=null)outline.widthMultiplier=guideWidth*1.25f;if(movementPath!=null)movementPath.widthMultiplier=guideWidth*1.35f;if(movementArrow!=null)movementArrow.widthMultiplier=guideWidth*1.35f;
+            float width=RuntimeGuideScale.WorldWidth(View.orthographicSize,View.pixelHeight);if(worldFrame!=null)worldFrame.widthMultiplier=width;float guideWidth=Mathf.Clamp(View.orthographicSize*.012f,.06f,1.2f);if(outline!=null)outline.widthMultiplier=guideWidth*1.25f;if(movementPath!=null)movementPath.widthMultiplier=guideWidth*1.35f;if(movementArrow!=null)movementArrow.widthMultiplier=guideWidth*1.35f;if(moveHorizontal!=null)moveHorizontal.widthMultiplier=guideWidth*1.6f;if(moveVertical!=null)moveVertical.widthMultiplier=guideWidth*1.6f;
         }
         void RefreshWorld()
         {
             if(worldFrame==null||controller.Project?.bounds==null)return;var b=controller.Project.bounds;worldFrame.SetPositions(new[]{new Vector3(b.left,b.bottom,5),new Vector3(b.left,b.top,5),new Vector3(b.right,b.top,5),new Vector3(b.right,b.bottom,5)});UpdateGuideScale();UpdateSelectionVisuals();
         }
-        void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);bool showHandles=visible&&Tool==RuntimeTransformTool.Resize;foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(showHandles);if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
-        void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)Destroy(handle.gameObject);if(movementPath!=null)Destroy(movementPath.gameObject);if(movementArrow!=null)Destroy(movementArrow.gameObject);if(movementStart!=null)Destroy(movementStart.gameObject);if(movementEnd!=null)Destroy(movementEnd.gameObject);outline=movementPath=movementArrow=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=null;fallingGuide=false;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
+        void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);bool showResize=visible&&Tool==RuntimeTransformTool.Resize,showMove=visible&&Tool==RuntimeTransformTool.Move;foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(showResize);if(moveHorizontal!=null){moveHorizontal.gameObject.SetActive(showMove);moveVertical.gameObject.SetActive(showMove);moveCenter.gameObject.SetActive(showMove);}if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
+        void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd,moveCenter})if(handle!=null)Destroy(handle.gameObject);foreach(var line in new[]{movementPath,movementArrow,moveHorizontal,moveVertical})if(line!=null)Destroy(line.gameObject);outline=movementPath=movementArrow=moveHorizontal=moveVertical=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=moveCenter=null;fallingGuide=false;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
         SpriteRenderer Handle(string name){var go=new GameObject(name,typeof(RuntimeResizeHandle),typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=new Color(1,.85f,.1f);renderer.sortingOrder=101;return renderer;}
         SpriteRenderer GuidePoint(string name,Color color){var go=new GameObject(name,typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=color;renderer.sortingOrder=100;return renderer;}
         static Sprite CreateHandleSprite(){var texture=new Texture2D(8,8,TextureFormat.RGBA32,false);var pixels=new Color[64];for(int i=0;i<pixels.Length;i++)pixels[i]=Color.white;texture.SetPixels(pixels);texture.Apply();return Sprite.Create(texture,new Rect(0,0,8,8),new Vector2(.5f,.5f),8);}
@@ -103,6 +133,18 @@ namespace CreaJuego.Web
         }
     }
     public sealed class RuntimeResizeHandle:MonoBehaviour{}
+    public static class RuntimeMoveGizmoHit
+    {
+        public static RuntimeMoveAxis Resolve(Vector2 point,Vector2 center,Vector2 xEnd,Vector2 yEnd,float radius)
+        {
+            if(Vector2.Distance(point,center)<=radius)return RuntimeMoveAxis.Free;
+            var xStart=center-(xEnd-center);if(DistanceToSegment(point,xStart,xEnd)<=radius)return RuntimeMoveAxis.Horizontal;
+            var yStart=center-(yEnd-center);if(DistanceToSegment(point,yStart,yEnd)<=radius)return RuntimeMoveAxis.Vertical;
+            return RuntimeMoveAxis.None;
+        }
+        public static bool IsNearSegment(Vector2 point,Vector2 start,Vector2 end,float radius)=>DistanceToSegment(point,start,end)<=radius;
+        static float DistanceToSegment(Vector2 point,Vector2 a,Vector2 b){var line=b-a;float length=line.sqrMagnitude;if(length<.001f)return Vector2.Distance(point,a);float t=Mathf.Clamp01(Vector2.Dot(point-a,line)/length);return Vector2.Distance(point,a+line*t);}
+    }
     public static class RuntimeResizeHit
     {
         public static int Resolve(Vector2 point,System.Collections.Generic.IReadOnlyList<Vector2> handles,float radius)

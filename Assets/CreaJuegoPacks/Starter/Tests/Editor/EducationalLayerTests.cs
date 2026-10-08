@@ -25,7 +25,8 @@ namespace CreaJuego.Starter.Tests
         {
             var catalog = ItemService.WorkshopCatalog();
             Assert.That(ItemService.PilotCatalog().Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Enemy, ItemKind.Goal, ItemKind.Decoration }));
-            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "movil", "piso" }));
+            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "piso" }));
+            Assert.That(ItemService.WorkshopCatalog().Any(d => d.id == "movil"), Is.False);
             Assert.That(catalog.All(d => d.icon != null), Is.True);
             Assert.That(ItemService.PilotCatalog().Select(d => d.icon).Distinct().Count(), Is.EqualTo(ItemService.PilotCatalog().Length));
             Assert.That(ItemService.Catalog().Length, Is.EqualTo(9), "Experimental content is preserved");
@@ -75,7 +76,7 @@ namespace CreaJuego.Starter.Tests
             var prize = Object.FindObjectsByType<GameItem>().First(i => i.definition.kind == ItemKind.Prize);
             Selection.activeGameObject = prize.gameObject;
             yield return null;
-            Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Not.Null);
+            Assert.That(window.rootVisualElement.Q<Button>("crear-movil"), Is.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-piso"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Button>("crear-enemigo"), Is.Not.Null);
             Assert.That(window.rootVisualElement.Q<Image>("icono-premio").sprite, Is.EqualTo(ItemVisual.Resolve(prize).sprite));

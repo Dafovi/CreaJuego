@@ -34,7 +34,22 @@ namespace CreaJuego.Web
         void Awake()
         {
             storage=new FileProjectStorage();recoveryStorage=new FileProjectStorage(System.IO.Path.Combine(Application.persistentDataPath,"recuperacion.creajuego"));if(buildRoot==null)buildRoot=new GameObject("Nivel en construcción").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
-            if(editableSceneProject!=null){Project=CloneProject(editableSceneProject);EnsureDefaultAppearances(Project);History.Reset(Project);}else NewProject(false);
+            if(editableSceneProject!=null)
+            {
+                Project=CloneProject(editableSceneProject);EnsureDefaultAppearances(Project);
+                // La plantilla de la escena no debe revivir opciones retiradas del taller.
+                // Los proyectos importados después siguen pudiendo resolverlas por compatibilidad.
+                var retired=new HashSet<string>(Project.objects.Where(value=>value!=null&&value.definitionId=="movil").Select(value=>value.instanceId));
+                if(retired.Count>0)
+                {
+                    Project.objects.RemoveAll(value=>value!=null&&retired.Contains(value.instanceId));
+                    // No se reconstruye el nivel en Awake: el fondo usa un Canvas asociado a la
+                    // cámara y recrearlo antes de Start podía dejarlo invisible en Play Mode.
+                    foreach(var marker in buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true))if(retired.Contains(marker.instanceId))Destroy(marker.gameObject);
+                }
+                History.Reset(Project);
+            }
+            else NewProject(false);
         }
         void Start(){if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
         void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveRecovery();}
@@ -91,7 +106,6 @@ namespace CreaJuego.Web
             StarterRamp(new Vector2(-16,-8),new Vector2(-13,-6),"workshop-grass-ramp");StarterRamp(new Vector2(-5,-6),new Vector2(-1,-4),"workshop-grass-ramp");StarterRamp(new Vector2(7,-4),new Vector2(11,-2),"workshop-grass-ramp");
             StarterRamp(new Vector2(12,2),new Vector2(9,4),"workshop-grass-ramp");StarterRamp(new Vector2(1,4),new Vector2(-3,6),"workshop-grass-ramp");StarterRamp(new Vector2(-11,6),new Vector2(-15,8),"workshop-grass-ramp");
             StarterRamp(new Vector2(-15,8),new Vector2(-11,10),"workshop-grass-ramp");StarterRamp(new Vector2(-3,10),new Vector2(2,12),"workshop-grass-ramp");StarterRamp(new Vector2(10,12),new Vector2(15,14),"workshop-grass-ramp");
-            var moving=Starter("movil",new Vector3(0,9),0,"workshop-grass-moving");if(moving!=null){moving.distance=4;moving.speed=1.2f;}
             var player=StarterOnSurface("jugador",-22,-8,"5b84b5bdbf244cecb12b976bbf0aa6c7");if(player!=null){player.speed=3;player.jump=14;}
             foreach(var position in new[]{new Vector2(-18,-8),new Vector2(-9,-6),new Vector2(3,-4),new Vector2(13,-2),new Vector2(19,2),new Vector2(5,4),new Vector2(-7,6),new Vector2(-19,8),new Vector2(-7,10),new Vector2(6,12),new Vector2(17,14)})StarterOnSurface("premio",position.x,position.y,"workshop-gold-coin");
             foreach(var position in new[]{new Vector2(-19,-8),new Vector2(17,-2),new Vector2(6,4),new Vector2(-6,10),new Vector2(7,12)})StarterOnSurface("peligro",position.x,position.y,"workshop-grass-spikes");

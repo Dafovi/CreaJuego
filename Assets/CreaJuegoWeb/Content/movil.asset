@@ -23,8 +23,8 @@ MonoBehaviour:
   kind: 5
   order: 5
   runtimeOnly: 1
-  availableInWorkshop: 1
-  extraInWorkshop: 1
+  availableInWorkshop: 0
+  extraInWorkshop: 0
   allowMultiple: 1
   properties:
   - path: speed

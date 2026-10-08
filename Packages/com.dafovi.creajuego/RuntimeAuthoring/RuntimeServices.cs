@@ -49,7 +49,9 @@ namespace CreaJuego.Web
                 if(!visualHit){var collider=item.GetComponentInChildren<Collider2D>();if(collider==null||!collider.bounds.Contains(point))continue;bounds=collider.bounds;layer=-1;order=-1;}
                 candidates.Add(new Candidate{item=item,layer=layer,order=order,area=Mathf.Max(.0001f,bounds.size.x*bounds.size.y),distance=((Vector2)item.transform.position-point).sqrMagnitude,selected=marker.instanceId==selectedId});
             }
-            return candidates.OrderByDescending(v=>v.layer).ThenByDescending(v=>v.order).ThenBy(v=>v.area).ThenByDescending(v=>v.selected).ThenBy(v=>v.distance).Select(v=>v.item).FirstOrDefault();
+            // Si el usuario ya eligió un elemento, conservarlo mientras el puntero siga sobre él.
+            // Esto evita que una plataforma móvil apoyada sobre otra superficie pierda el arrastre.
+            return candidates.OrderByDescending(v=>v.layer).ThenByDescending(v=>v.order).ThenByDescending(v=>v.selected).ThenBy(v=>v.area).ThenBy(v=>v.distance).Select(v=>v.item).FirstOrDefault();
         }
     }
     public sealed class RuntimeHistory

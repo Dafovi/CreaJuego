@@ -32,7 +32,9 @@ namespace CreaJuego.Editor
             }
         }
 
-        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected | GizmoType.Pickable)]
+        // La ruta informa el recorrido. No debe ser Pickable: en Scene View parecía
+        // una flecha editable y podía capturar clics que debían mover el objeto.
+        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected)]
         private static void DrawItem(GameItem item, GizmoType gizmoType)
         {
             var selected = (gizmoType & GizmoType.Selected) != 0;

@@ -159,7 +159,8 @@ namespace CreaJuego.Starter.Tests
         public void PilotCatalogContainsSevenMainItemsAndWorkshopExtras()
         {
             Assert.That(ItemService.PilotCatalog().Select(d => d.kind), Is.EquivalentTo(new[] { ItemKind.Player, ItemKind.Platform, ItemKind.Prize, ItemKind.Hazard, ItemKind.Enemy, ItemKind.Goal, ItemKind.Decoration }));
-            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "movil", "piso" }));
+            Assert.That(ItemService.ExtraCatalog().Select(d => d.id), Is.EquivalentTo(new[] { "piso" }));
+            Assert.That(ItemService.WorkshopCatalog().Any(d => d.id == "movil"), Is.False);
         }
 
         [Test]
@@ -198,7 +199,7 @@ namespace CreaJuego.Starter.Tests
         [Test]
         public void EducationalGizmosDescribeMovementAndInteractions()
         {
-            var moving = ItemService.Create(ItemService.ExtraCatalog().Single(d => d.id == "movil"), new Vector3(2, 3, 0));
+            var moving = ItemService.Create(ItemService.Catalog().Single(d => d.id == "movil"), new Vector3(2, 3, 0));
             moving.distance = 6;
             Assert.That(EducationalGizmos.TryGetMovementPath(moving, out var start, out var end), Is.True);
             Assert.That(start, Is.EqualTo(new Vector3(2, 3, 0)).Using(Vector3ComparerWithEqualsOperator.Instance));
