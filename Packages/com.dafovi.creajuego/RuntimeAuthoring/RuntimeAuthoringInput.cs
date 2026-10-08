@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -40,9 +41,8 @@ namespace CreaJuego.Web
         bool TryBeginResize(Vector2 screen)
         {
             var item=controller.Selection.SelectedItem;if(item==null||item.definition==null||item.definition.kind==ItemKind.Background||leftHandle==null)return false;
-            var handles=new[]{leftHandle,rightHandle,bottomHandle,topHandle};int closest=-1;float distance=float.MaxValue;
-            for(int i=0;i<handles.Length;i++){float current=Vector2.Distance(screen,View.WorldToScreenPoint(handles[i].transform.position));if(current<distance){distance=current;closest=i;}}
-            if(distance>24)return false;
+            var handles=new[]{leftHandle,rightHandle,bottomHandle,topHandle};var positions=handles.Select(handle=>(Vector2)View.WorldToScreenPoint(handle.transform.position)).ToArray();int closest=RuntimeResizeHit.Resolve(screen,positions,12);
+            if(closest<0)return false;
             var bounds=ItemBounds(item);resizeHorizontal=closest<2;resizePositive=closest==1||closest==3;
             fixedEdge=resizeHorizontal?(resizePositive?bounds.min.x:bounds.max.x):(resizePositive?bounds.min.y:bounds.max.y);resizing=true;return true;
         }
@@ -90,6 +90,15 @@ namespace CreaJuego.Web
         }
     }
     public sealed class RuntimeResizeHandle:MonoBehaviour{}
+    public static class RuntimeResizeHit
+    {
+        public static int Resolve(Vector2 point,System.Collections.Generic.IReadOnlyList<Vector2> handles,float radius)
+        {
+            if(handles==null||handles.Count<4)return -1;int closest=-1;float distance=float.MaxValue;var distances=new float[handles.Count];
+            for(int i=0;i<handles.Count;i++){distances[i]=Vector2.Distance(point,handles[i]);if(distances[i]<distance){distance=distances[i];closest=i;}}
+            if(distance>radius)return -1;int opposite=closest==0?1:closest==1?0:closest==2?3:2;return distances[opposite]<=radius?-1:closest;
+        }
+    }
     public static class RuntimeGuideScale
     {
         public static float WorldWidth(float orthographicSize,int pixelHeight)

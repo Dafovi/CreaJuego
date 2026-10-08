@@ -456,5 +456,13 @@ namespace CreaJuego.Web.Tests
             moving.distance=7;Assert.That(RuntimeMovementGuide.TryGetRoute(moving,out start,out end),Is.True);Assert.That(end.x-start.x,Is.EqualTo(7).Within(.01f));
             var platform=c.buildRoot.GetComponentsInChildren<GameItem>().First(item=>item.definition.kind==ItemKind.Platform);Assert.That(RuntimeMovementGuide.TryGetRoute(platform,out _,out _),Is.False);
         }
+        [Test]
+        public void ThinPlatformCenterStartsMoveInsteadOfAmbiguousResize()
+        {
+            var handles=new[]{new Vector2(20,50),new Vector2(180,50),new Vector2(100,45),new Vector2(100,55)};
+            Assert.That(RuntimeResizeHit.Resolve(new Vector2(100,50),handles,12),Is.EqualTo(-1),"El centro de una plataforma delgada debe quedar libre para arrastrarla.");
+            Assert.That(RuntimeResizeHit.Resolve(new Vector2(100,58),handles,12),Is.EqualTo(3),"El borde superior debe conservar su control de tamaño.");
+            Assert.That(RuntimeResizeHit.Resolve(new Vector2(18,50),handles,12),Is.EqualTo(0),"Los controles laterales deben seguir funcionando.");
+        }
     }
 }
