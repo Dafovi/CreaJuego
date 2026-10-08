@@ -12,12 +12,12 @@ namespace CreaJuego.Web
         [SerializeField] Canvas canvas;
         [SerializeField] Transform catalog,list,properties,editTop,top,hearts;
         [SerializeField] Text status,save,flow,readinessTitle,readinessChecks,brandTitle,brandTagline;
-        [SerializeField] Button newButton,saveButton,openButton,undoButton,redoButton,frameAllButton,frameSelectedButton,levelButton,duplicateButton,deleteButton,modeButton,returnButton;
+        [SerializeField] Button newButton,saveButton,openButton,undoButton,redoButton,moveToolButton,resizeToolButton,frameAllButton,frameSelectedButton,levelButton,duplicateButton,deleteButton,modeButton,returnButton;
         [SerializeField] Toggle snap;
         [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,gameResultPanel,newProjectDialog;
         [SerializeField] Text hudObjective,hudScore,hudEnemies,gameResultTitle,gameResultMessage,newProjectHint;
         [SerializeField, Tooltip("Recalcula paneles y cámara según la resolución. Déjalo desactivado para respetar el layout guardado en el Canvas.")] bool adaptLayoutAtRuntime;
-        RuntimeAuthoringController c;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",mediaSearch="",mediaCategory="todas",renamingMediaId,pendingMediaDeleteId,statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
+        RuntimeAuthoringController c;RuntimeAuthoringInput authoringInput;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",mediaSearch="",mediaCategory="todas",renamingMediaId,pendingMediaDeleteId,statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
 
         static readonly Color Background=Hex("171D27"),Header=Hex("111822"),Panel=Hex("222B39"),Soft=Hex("273344"),Selected=Hex("304D73"),TextColor=Hex("EDF2FA"),Muted=Hex("AFBDD1"),Accent=Hex("80B4FF"),Border=Hex("45556C"),Success=Hex("08743F"),SuccessBright=Hex("48C78A"),Warning=Hex("3B3020"),WarningText=Hex("F2C778"),Danger=Hex("5A2731"),DangerText=Hex("FF8C9C");
         static Color Hex(string value){ColorUtility.TryParseHtmlString("#"+value,out var color);return color;}
@@ -37,13 +37,15 @@ namespace CreaJuego.Web
         public int VisibleGameTypeCount=>newProjectDialog==null?0:newProjectDialog.GetComponentsInChildren<RuntimeGameTypeButton>(true).Length;
         public int GameplayHeartCount=>hearts==null?0:hearts.GetComponentsInChildren<Image>(false).Count(image=>image.sprite==RuntimeIconLibrary.Heart);
         public string GameplayHudText=>(hudObjective?.text??"")+" "+(hudScore?.text??"")+" "+(hudEnemies?.text??"")+" "+(hearts!=null?string.Join(" ",hearts.GetComponentsInChildren<Text>(false).Select(t=>t.text)):"");
+        public RuntimeTransformTool ActiveTransformTool=>authoringInput!=null?authoringInput.Tool:RuntimeTransformTool.Move;
+        public bool HasTransformToolControls=>moveToolButton!=null&&resizeToolButton!=null;
         public bool HasPreparedLayout=>canvas!=null&&catalog!=null&&list!=null&&properties!=null&&status!=null&&modeButton!=null&&leftPanel!=null&&rightPanel!=null&&readinessPanel!=null;
 
-        void Start(){Initialize();if(!HasPreparedLayout)Build();if(gameResultPanel==null)BuildGameResultPanel();BindStaticActions();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;Refresh();}
-        void OnDestroy(){if(c!=null){if(selectionChanged!=null)c.Selection.SelectionChanged-=selectionChanged;c.ProjectChanged-=Refresh;}}
+        void Start(){Initialize();if(!HasPreparedLayout)Build();EnsureTransformToolControls();if(gameResultPanel==null)BuildGameResultPanel();BindStaticActions();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;if(authoringInput!=null)authoringInput.ToolChanged+=OnTransformToolChanged;Refresh();}
+        void OnDestroy(){if(c!=null){if(selectionChanged!=null)c.Selection.SelectionChanged-=selectionChanged;c.ProjectChanged-=Refresh;}if(authoringInput!=null)authoringInput.ToolChanged-=OnTransformToolChanged;}
         void LateUpdate(){ApplyResponsiveLayout();UpdateGameplayHud();}
         void OnSelection(GameItem item){if(item!=null)worldSelected=false;if(item!=null&&item.definition!=null&&searchKind!=item.definition.kind){appearanceSearch="";searchKind=item.definition.kind;}Refresh();}
-        void Initialize(){c=GetComponent<RuntimeAuthoringController>();font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");if(canvas!=null)scaler=canvas.GetComponent<CanvasScaler>();ResolveBrandLabels();ApplyBranding();}
+        void Initialize(){c=GetComponent<RuntimeAuthoringController>();authoringInput=GetComponent<RuntimeAuthoringInput>();font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");if(canvas!=null)scaler=canvas.GetComponent<CanvasScaler>();ResolveBrandLabels();ApplyBranding();}
 
         void ResolveBrandLabels()
         {
@@ -110,10 +112,34 @@ namespace CreaJuego.Web
         void BindStaticActions()
         {
             Bind(newButton,ShowNewProjectDialog);Bind(saveButton,c.SaveNow);Bind(openButton,c.LoadLast);Bind(undoButton,c.Undo);Bind(redoButton,c.Redo);Bind(frameAllButton,c.FrameAll);Bind(frameSelectedButton,c.FrameSelected);
+            Bind(moveToolButton,()=>SetTransformTool(RuntimeTransformTool.Move));Bind(resizeToolButton,()=>SetTransformTool(RuntimeTransformTool.Resize));
             Bind(levelButton,()=>{worldSelected=true;c.Selection.Clear();Refresh();});Bind(duplicateButton,c.DuplicateSelected);Bind(deleteButton,c.DeleteSelected);Bind(modeButton,c.ToggleMode);Bind(returnButton,c.ToggleMode);
             snap.onValueChanged.RemoveAllListeners();snap.onValueChanged.AddListener(value=>c.SetSnap(value));
         }
         static void Bind(Button button,UnityEngine.Events.UnityAction action){if(button==null)return;button.onClick.RemoveAllListeners();button.onClick.AddListener(action);}
+
+        void EnsureTransformToolControls()
+        {
+            if(editTop==null||moveToolButton!=null&&resizeToolButton!=null)return;
+            // La barra preparada existe en la escena. Reordenarla aquí conserva el layout manual y añade
+            // herramientas inequívocas sin exigir regenerar ni sobrescribir el Canvas del taller.
+            SetToolbarButton(newButton,8,58);SetToolbarButton(saveButton,70,66);SetToolbarButton(openButton,140,54);SetToolbarButton(undoButton,198,34);SetToolbarButton(redoButton,236,34);
+            moveToolButton=ButtonAt(editTop,"Mover",new Vector2(274,7),null,new Vector2(62,36),null,Selected,TextColor,11);moveToolButton.name="Herramienta Mover";
+            resizeToolButton=ButtonAt(editTop,"Tamaño",new Vector2(340,7),null,new Vector2(70,36),null,Soft,TextColor,11);resizeToolButton.name="Herramienta Cambiar tamaño";
+            SetToolbarButton(frameAllButton,414,70);SetToolbarButton(frameSelectedButton,488,76);SetToolbarButton(levelButton,568,50);
+            if(snap!=null){var rect=Rect(snap.transform);rect.anchoredPosition=new Vector2(622,8);rect.sizeDelta=new Vector2(112,34);var label=snap.GetComponentsInChildren<Text>(true).FirstOrDefault();if(label!=null)label.text="Cuadrícula";}
+            UpdateTransformToolButtons();
+        }
+        static void SetToolbarButton(Button button,float x,float width){if(button==null)return;var rect=(RectTransform)button.transform;rect.anchoredPosition=new Vector2(x,7);rect.sizeDelta=new Vector2(width,36);}
+        void SetTransformTool(RuntimeTransformTool tool)
+        {
+            if(authoringInput==null)return;authoringInput.SetTool(tool);statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.";UpdateTransformToolButtons();UpdateReadiness();
+        }
+        void OnTransformToolChanged(RuntimeTransformTool tool){UpdateTransformToolButtons();}
+        void UpdateTransformToolButtons()
+        {
+            if(authoringInput==null)return;if(moveToolButton!=null)moveToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Move?Selected:Soft;if(resizeToolButton!=null)resizeToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Resize?Selected:Soft;
+        }
 
         void BuildNewProjectDialog()
         {
@@ -162,7 +188,7 @@ namespace CreaJuego.Web
                 var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,data,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
             }
             ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);
-            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);gameplayHudPanel?.SetActive(!build);if(build)gameResultPanel?.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
+            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);gameplayHudPanel?.SetActive(!build);if(build)gameResultPanel?.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateTransformToolButtons();UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
         }
 
         void UpdateFlow()

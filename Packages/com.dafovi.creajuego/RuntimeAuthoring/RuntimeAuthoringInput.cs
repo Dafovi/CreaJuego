@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 
 namespace CreaJuego.Web
 {
+    public enum RuntimeTransformTool{Move,Resize}
+
     [RequireComponent(typeof(RuntimeAuthoringController))]
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
@@ -17,6 +19,9 @@ namespace CreaJuego.Web
         public Vector3 MovementGuideEnd=>movementEnd!=null?movementEnd.transform.position:Vector3.zero;
         public float WorldFrameWidth=>worldFrame!=null?worldFrame.widthMultiplier:0;
         public Color WorldFrameColor=>worldFrame!=null?worldFrame.startColor:Color.clear;
+        public RuntimeTransformTool Tool{get;private set;}=RuntimeTransformTool.Move;
+        public bool HasVisibleResizeHandles=>leftHandle!=null&&leftHandle.gameObject.activeInHierarchy;
+        public event Action<RuntimeTransformTool> ToolChanged;
         void Awake(){controller=GetComponent<RuntimeAuthoringController>();controller.Selection.SelectionChanged+=Selected;controller.ProjectChanged+=RefreshWorld;}
         void Start(){lineMaterial=new Material(Shader.Find("Sprites/Default"));handleSprite=CreateHandleSprite();worldFrame=Line("Zona del nivel",new Color(1f,.72f,.05f,.98f),.08f,110);worldFrame.positionCount=4;worldFrame.loop=true;worldFrame.numCornerVertices=2;RefreshWorld();}
         void OnDestroy(){controller.Selection.SelectionChanged-=Selected;controller.ProjectChanged-=RefreshWorld;if(lineMaterial!=null)Destroy(lineMaterial);if(handleSprite!=null){var texture=handleSprite.texture;Destroy(handleSprite);Destroy(texture);}}
@@ -28,7 +33,7 @@ namespace CreaJuego.Web
             {
                 if(TryBeginResize(screen)){changed=false;return;}
                 var hit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());var item=controller.Selection.Select(hit!=null?hit.GetComponent<RuntimeAuthoredItem>()?.instanceId:null);
-                if(item!=null){dragging=true;changed=false;offset=item.transform.position-world;last=item.transform.position;}else{panning=true;last=world;}
+                if(item!=null&&Tool==RuntimeTransformTool.Move){dragging=true;changed=false;offset=item.transform.position-world;last=item.transform.position;}else if(item==null){panning=true;last=world;}
             }
             if(mouse.leftButton.isPressed&&resizing)Resize(world);
             else if(mouse.leftButton.isPressed&&dragging){var before=controller.Selection.SelectedItem.transform.position;controller.MoveSelected(world+offset,false);changed|=(before-controller.Selection.SelectedItem.transform.position).sqrMagnitude>.0001f;}
@@ -36,10 +41,18 @@ namespace CreaJuego.Web
             if(mouse.leftButton.wasReleasedThisFrame){if((dragging||resizing)&&changed)controller.CommitEdit();dragging=panning=resizing=changed=false;}
             var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,100);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
-            if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();UpdateSelectionVisuals();
+            if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();
+            bool editingText=EventSystem.current!=null&&EventSystem.current.currentSelectedGameObject!=null&&EventSystem.current.currentSelectedGameObject.GetComponent<UnityEngine.UI.InputField>()!=null;
+            if(keys!=null&&!editingText&&!keys.leftCtrlKey.isPressed&&!keys.rightCtrlKey.isPressed){if(keys.wKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Move);else if(keys.rKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Resize);}UpdateSelectionVisuals();
+        }
+        public void SetTool(RuntimeTransformTool tool)
+        {
+            if(Tool==tool){SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);return;}
+            Tool=tool;dragging=panning=resizing=changed=false;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
         }
         bool TryBeginResize(Vector2 screen)
         {
+            if(Tool!=RuntimeTransformTool.Resize)return false;
             var item=controller.Selection.SelectedItem;if(item==null||item.definition==null||item.definition.kind==ItemKind.Background||leftHandle==null)return false;
             var handles=new[]{leftHandle,rightHandle,bottomHandle,topHandle};var positions=handles.Select(handle=>(Vector2)View.WorldToScreenPoint(handle.transform.position)).ToArray();int closest=RuntimeResizeHit.Resolve(screen,positions,12);
             if(closest<0)return false;
@@ -74,7 +87,7 @@ namespace CreaJuego.Web
         {
             if(worldFrame==null||controller.Project?.bounds==null)return;var b=controller.Project.bounds;worldFrame.SetPositions(new[]{new Vector3(b.left,b.bottom,5),new Vector3(b.left,b.top,5),new Vector3(b.right,b.top,5),new Vector3(b.right,b.bottom,5)});UpdateGuideScale();UpdateSelectionVisuals();
         }
-        void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(visible);if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
+        void SetSelectionVisible(bool visible){if(outline!=null)outline.gameObject.SetActive(visible);bool showHandles=visible&&Tool==RuntimeTransformTool.Resize;foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)handle.gameObject.SetActive(showHandles);if(movementPath!=null){movementPath.gameObject.SetActive(visible);movementArrow.gameObject.SetActive(visible);movementStart.gameObject.SetActive(visible);movementEnd.gameObject.SetActive(visible);}}
         void DestroySelection(){if(outline!=null)Destroy(outline.gameObject);foreach(var handle in new[]{leftHandle,rightHandle,topHandle,bottomHandle})if(handle!=null)Destroy(handle.gameObject);if(movementPath!=null)Destroy(movementPath.gameObject);if(movementArrow!=null)Destroy(movementArrow.gameObject);if(movementStart!=null)Destroy(movementStart.gameObject);if(movementEnd!=null)Destroy(movementEnd.gameObject);outline=movementPath=movementArrow=null;leftHandle=rightHandle=topHandle=bottomHandle=movementStart=movementEnd=null;fallingGuide=false;}        LineRenderer Line(string name,Color color,float width,int order){var go=new GameObject(name);go.transform.SetParent(transform,false);var line=go.AddComponent<LineRenderer>();line.material=lineMaterial;line.startColor=line.endColor=color;line.startWidth=line.endWidth=width;line.positionCount=5;line.loop=false;line.sortingOrder=order;return line;}
         SpriteRenderer Handle(string name){var go=new GameObject(name,typeof(RuntimeResizeHandle),typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=new Color(1,.85f,.1f);renderer.sortingOrder=101;return renderer;}
         SpriteRenderer GuidePoint(string name,Color color){var go=new GameObject(name,typeof(SpriteRenderer));go.transform.SetParent(transform,false);var renderer=go.GetComponent<SpriteRenderer>();renderer.sprite=handleSprite;renderer.color=color;renderer.sortingOrder=100;return renderer;}
