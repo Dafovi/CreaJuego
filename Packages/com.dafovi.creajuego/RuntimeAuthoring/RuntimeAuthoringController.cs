@@ -22,13 +22,16 @@ namespace CreaJuego.Web
         public RuntimeHistory History{get;}=new RuntimeHistory();
         public RuntimeGameplayCamera GameplayCamera=>GetComponent<RuntimeGameplayCamera>();
         public RuntimeGameTypeDefinition[] GameTypes=>contentPack!=null?contentPack.GameTypes:RuntimeGameTypeCatalog.Defaults;
+        public RuntimeTilePaletteDefinition TilePalette=>contentPack!=null?contentPack.tilePalette:null;
+        public string SelectedTileId{get;private set;}
+        public int TileCount=>Project?.tileLayers?.Sum(layer=>layer?.cells?.Count??0)??0;
         public bool IsCatchMode=>Project!=null&&Project.gameTypeId=="catch-and-dodge";
         public Transform PlayRoot=>playRoot;
         public GameItem PlayPlayer=>playPlayer;
         public event Action ProjectChanged;
         readonly List<UnityEngine.Object> imageAssets=new List<UnityEngine.Object>();
         readonly Dictionary<string,Sprite> mediaSprites=new Dictionary<string,Sprite>();
-        Transform playRoot;GameObject services;GameItem playPlayer;IProjectStorage storage,recoveryStorage;bool dirty;float saveAt;
+        Transform playRoot;GameObject services;GameItem playPlayer;RuntimeTilemapWorld buildTilemap;IProjectStorage storage,recoveryStorage;bool dirty;float saveAt;
         string pendingImageTarget,editingMediaId;MediaAssetSource pendingMediaSource;bool importChanged,importedAppliedToTarget,updatedMediaAsset;int importedImageCount;
 
         void Awake()
@@ -39,7 +42,7 @@ namespace CreaJuego.Web
                 Project=CloneProject(editableSceneProject);EnsureDefaultAppearances(Project);
                 // La plantilla de la escena no debe revivir opciones retiradas del taller.
                 // Los proyectos importados después siguen pudiendo resolverlas por compatibilidad.
-                var retired=new HashSet<string>(Project.objects.Where(value=>value!=null&&value.definitionId=="movil").Select(value=>value.instanceId));
+                var retired=contentPack!=null&&contentPack.id=="web-parity-1"?new HashSet<string>(Project.objects.Where(value=>value!=null&&value.definitionId=="movil").Select(value=>value.instanceId)):new HashSet<string>();
                 if(retired.Count>0)
                 {
                     Project.objects.RemoveAll(value=>value!=null&&retired.Contains(value.instanceId));
@@ -50,8 +53,9 @@ namespace CreaJuego.Web
                 History.Reset(Project);
             }
             else NewProject(false);
+            SelectedTileId=TilePalette?.Default?.id;
         }
-        void Start(){if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
+        void Start(){if(buildRoot!=null)foreach(var background in buildRoot.GetComponentsInChildren<RuntimeCanvasBackground>(true))background.Configure(buildCamera);if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
         void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveRecovery();}
         void OnDestroy(){ReleaseImages();}
         public GameItemDefinition Find(string id)=>contentPack!=null?contentPack.Find(id):definitions.FirstOrDefault(d=>d!=null&&d.id==id);
@@ -300,7 +304,7 @@ namespace CreaJuego.Web
             if(Mode==AuthoringMode.Play)return null;var error=RuntimePreflight.Validate(Project,Find,new RuntimePreflightContext{cameraAvailable=gameCamera!=null});if(error!=null){ui?.SetStatus(error);return error;}
             bool catchMode=IsCatchMode;Selection.Clear();buildRoot.gameObject.SetActive(false);services=!catchMode&&sceneServicesPrefab!=null?Instantiate(sceneServicesPrefab):null;
             if(services!=null){foreach(var camera in services.GetComponentsInChildren<Camera>(true))camera.enabled=false;foreach(var listener in services.GetComponentsInChildren<AudioListener>(true))listener.enabled=false;foreach(var serviceCanvas in services.GetComponentsInChildren<Canvas>(true))serviceCanvas.enabled=false;}
-            playRoot=new GameObject("Partida temporal").transform;playRoot.gameObject.SetActive(false);var instances=new List<(GameItem item,RuntimeItemData data)>();foreach(var data in Project.objects)instances.Add((InstantiateItem(data,playRoot,false),data));
+            playRoot=new GameObject("Partida temporal").transform;playRoot.gameObject.SetActive(false);RuntimeTilemapWorld.Build(playRoot,Project,TilePalette,false);var instances=new List<(GameItem item,RuntimeItemData data)>();foreach(var data in Project.objects)instances.Add((InstantiateItem(data,playRoot,false),data));
             playPlayer=instances.First(pair=>pair.item.definition.kind==ItemKind.Player).item;
             if(catchMode)ConfigureCatchMode(instances);else
             {
@@ -409,9 +413,19 @@ namespace CreaJuego.Web
         public void Rebuild(string selectId=null)
         {
             if(buildRoot==null)return;Selection.Bind(ResolveAuthoredItem);selectId??=Selection.SelectedInstanceId;buildRoot.gameObject.SetActive(false);ReleaseImages();for(int i=buildRoot.childCount-1;i>=0;i--){buildRoot.GetChild(i).gameObject.SetActive(false);DestroySafe(buildRoot.GetChild(i).gameObject);}
-            GameItem selected=null;foreach(var data in Project.objects){var item=InstantiateItem(data,buildRoot,true);var marker=item.gameObject.AddComponent<RuntimeAuthoredItem>();marker.instanceId=data.instanceId;if(data.instanceId==selectId)selected=item;}
+            buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);GameItem selected=null;foreach(var data in Project.objects){var item=InstantiateItem(data,buildRoot,true);var marker=item.gameObject.AddComponent<RuntimeAuthoredItem>();marker.instanceId=data.instanceId;if(data.instanceId==selectId)selected=item;}
             buildRoot.gameObject.SetActive(true);foreach(var behaviour in buildRoot.GetComponentsInChildren<MonoBehaviour>())if(!KeepEnabledWhileBuilding(behaviour))behaviour.enabled=false;foreach(var body in buildRoot.GetComponentsInChildren<Rigidbody2D>())body.simulated=false;
             Selection.Select(selected!=null?selectId:null);
+        }
+        public void SelectTile(string tileId)
+        {
+            if(TilePalette?.Find(tileId)?.tile==null)return;SelectedTileId=tileId;Selection.Clear();ui?.Refresh();
+        }
+        public Vector3Int TileCell(Vector3 world)=>buildTilemap!=null?buildTilemap.WorldToCell(world):Vector3Int.zero;
+        public bool PaintTile(Vector3 world,bool erase,bool record=true)
+        {
+            if(IsCatchMode||TilePalette==null)return false;if(buildTilemap==null)buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);if(buildTilemap==null)return false;
+            var changed=buildTilemap.SetCell(Project,buildTilemap.WorldToCell(world),SelectedTileId,erase);if(changed&&record)CommitEdit();return changed;
         }
         GameItem InstantiateItem(RuntimeItemData data,Transform parent,bool authoring)
         {

@@ -27,6 +27,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 286400a3a499c15498477d760b64101d, type: 2}
   - {fileID: 11400000, guid: 141eef062544a2146a0c87f26339f47e, type: 2}
   preparedAppearances: {fileID: 11400000, guid: 9c4a3b595052fb548b261541e19b8af8, type: 2}
+  tilePalette: {fileID: 11400000, guid: f43b6ad4369a4bb59e18de5769025841, type: 2}
   defaults:
   - kind: 0
     appearanceId: 5b84b5bdbf244cecb12b976bbf0aa6c7

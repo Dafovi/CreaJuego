@@ -14,7 +14,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void SharedMediaRoundTripKeepsOneImageForSeveralObjects()
         {
             var data=new CreaJuegoProjectData();var media=MediaAssetData.Create("Dragón","data:image/png;base64,YWJj");data.mediaAssets.Add(media);data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",mediaAssetId=media.id});data.objects.Add(new RuntimeItemData{instanceId="2",definitionId="enemigo",mediaAssetId=media.id});
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(10));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(11));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
         }
         [Test] public void LegacyEmbeddedImagesMigrateAndDeduplicate()
         {
@@ -57,7 +57,7 @@ namespace CreaJuego.Web.Tests
             Assert.That(Mathf.Abs(playerCollider.bounds.min.y-support.bounds.max.y),Is.LessThan(.05f));
             foreach(var marker in controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Where(value=>controller.Project.objects.Single(data=>data.instanceId==value.instanceId).appearanceId.StartsWith("workshop-")&&value.GetComponent<GameItem>().definition.kind!=ItemKind.Background)){var renderer=ItemVisual.Resolve(marker.GetComponent<GameItem>());Assert.That(renderer,Is.Not.Null);Assert.That(renderer.sprite,Is.Not.Null);Assert.That(renderer.bounds.size.x,Is.InRange(.05f,15f));Assert.That(renderer.bounds.size.y,Is.InRange(.05f,15f));}
             AssertStarterRouteIsConnected(controller.Project);
-            controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.childCount,Is.EqualTo(0));
+            controller.NewProject(false);Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.buildRoot.GetComponentsInChildren<GameItem>(),Is.Empty);
         }
         static void AssertStarterRouteIsConnected(CreaJuegoProjectData project)
         {
@@ -107,7 +107,21 @@ namespace CreaJuego.Web.Tests
             ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));Assert.That(ui.ChooseGameType("catch-and-dodge"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("catch-and-dodge"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.DefinitionAvailable(controller.Find("premio")));Assert.That(controller.DefinitionAvailable(controller.Find("peligro")));Assert.That(controller.DefinitionAvailable(controller.Find("plataforma")),Is.False);
             ui.ShowNewProjectDialog();
             Assert.That(ui.ChooseGameType("platformer"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(10));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(11));
+        }
+        [Test] public void TilePalettePaintEraseAndJsonRoundTripWork()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);
+            Assert.That(controller.TilePalette,Is.Not.Null);Assert.That(controller.TilePalette.tiles.Count(tile=>tile!=null&&tile.tile!=null),Is.GreaterThanOrEqualTo(3));var tile=controller.TilePalette.Default;controller.SelectTile(tile.id);
+            Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1));Assert.That(controller.PaintTile(new Vector3(.8f,.7f),false),Is.False,"Dos puntos de la misma celda no deben duplicar el tile.");
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(11));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
+            controller.Undo();Assert.That(controller.TileCount,Is.Zero);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),false),Is.True);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),true),Is.True);Assert.That(controller.TileCount,Is.Zero);
+        }
+        [Test] public void PaintedTilesCreatePhysicsOnlyDuringPlay()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);controller.SelectTile(controller.TilePalette.Default.id);Assert.That(controller.PaintTile(new Vector3(0,-12),false),Is.True);
+            var authored=controller.buildRoot.GetComponentsInChildren<UnityEngine.Tilemaps.TilemapCollider2D>(true);Assert.That(authored.Length,Is.EqualTo(2));Assert.That(authored.All(collider=>!collider.enabled),Is.True);
+            Assert.That(controller.EnterPlay(),Is.Null);var playing=controller.PlayRoot.GetComponentsInChildren<UnityEngine.Tilemaps.TilemapCollider2D>(true);Assert.That(playing.Length,Is.EqualTo(2));Assert.That(playing.All(collider=>collider.enabled&&collider.attachedRigidbody!=null&&collider.attachedRigidbody.simulated),Is.True);controller.ExitPlay();
         }
     }
 }

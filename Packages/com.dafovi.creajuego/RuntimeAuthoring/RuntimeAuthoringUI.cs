@@ -133,7 +133,7 @@ namespace CreaJuego.Web
         static void SetToolbarButton(Button button,float x,float width){if(button==null)return;var rect=(RectTransform)button.transform;rect.anchoredPosition=new Vector2(x,7);rect.sizeDelta=new Vector2(width,36);}
         void SetTransformTool(RuntimeTransformTool tool)
         {
-            if(authoringInput==null)return;authoringInput.SetTool(tool);statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.";UpdateTransformToolButtons();UpdateReadiness();
+            if(authoringInput==null)return;authoringInput.SetTool(tool);statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":tool==RuntimeTransformTool.Resize?"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.":tool==RuntimeTransformTool.Paint?"Pincel activo: haz clic o arrastra dentro del nivel para construir.":"Borrador activo: arrastra sobre los tiles que quieras quitar.";UpdateTransformToolButtons();UpdateReadiness();
         }
         void OnTransformToolChanged(RuntimeTransformTool tool){UpdateTransformToolButtons();}
         void UpdateTransformToolButtons()
@@ -188,7 +188,7 @@ namespace CreaJuego.Web
                 var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,data,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
             }
             ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);
-            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);gameplayHudPanel?.SetActive(!build);if(build)gameResultPanel?.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateTransformToolButtons();UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
+            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);if(gameplayHudPanel!=null)gameplayHudPanel.SetActive(!build);if(build&&gameResultPanel!=null)gameResultPanel.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateTransformToolButtons();UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
         }
 
         void UpdateFlow()
@@ -200,7 +200,7 @@ namespace CreaJuego.Web
         {
             if(readinessPanel==null)return;var error=RuntimePreflight.Validate(c.Project,c.Find,new RuntimePreflightContext{cameraAvailable=c.gameCamera!=null});bool ready=string.IsNullOrEmpty(error);
             readinessPanel.GetComponent<Image>().color=ready?Hex("183B30"):Warning;readinessTitle.text=ready?"¡Todo listo para jugar!":"Tu juego necesita un ajuste";readinessTitle.color=ready?SuccessBright:WarningText;
-            bool player=Has(ItemKind.Player),platform=Has(ItemKind.Platform),interaction=Has(ItemKind.Prize)||Has(ItemKind.Hazard)||Has(ItemKind.Enemy),goal=Has(ItemKind.Goal);
+            bool player=Has(ItemKind.Player),platform=Has(ItemKind.Platform)||c.TileCount>0,interaction=Has(ItemKind.Prize)||Has(ItemKind.Hazard)||Has(ItemKind.Enemy),goal=Has(ItemKind.Goal);
             readinessChecks.text=c.IsCatchMode?(player?"[OK]":"[ ]")+" Jugador    "+(Has(ItemKind.Prize)?"[OK]":"[ ]")+" Premio que cae\n"+(Has(ItemKind.Hazard)?"[OK]":"[ ]")+" Peligro opcional    META "+c.Project.targetScore+" puntos":(player?"[OK]":"[ ]")+" Jugador    "+(platform?"[OK]":"[ ]")+" Plataforma\n"+(interaction?"[OK]":"[ ]")+" Algo con qué interactuar    "+(goal?"[OK]":"[ ]")+" Meta";
             status.text=!string.IsNullOrEmpty(statusOverride)?statusOverride:ready?"Tu juego tiene los elementos necesarios.":error;
         }
@@ -227,6 +227,14 @@ namespace CreaJuego.Web
             }
             else
             {
+                if(c.TilePalette!=null&&c.TilePalette.tiles!=null&&c.TilePalette.tiles.Any(tile=>tile!=null&&tile.tile!=null))
+                {
+                    Group("CONSTRUIR CON TILES",ref y);
+                    ButtonAt(properties,"Pintar",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Paint),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Paint?Selected:Soft,TextColor,12);
+                    ButtonAt(properties,"Borrar",new Vector2(130,-y),()=>SetTransformTool(RuntimeTransformTool.Erase),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Erase?Selected:Soft,TextColor,12);y+=44;
+                    foreach(var tile in c.TilePalette.tiles.Where(tile=>tile!=null&&tile.tile!=null).Take(12)){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
+                    var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(tileHelp,"Elige una pieza y pinta el terreno. P y E cambian entre pincel y borrador.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+                }
                 Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
                 foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}
                 var help=PanelRect("Ayuda del nivel",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(help,"El marco amarillo muestra la zona válida. Si el personaje cae, vuelve al inicio.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
@@ -371,7 +379,7 @@ namespace CreaJuego.Web
         static GameObject New(string name,Transform parent){var go=new GameObject(name,typeof(RectTransform));go.transform.SetParent(parent,false);var rect=(RectTransform)go.transform;var top=parent!=null&&parent.name=="Contenido"?new Vector2(0,1):Vector2.zero;rect.anchorMin=rect.anchorMax=rect.pivot=top;return go;}
         static RectTransform Rect(Transform transform)=>(RectTransform)transform;
         static void Anchor(RectTransform rect){rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.offsetMin=rect.offsetMax=Vector2.zero;}
-        static void Clear(Transform transform){for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i).gameObject;child.SetActive(false);DestroyNow(child);}}
+        static void Clear(Transform transform){for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i);child.gameObject.SetActive(false);child.SetParent(null,false);DestroyNow(child.gameObject);}}
         static void DestroyNow(UnityEngine.Object value){if(Application.isPlaying)Destroy(value);else DestroyImmediate(value);}
         void BuildGameplayHud()
         {

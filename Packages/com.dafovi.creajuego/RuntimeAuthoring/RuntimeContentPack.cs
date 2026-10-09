@@ -36,6 +36,7 @@ namespace CreaJuego.Web
         public string id;
         public GameItemDefinition[] definitions=Array.Empty<GameItemDefinition>();
         public ContentPackDefinition preparedAppearances;
+        public RuntimeTilePaletteDefinition tilePalette;
         public RuntimeAppearanceDefault[] defaults=Array.Empty<RuntimeAppearanceDefault>();
         [Header("Tipos de juego")]
         public RuntimeGameTypeDefinition[] gameTypes=Array.Empty<RuntimeGameTypeDefinition>();

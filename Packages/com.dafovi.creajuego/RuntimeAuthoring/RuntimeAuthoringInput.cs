@@ -6,14 +6,14 @@ using UnityEngine.InputSystem;
 
 namespace CreaJuego.Web
 {
-    public enum RuntimeTransformTool{Move,Resize}
+    public enum RuntimeTransformTool{Move,Resize,Paint,Erase}
     public enum RuntimeMoveAxis{None,Free,Horizontal,Vertical}
 
     [RequireComponent(typeof(RuntimeAuthoringController))]
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
         RuntimeAuthoringController controller;Camera View=>controller.buildCamera;
-        bool dragging,panning,resizing,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;float fixedEdge;RuntimeMoveAxis moveAxis;
+        bool dragging,panning,resizing,painting,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;Vector3Int lastPaintCell;float fixedEdge;RuntimeMoveAxis moveAxis;
         LineRenderer outline,worldFrame,movementPath,movementArrow,moveHorizontal,moveVertical;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd,moveCenter;Material lineMaterial;Sprite handleSprite;
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
@@ -32,25 +32,35 @@ namespace CreaJuego.Web
             var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
+                if(Tool==RuntimeTransformTool.Paint||Tool==RuntimeTransformTool.Erase)
+                {
+                    var objectHit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());
+                    if(objectHit!=null)
+                    {
+                        var instanceId=objectHit.GetComponent<RuntimeAuthoredItem>()?.instanceId;var selectedItem=controller.Selection.Select(instanceId);SetTool(RuntimeTransformTool.Move);if(selectedItem!=null)BeginMove(selectedItem,world,RuntimeMoveAxis.Free);return;
+                    }
+                    painting=true;changed=controller.PaintTile(world,Tool==RuntimeTransformTool.Erase,false);lastPaintCell=controller.TileCell(world);controller.Selection.Clear();return;
+                }
                 if(TryBeginResize(screen)){changed=false;return;}
                 if(TryBeginMoveGizmo(screen,world)){changed=false;return;}
                 var hit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());var item=controller.Selection.Select(hit!=null?hit.GetComponent<RuntimeAuthoredItem>()?.instanceId:null);
                 if(item!=null&&Tool==RuntimeTransformTool.Move)BeginMove(item,world,RuntimeMoveAxis.Free);else if(item==null){panning=true;last=world;}
             }
-            if(mouse.leftButton.isPressed&&resizing)Resize(world);
+            if(mouse.leftButton.isPressed&&painting){var cell=controller.TileCell(world);if(cell!=lastPaintCell){changed|=controller.PaintTile(world,Tool==RuntimeTransformTool.Erase,false);lastPaintCell=cell;}}
+            else if(mouse.leftButton.isPressed&&resizing)Resize(world);
             else if(mouse.leftButton.isPressed&&dragging)DragMove(world);
             else if(mouse.leftButton.isPressed&&panning){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
-            if(mouse.leftButton.wasReleasedThisFrame){if(dragging)EndMove();else if(resizing&&changed)controller.CommitEdit();panning=resizing=changed=false;moveAxis=RuntimeMoveAxis.None;}
+            if(mouse.leftButton.wasReleasedThisFrame){if(dragging)EndMove();else if((resizing||painting)&&changed)controller.CommitEdit();panning=resizing=painting=changed=false;moveAxis=RuntimeMoveAxis.None;}
             var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,100);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
             if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();
             bool editingText=EventSystem.current!=null&&EventSystem.current.currentSelectedGameObject!=null&&EventSystem.current.currentSelectedGameObject.GetComponent<UnityEngine.UI.InputField>()!=null;
-            if(keys!=null&&!editingText&&!keys.leftCtrlKey.isPressed&&!keys.rightCtrlKey.isPressed){if(keys.wKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Move);else if(keys.rKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Resize);}UpdateSelectionVisuals();
+            if(keys!=null&&!editingText&&!keys.leftCtrlKey.isPressed&&!keys.rightCtrlKey.isPressed){if(keys.wKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Move);else if(keys.rKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Resize);else if(keys.pKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Paint);else if(keys.eKey.wasPressedThisFrame)SetTool(RuntimeTransformTool.Erase);}UpdateSelectionVisuals();
         }
         public void SetTool(RuntimeTransformTool tool)
         {
             if(Tool==tool){SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);return;}
-            Tool=tool;dragging=panning=resizing=changed=false;moveAxis=RuntimeMoveAxis.None;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
+            Tool=tool;dragging=panning=resizing=painting=changed=false;moveAxis=RuntimeMoveAxis.None;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
         }
         public bool BeginMoveHandle(Vector2 screen,Vector3 world)=>TryBeginMoveGizmo(screen,world);
         public bool DragMove(Vector3 world)

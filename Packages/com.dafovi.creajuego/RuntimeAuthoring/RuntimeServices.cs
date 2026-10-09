@@ -89,14 +89,21 @@ namespace CreaJuego.Web
             if(data.gameTypeId=="catch-and-dodge")return ValidateCatch(data,kinds,context);
             var players=kinds.Where(p=>p.Value.kind==ItemKind.Player).ToArray();var platforms=kinds.Where(p=>p.Value.kind==ItemKind.Platform).ToArray();var goals=kinds.Count(p=>p.Value.kind==ItemKind.Goal);
             if(players.Length!=1)return players.Length==0?"Añade un Jugador antes de jugar.":"Tu juego debe tener un solo Jugador.";
-            if(platforms.Length==0)return "Agrega al menos una Plataforma para comenzar.";
+            bool hasTiles=data.tileLayers!=null&&data.tileLayers.Any(layer=>layer?.cells!=null&&layer.cells.Count>0);
+            if(platforms.Length==0&&!hasTiles)return "Agrega una Plataforma o pinta terreno para comenzar.";
             if(goals!=1)return goals==0?"El nivel necesita una Meta.":"Tu juego debe tener una sola Meta.";
             if(context==null)return null;
             if(data.bounds==null||!data.bounds.IsValid)return "El tamaño del nivel no es válido. Elige otro tamaño.";
             if(!context.cameraAvailable)return "Prepara la vista de juego antes de jugar.";
             if(context.requireRecovery&&players[0].Value.prefab.GetComponent<PlayerFallRecovery>()==null)return "El personaje necesita volver al inicio si cae. Créalo de nuevo desde el catálogo.";
-            if(context.validateSupport&&!SeemsSupported(players[0].Key,players[0].Value,platforms))return "El personaje parece estar en el aire. Ponlo sobre una plataforma.";
+            if(context.validateSupport&&!SeemsSupported(players[0].Key,players[0].Value,platforms)&&!SeemsSupportedByTile(players[0].Key,players[0].Value,data))return "El personaje parece estar en el aire. Ponlo sobre una plataforma o terreno.";
             return null;
+        }
+        static bool SeemsSupportedByTile(RuntimeItemData player,GameItemDefinition definition,CreaJuegoProjectData data)
+        {
+            if(data.tileLayers==null)return false;var box=definition.prefab.GetComponent<BoxCollider2D>();if(box==null)return false;
+            float bottom=player.position.y+(box.offset.y-box.size.y*.5f)*player.scale.y;int x=Mathf.FloorToInt(player.position.x),y=Mathf.FloorToInt(bottom-.05f);
+            return data.tileLayers.Where(layer=>layer!=null&&layer.id!="decoracion").SelectMany(layer=>layer.cells??new List<RuntimeTileCellData>()).Any(cell=>cell.x==x&&cell.y==y);
         }
         static string ValidateCatch(CreaJuegoProjectData data,Dictionary<RuntimeItemData,GameItemDefinition> kinds,RuntimePreflightContext context)
         {

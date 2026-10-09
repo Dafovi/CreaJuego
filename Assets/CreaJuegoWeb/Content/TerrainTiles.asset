@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bef78f5015e421cbd9ecb97b388ea95, type: 3}
+  m_Name: TerrainTiles
+  m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeTilePaletteDefinition
+  id: bosque-plains
+  displayName: Terreno del bosque
+  tiles:
+  - id: plains-ground-1
+    displayName: Tierra con césped
+    icon: {fileID: 0}
+    tile: {fileID: 11400000, guid: cd7954928d6642e4cae01672826296dd, type: 2}
+    layer: 0
+  - id: plains-ground-2
+    displayName: Borde de tierra
+    icon: {fileID: 0}
+    tile: {fileID: 11400000, guid: 2daa08c11685a174ca5f1d460dedf301, type: 2}
+    layer: 0
+  - id: plains-ground-14
+    displayName: Tierra interior
+    icon: {fileID: 0}
+    tile: {fileID: 11400000, guid: aa81d52ec76f07a4992017a6e403783e, type: 2}
+    layer: 0

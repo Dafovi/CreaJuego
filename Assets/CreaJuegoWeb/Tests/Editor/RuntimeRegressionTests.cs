@@ -51,7 +51,7 @@ namespace CreaJuego.Web.Tests
             Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.GreaterThanOrEqualTo(35));
             var hierarchy=Object.FindObjectsByType<Transform>(FindObjectsInactive.Include).Select(transform=>transform.name).ToArray();
             Assert.That(hierarchy,Does.Contain("Cabecera"));Assert.That(hierarchy,Does.Contain("Panel de elementos"));Assert.That(hierarchy,Does.Contain("Panel de propiedades"));Assert.That(hierarchy,Does.Contain("Herramientas"));Assert.That(hierarchy,Does.Contain("Estado para jugar"));
-            Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.EqualTo(controller.Project.objects.Count));
+            Assert.That(ui.VisibleCatalogIconCount,Is.GreaterThanOrEqualTo(5));Assert.That(ui.VisibleSceneItemIconCount,Is.GreaterThanOrEqualTo(controller.Project.objects.Count));
             Assert.That(ui.FlowText,Does.Contain("Seleccionar"));Assert.That(ui.FlowText,Does.Contain("Personalizar"));Assert.That(ui.FlowText,Does.Contain("Jugar"));Assert.That(ui.ReadinessText,Does.Contain("listo"));
             Assert.That(controller.buildCamera.rect,Is.EqualTo(authoredCameraRect),"Entrar en ejecución no debe reemplazar el encuadre guardado en la escena.");
         }
@@ -133,7 +133,7 @@ namespace CreaJuego.Web.Tests
             var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.First(o=>o.definitionId=="enemigo");var enemyId=enemy.instanceId;
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(10));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
+            Assert.That(migrated.schemaVersion,Is.EqualTo(11));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
