@@ -133,9 +133,15 @@ namespace CreaJuego.Web
         static void SetToolbarButton(Button button,float x,float width){if(button==null)return;var rect=(RectTransform)button.transform;rect.anchoredPosition=new Vector2(x,7);rect.sizeDelta=new Vector2(width,36);}
         void SetTransformTool(RuntimeTransformTool tool)
         {
-            if(authoringInput==null)return;authoringInput.SetTool(tool);statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":tool==RuntimeTransformTool.Resize?"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.":tool==RuntimeTransformTool.Paint?"Pincel activo: haz clic o arrastra dentro del nivel para construir.":"Borrador activo: arrastra sobre los tiles que quieras quitar.";UpdateTransformToolButtons();UpdateReadiness();
+            if(authoringInput==null)return;authoringInput.SetTool(tool);ShowToolStatus(tool);
         }
-        void OnTransformToolChanged(RuntimeTransformTool tool){UpdateTransformToolButtons();}
+        void OnTransformToolChanged(RuntimeTransformTool tool){ShowToolStatus(tool);}
+        void ShowToolStatus(RuntimeTransformTool tool)
+        {
+            statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":tool==RuntimeTransformTool.Resize?"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.":tool==RuntimeTransformTool.Paint?"Pincel "+BrushName()+" activo: pinta el terreno. Si pulsas un objeto, pasarás a moverlo.":"Borrador "+BrushName()+" activo: borra terreno. Si pulsas un objeto, pasarás a moverlo.";UpdateTransformToolButtons();UpdateReadiness();
+        }
+        string BrushName()=>authoringInput==null||authoringInput.Brush==RuntimeTileBrush.Pencil?"libre":authoringInput.Brush==RuntimeTileBrush.Line?"en línea":"rectangular";
+        void SetTileBrush(RuntimeTileBrush brush){if(authoringInput==null)return;authoringInput.SetBrush(brush);SetTransformTool(RuntimeTransformTool.Paint);Refresh();}
         void UpdateTransformToolButtons()
         {
             if(authoringInput==null)return;if(moveToolButton!=null)moveToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Move?Selected:Soft;if(resizeToolButton!=null)resizeToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Resize?Selected:Soft;
@@ -230,10 +236,14 @@ namespace CreaJuego.Web
                 if(c.TilePalette!=null&&c.TilePalette.tiles!=null&&c.TilePalette.tiles.Any(tile=>tile!=null&&tile.tile!=null))
                 {
                     Group("CONSTRUIR CON TILES",ref y);
+                    ButtonAt(properties,"Mover objetos",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Move),new Vector2(238,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Move?Selected:Soft,TextColor,12);y+=44;
+                    ButtonAt(properties,"Lápiz",new Vector2(6,-y),()=>SetTileBrush(RuntimeTileBrush.Pencil),new Vector2(72,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Pencil?Selected:Soft,TextColor,11);
+                    ButtonAt(properties,"Línea",new Vector2(82,-y),()=>SetTileBrush(RuntimeTileBrush.Line),new Vector2(72,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Line?Selected:Soft,TextColor,11);
+                    ButtonAt(properties,"Rectángulo",new Vector2(158,-y),()=>SetTileBrush(RuntimeTileBrush.Rectangle),new Vector2(86,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Rectangle?Selected:Soft,TextColor,10);y+=42;
                     ButtonAt(properties,"Pintar",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Paint),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Paint?Selected:Soft,TextColor,12);
                     ButtonAt(properties,"Borrar",new Vector2(130,-y),()=>SetTransformTool(RuntimeTransformTool.Erase),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Erase?Selected:Soft,TextColor,12);y+=44;
                     foreach(var tile in c.TilePalette.tiles.Where(tile=>tile!=null&&tile.tile!=null).Take(12)){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
-                    var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,70),Hex("263B55"),true);Label(tileHelp,"Elige una pieza y pinta el terreno. P y E cambian entre pincel y borrador.",12,new Vector2(10,7),new Vector2(218,56),TextColor);y+=78;
+                    var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,104),Hex("263B55"),true);Label(tileHelp,"Lápiz pinta libremente. Línea crea caminos y Rectángulo rellena pisos o muros. Para mover algo, pulsa el objeto. Atajos: M, P y E.",12,new Vector2(10,7),new Vector2(218,90),TextColor);y+=112;
                 }
                 Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
                 foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}

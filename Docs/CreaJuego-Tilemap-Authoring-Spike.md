@@ -12,19 +12,20 @@ Esto evita estirar sprites de suelo, reduce la cantidad de GameObjects y conserv
 ## Implementación del spike
 
 - Unity objetivo: **6000.6.0f1**.
-- Módulo público: `com.unity.modules.tilemap` 1.0.0.
-- Paleta inicial: tres tiles reales de `2D Pixel Art Platformer Biome - Plains`.
-- Herramientas: **Pintar** y **Borrar**, también accesibles con `P` y `E`.
+- Módulos públicos: `com.unity.modules.tilemap` 1.0.0 y `com.unity.2d.tilemap.extras` 9.0.0, versión publicada para Unity 6000.6.
+- Paleta inicial: un **Rule Tile** de terreno automático construido con piezas reales de `2D Pixel Art Platformer Biome - Plains`.
+- Herramientas: **Lápiz**, **Línea** y **Rectángulo**, utilizables tanto para pintar como para borrar.
 - Acceso: botón **Nivel** → **Construir con tiles**.
 - Capas preparadas: `terreno`, `plataformas` y `decoracion`.
 - El JSON de proyecto guarda celdas como coordenadas y un id estable de tile.
 - Undo/Redo registra un trazo completo al soltar el puntero.
+- El Rule Tile comprueba sus vecinos ortogonales y cambia entre superficie, laterales, esquinas, base e interior. El relleno de tierra se dibuja en una capa visual inferior para que las piezas transparentes mantengan continuidad.
 - Los colliders de Tilemap permanecen desactivados durante la edición y se activan en la copia temporal de juego.
 
 ## Límites del spike
 
-- La paleta sólo contiene tres piezas de prueba; falta seleccionar un set visual completo de bordes, esquinas, relleno y pendientes.
-- No hay pinceles rectangulares, relleno de áreas, selección múltiple ni autotiling.
+- La primera paleta automática cubre terreno ortogonal. Las pendientes continúan como elementos porque requieren reglas y colliders distintos.
+- No hay cubeta de relleno, selección múltiple ni sustitución masiva de un tipo de terreno.
 - Los paquetes importados usan escalas y PPU distintos. Cada pack deberá declarar una paleta normalizada para una cuadrícula de una unidad.
 - Las rampas siguen siendo elementos hasta evaluar `RuleTile` o una familia de tiles de pendiente con colisión coherente.
 - La personalización de tiles no usa la ventana Tile Palette del Editor, porque CreaJuego también necesita el mismo flujo en WebGL.
@@ -32,8 +33,8 @@ Esto evita estirar sprites de suelo, reduce la cantidad de GameObjects y conserv
 ## Siguiente iteración recomendada
 
 1. Crear un descriptor de pack con paletas separadas para terreno sólido, plataformas atravesables y decoración.
-2. Añadir pincel rectangular y relleno para construir suelo y muros rápidamente.
-3. Incorporar autotiling para bordes y esquinas sin exponer reglas técnicas al participante.
+2. Añadir una cubeta de relleno y una herramienta para sustituir un terreno por otro.
+3. Crear más Rule Tiles por pack temático sin exponer sus reglas técnicas al participante.
 4. Migrar el nivel inicial a tiles de forma gradual, conservando una ruta de compatibilidad para niveles JSON anteriores.
 5. Probar el tamaño del JSON y el rendimiento WebGL con niveles de 500, 2.000 y 10.000 celdas.
 

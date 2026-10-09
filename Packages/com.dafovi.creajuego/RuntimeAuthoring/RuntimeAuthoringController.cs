@@ -422,10 +422,19 @@ namespace CreaJuego.Web
             if(TilePalette?.Find(tileId)?.tile==null)return;SelectedTileId=tileId;Selection.Clear();ui?.Refresh();
         }
         public Vector3Int TileCell(Vector3 world)=>buildTilemap!=null?buildTilemap.WorldToCell(world):Vector3Int.zero;
+        public Vector3Int ClampTileCell(Vector3Int cell)
+        {
+            var bounds=Project?.bounds;if(bounds==null)return cell;cell.x=Mathf.Clamp(cell.x,Mathf.FloorToInt(bounds.left),Mathf.CeilToInt(bounds.right)-1);cell.y=Mathf.Clamp(cell.y,Mathf.FloorToInt(bounds.bottom),Mathf.CeilToInt(bounds.top)-1);cell.z=0;return cell;
+        }
+        public Vector3 TileCellCenter(Vector3Int cell)=>buildTilemap!=null?buildTilemap.Grid.GetCellCenterWorld(cell):new Vector3(cell.x+.5f,cell.y+.5f,0);
         public bool PaintTile(Vector3 world,bool erase,bool record=true)
         {
-            if(IsCatchMode||TilePalette==null)return false;if(buildTilemap==null)buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);if(buildTilemap==null)return false;
-            var changed=buildTilemap.SetCell(Project,buildTilemap.WorldToCell(world),SelectedTileId,erase);if(changed&&record)CommitEdit();return changed;
+            return PaintTiles(new[]{TileCell(world)},erase,record);
+        }
+        public bool PaintTiles(IEnumerable<Vector3Int> cells,bool erase,bool record=true)
+        {
+            if(IsCatchMode||TilePalette==null||cells==null)return false;if(buildTilemap==null)buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);if(buildTilemap==null)return false;
+            bool changed=false;foreach(var cell in cells.Select(ClampTileCell).Distinct())changed|=buildTilemap.SetCell(Project,cell,SelectedTileId,erase);if(changed&&record)CommitEdit();return changed;
         }
         GameItem InstantiateItem(RuntimeItemData data,Transform parent,bool authoring)
         {

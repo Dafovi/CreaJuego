@@ -112,10 +112,15 @@ namespace CreaJuego.Web.Tests
         [Test] public void TilePalettePaintEraseAndJsonRoundTripWork()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);
-            Assert.That(controller.TilePalette,Is.Not.Null);Assert.That(controller.TilePalette.tiles.Count(tile=>tile!=null&&tile.tile!=null),Is.GreaterThanOrEqualTo(3));var tile=controller.TilePalette.Default;controller.SelectTile(tile.id);
+            Assert.That(controller.TilePalette,Is.Not.Null);Assert.That(controller.TilePalette.tiles.Count(tile=>tile!=null&&tile.tile!=null),Is.GreaterThanOrEqualTo(1));var tile=controller.TilePalette.Default;Assert.That(tile.tile.GetType().Name,Is.EqualTo("RuleTile"));Assert.That(tile.underlayTile,Is.Not.Null);Assert.That(controller.TilePalette.Find("plains-ground-1"),Is.SameAs(tile));controller.SelectTile(tile.id);
             Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1));Assert.That(controller.PaintTile(new Vector3(.8f,.7f),false),Is.False,"Dos puntos de la misma celda no deben duplicar el tile.");
             var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(11));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
             controller.Undo();Assert.That(controller.TileCount,Is.Zero);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),false),Is.True);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),true),Is.True);Assert.That(controller.TileCount,Is.Zero);
+        }
+        [Test] public void TileLineAndRectangleBrushesCoverExpectedCells()
+        {
+            var line=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Line,new Vector3Int(0,0),new Vector3Int(4,2)).ToArray();Assert.That(line.First(),Is.EqualTo(new Vector3Int(0,0)));Assert.That(line.Last(),Is.EqualTo(new Vector3Int(4,2)));Assert.That(line.Distinct().Count(),Is.EqualTo(line.Length));
+            var rectangle=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Rectangle,new Vector3Int(2,3),new Vector3Int(4,5)).ToArray();Assert.That(rectangle.Length,Is.EqualTo(9));Assert.That(rectangle,Does.Contain(new Vector3Int(2,3)));Assert.That(rectangle,Does.Contain(new Vector3Int(4,5)));
         }
         [Test] public void PaintedTilesCreatePhysicsOnlyDuringPlay()
         {

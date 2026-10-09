@@ -54,7 +54,7 @@ namespace CreaJuego.Web.Editor
         }
         public static RuntimeContentPack EnsureRuntimePack()
         {
-            EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");EnsureFolder(ContentDirectory,"WorkshopSprites");RemoveLegacyStairs();
+            EnsureFolder("Assets/CreaJuegoWeb","Content");EnsureFolder(ContentDirectory,"Prefabs");EnsureFolder(ContentDirectory,"Appearances");EnsureFolder(ContentDirectory,"WorkshopSprites");TerrainRuleTileBuilder.EnsureTerrainPalette();RemoveLegacyStairs();
             var kinds=new[]{ItemKind.Player,ItemKind.Platform,ItemKind.MovingPlatform,ItemKind.Prize,ItemKind.Hazard,ItemKind.Enemy,ItemKind.Goal,ItemKind.Decoration,ItemKind.Background};
             var sources=AssetDatabase.FindAssets("t:GameItemDefinition",new[]{"Assets/CreaJuegoPacks/Starter/Content"}).Select(g=>AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(g))).Where(d=>d!=null&&kinds.Contains(d.kind)&&d.id!="piso").OrderBy(d=>d.order).ToArray();
             var baseDefinitions=sources.Select(PrepareDefinition).ToArray();var platform=baseDefinitions.First(d=>d.id=="plataforma");var preparedDefinitions=baseDefinitions.Concat(PrepareStructures(platform)).Concat(new[]{PrepareBackgroundDefinition(EnsureBackgroundSprite())}).ToArray();var sourcePack=sources.Select(d=>d.appearancePack).FirstOrDefault(p=>p!=null);PrepareSourceRecommendations(sourcePack);var categories=kinds.Select(kind=>PrepareCategory(sourcePack?.CategoryFor(kind),kind)).Where(c=>c!=null).ToArray();EnsureMinimumOptions(categories);
