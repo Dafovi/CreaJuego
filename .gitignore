@@ -23,3 +23,18 @@ Docs/tests-*.xml
 *.mdb
 *.opendb
 *.VC.db
+
+# Optional Unity Asset Store source packs. They may be used in local builds but
+# must not be redistributed through this public source repository.
+/Assets/Cainos/
+/Assets/Cainos.meta
+/Assets/Cave Platformer Tileset/
+/Assets/Cave Platformer Tileset.meta
+/Assets/CrystalWorld/
+/Assets/CrystalWorld.meta
+/Assets/RockyWorld/
+/Assets/RockyWorld.meta
+/Assets/CreaJuegoWeb/Content/VillageTerrainRule.asset*
+/Assets/CreaJuegoWeb/Content/SkullGardenTile.asset*
+/Assets/CreaJuegoWeb/Content/cave-gray.asset*
+/Assets/CreaJuegoWeb/Content/cave-brown.asset*

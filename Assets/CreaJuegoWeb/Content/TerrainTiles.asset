@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bef78f5015e421cbd9ecb97b388ea95, type: 3}
   m_Name: TerrainTiles
   m_EditorClassIdentifier: CreaJuego.RuntimeAuthoring::CreaJuego.Web.RuntimeTilePaletteDefinition
-  id: bosque-plains
-  displayName: Terreno del bosque
+  id: creajuego-terrenos
+  displayName: Terrenos de CreaJuego
   tiles:
   - id: plains-auto-terrain
-    displayName: "Terreno autom\xE1tico"
+    displayName: Bosque
+    theme: Naturaleza
     legacyIds:
     - plains-ground-1
     - plains-ground-2

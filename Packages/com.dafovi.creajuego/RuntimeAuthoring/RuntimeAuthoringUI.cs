@@ -242,7 +242,11 @@ namespace CreaJuego.Web
                     ButtonAt(properties,"Rectángulo",new Vector2(158,-y),()=>SetTileBrush(RuntimeTileBrush.Rectangle),new Vector2(86,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Rectangle?Selected:Soft,TextColor,10);y+=42;
                     ButtonAt(properties,"Pintar",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Paint),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Paint?Selected:Soft,TextColor,12);
                     ButtonAt(properties,"Borrar",new Vector2(130,-y),()=>SetTransformTool(RuntimeTransformTool.Erase),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Erase?Selected:Soft,TextColor,12);y+=44;
-                    foreach(var tile in c.TilePalette.tiles.Where(tile=>tile!=null&&tile.tile!=null).Take(12)){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
+                    foreach(var family in c.TilePalette.tiles.Where(tile=>tile!=null&&tile.tile!=null).GroupBy(tile=>string.IsNullOrWhiteSpace(tile.theme)?"Terreno":tile.theme))
+                    {
+                        Label(properties,family.Key.ToUpperInvariant(),12,new Vector2(6,-y),new Vector2(238,22),Muted);y+=24;
+                        foreach(var tile in family){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
+                    }
                     var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,104),Hex("263B55"),true);Label(tileHelp,"Lápiz pinta libremente. Línea crea caminos y Rectángulo rellena pisos o muros. Para mover algo, pulsa el objeto. Atajos: M, P y E.",12,new Vector2(10,7),new Vector2(218,90),TextColor);y+=112;
                 }
                 Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;

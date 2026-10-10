@@ -122,6 +122,16 @@ namespace CreaJuego.Web.Tests
             var line=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Line,new Vector3Int(0,0),new Vector3Int(4,2)).ToArray();Assert.That(line.First(),Is.EqualTo(new Vector3Int(0,0)));Assert.That(line.Last(),Is.EqualTo(new Vector3Int(4,2)));Assert.That(line.Distinct().Count(),Is.EqualTo(line.Length));
             var rectangle=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Rectangle,new Vector3Int(2,3),new Vector3Int(4,5)).ToArray();Assert.That(rectangle.Length,Is.EqualTo(9));Assert.That(rectangle,Does.Contain(new Vector3Int(2,3)));Assert.That(rectangle,Does.Contain(new Vector3Int(4,5)));
         }
+        [Test] public void TileDefinitionsCanBeGroupedByEducationalTheme()
+        {
+            var palette=ScriptableObject.CreateInstance<RuntimeTilePaletteDefinition>();
+            try
+            {
+                palette.tiles=new[]{new RuntimeTileDefinition{id="forest",displayName="Bosque",theme="Naturaleza"},new RuntimeTileDefinition{id="cave",displayName="Roca",theme="Cueva"}};
+                Assert.That(palette.Find("forest").theme,Is.EqualTo("Naturaleza"));Assert.That(palette.tiles.Select(tile=>tile.theme),Is.EquivalentTo(new[]{"Naturaleza","Cueva"}));
+            }
+            finally{Object.DestroyImmediate(palette);}
+        }
         [Test] public void PaintedTilesCreatePhysicsOnlyDuringPlay()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);controller.SelectTile(controller.TilePalette.Default.id);Assert.That(controller.PaintTile(new Vector3(0,-12),false),Is.True);

@@ -22,6 +22,14 @@ Esto evita estirar sprites de suelo, reduce la cantidad de GameObjects y conserv
 - El Rule Tile comprueba sus vecinos ortogonales y cambia entre superficie, laterales, esquinas, base e interior. El relleno de tierra se dibuja en una capa visual inferior para que las piezas transparentes mantengan continuidad.
 - Los colliders de Tilemap permanecen desactivados durante la edición y se activan en la copia temporal de juego.
 
+## Familias de terreno
+
+La paleta admite familias educativas. Cuando los packs están instalados, el generador añade **Naturaleza**, **Aldea**, **Jardín de calaveras** y dos variantes de **Cueva**. Village Props utiliza conexión automática; los sprites de Cave y Skull Garden se normalizan a una celda sin modificar los originales. Si falta un pack opcional, se omite y el terreno base continúa disponible.
+
+Los packs opcionales de Asset Store permanecen excluidos del repositorio público. El código sólo conserva sus rutas de descubrimiento y genera los tiles derivados al abrir el proyecto local que tenga esos packs instalados. Los builds pueden incorporarlos, pero no se deben publicar sus fuentes desde este repositorio sin comprobar una licencia que lo permita.
+
+Rocky World y Crystal World incluyen láminas completas sin slicing de Unity. Se detectaron durante este sprint, pero no se exponen todavía: requieren un descriptor de atlas que indique qué regiones son tiles conectables. Usar la lámina completa como un tile produciría escalas incorrectas.
+
 ## Límites del spike
 
 - La primera paleta automática cubre terreno ortogonal. Las pendientes continúan como elementos porque requieren reglas y colliders distintos.

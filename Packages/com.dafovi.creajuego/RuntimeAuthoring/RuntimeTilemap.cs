@@ -36,6 +36,7 @@ namespace CreaJuego.Web
     public sealed class RuntimeTileDefinition
     {
         public string id,displayName;
+        [Tooltip("Tema que agrupa este terreno en la interfaz educativa.")] public string theme="Terreno";
         public string[] legacyIds=Array.Empty<string>();
         public Sprite icon;
         public TileBase tile;
