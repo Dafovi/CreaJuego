@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=11;
+        public int schemaVersion=12;
         public string projectName="Mi juego", teamName="Mi equipo";
         public string gameTypeId="platformer";
         public int targetScore=10;
@@ -34,6 +34,7 @@ namespace CreaJuego.Web
         public RuntimeLevelBounds bounds=new RuntimeLevelBounds();
         public List<MediaAssetData> mediaAssets=new List<MediaAssetData>();
         public List<RuntimeTileLayerData> tileLayers=new List<RuntimeTileLayerData>();
+        public List<RuntimeTileRampData> tileRamps=new List<RuntimeTileRampData>();
         public List<RuntimeItemData> objects=new List<RuntimeItemData>();
     }
 
@@ -49,6 +50,14 @@ namespace CreaJuego.Web
     {
         public string id="terreno";
         public List<RuntimeTileCellData> cells=new List<RuntimeTileCellData>();
+    }
+
+    [Serializable]
+    public sealed class RuntimeTileRampData
+    {
+        public string id, tileId;
+        public int startX,startY,endX,endY;
+        public bool fillBelow;
     }
 
     public enum MediaAssetSource { File, Camera }
@@ -123,7 +132,7 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>11)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>12)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
             int sourceSchemaVersion=data.schemaVersion;
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
@@ -131,6 +140,7 @@ namespace CreaJuego.Web
             if(data.bounds==null)data.bounds=RuntimeLevelBounds.For(data.levelSize);
             if(data.mediaAssets==null)data.mediaAssets=new List<MediaAssetData>();
             if(data.tileLayers==null)data.tileLayers=new List<RuntimeTileLayerData>();
+            if(data.tileRamps==null)data.tileRamps=new List<RuntimeTileRampData>();
             if(data.objects==null)data.objects=new List<RuntimeItemData>();
             if(string.IsNullOrWhiteSpace(data.gameTypeId))data.gameTypeId="platformer";
             if(data.targetScore<=0)data.targetScore=10;
@@ -164,7 +174,9 @@ namespace CreaJuego.Web
                 layer.cells.RemoveAll(cell=>cell==null||string.IsNullOrWhiteSpace(cell.tileId));
                 var unique=new HashSet<string>();layer.cells.RemoveAll(cell=>!unique.Add(cell.x+":"+cell.y));
             }
-            data.schemaVersion=11;
+            data.tileRamps.RemoveAll(ramp=>ramp==null||string.IsNullOrWhiteSpace(ramp.tileId)||ramp.startX==ramp.endX);
+            foreach(var ramp in data.tileRamps)if(string.IsNullOrWhiteSpace(ramp.id))ramp.id=Guid.NewGuid().ToString("N");
+            data.schemaVersion=12;
             return data;
         }
     }

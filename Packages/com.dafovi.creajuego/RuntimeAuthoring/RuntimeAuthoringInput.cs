@@ -13,7 +13,7 @@ namespace CreaJuego.Web
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
         RuntimeAuthoringController controller;Camera View=>controller.buildCamera;
-        bool dragging,panning,resizing,painting,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;Vector3Int paintStartCell,lastPaintCell;float fixedEdge;RuntimeMoveAxis moveAxis;
+        bool dragging,panning,resizing,painting,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;Vector3Int paintStartCell,lastPaintCell;float fixedEdge;RuntimeMoveAxis moveAxis;int panButton=-1;
         LineRenderer outline,worldFrame,brushPreview,movementPath,movementArrow,moveHorizontal,moveVertical;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd,moveCenter;Material lineMaterial;Sprite handleSprite;
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
@@ -22,6 +22,7 @@ namespace CreaJuego.Web
         public Color WorldFrameColor=>worldFrame!=null?worldFrame.startColor:Color.clear;
         public RuntimeTransformTool Tool{get;private set;}=RuntimeTransformTool.Move;
         public RuntimeTileBrush Brush{get;private set;}=RuntimeTileBrush.Pencil;
+        public bool FillRampBelow{get;set;}=true;
         public bool HasVisibleResizeHandles=>leftHandle!=null&&leftHandle.gameObject.activeInHierarchy;
         public event Action<RuntimeTransformTool> ToolChanged;
         void Awake(){controller=GetComponent<RuntimeAuthoringController>();controller.Selection.SelectionChanged+=Selected;controller.ProjectChanged+=RefreshWorld;}
@@ -31,6 +32,10 @@ namespace CreaJuego.Web
         {
             bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||View==null)return;UpdateGuideScale();if(Mouse.current==null)return;
             var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
+            if(!panning&&!painting&&!dragging&&!resizing&&!overUI&&inViewport&&(mouse.rightButton.wasPressedThisFrame||mouse.middleButton.wasPressedThisFrame))
+            {
+                BeginPan(world,mouse.middleButton.wasPressedThisFrame?2:1);
+            }
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
                 if(Tool==RuntimeTransformTool.Paint||Tool==RuntimeTransformTool.Erase)
@@ -49,13 +54,14 @@ namespace CreaJuego.Web
                 if(TryBeginResize(screen)){changed=false;return;}
                 if(TryBeginMoveGizmo(screen,world)){changed=false;return;}
                 var hit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());var item=controller.Selection.Select(hit!=null?hit.GetComponent<RuntimeAuthoredItem>()?.instanceId:null);
-                if(item!=null&&Tool==RuntimeTransformTool.Move)BeginMove(item,world,RuntimeMoveAxis.Free);else if(item==null){panning=true;last=world;}
+                if(item!=null&&Tool==RuntimeTransformTool.Move)BeginMove(item,world,RuntimeMoveAxis.Free);else if(item==null)BeginPan(world,0);
             }
-            if(mouse.leftButton.isPressed&&painting){var cell=controller.ClampTileCell(controller.TileCell(world));if(cell!=lastPaintCell){if(Brush==RuntimeTileBrush.Pencil)changed|=controller.PaintTiles(new[]{cell},Tool==RuntimeTransformTool.Erase,false);lastPaintCell=cell;UpdateBrushPreview(cell);}}
+            if(panning&&PanButtonPressed(mouse)){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
+            else if(mouse.leftButton.isPressed&&painting){var cell=controller.ClampTileCell(controller.TileCell(world));if(cell!=lastPaintCell){if(Brush==RuntimeTileBrush.Pencil)changed|=controller.PaintTiles(new[]{cell},Tool==RuntimeTransformTool.Erase,false);lastPaintCell=cell;UpdateBrushPreview(cell);}}
             else if(mouse.leftButton.isPressed&&resizing)Resize(world);
             else if(mouse.leftButton.isPressed&&dragging)DragMove(world);
-            else if(mouse.leftButton.isPressed&&panning){var delta=last-world;View.transform.position+=delta;last=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));last.z=0;}
-            if(mouse.leftButton.wasReleasedThisFrame){if(painting&&Brush!=RuntimeTileBrush.Pencil)changed|=controller.PaintTiles(RuntimeTileBrushGeometry.Cells(Brush,paintStartCell,lastPaintCell),Tool==RuntimeTransformTool.Erase,false);if(dragging)EndMove();else if((resizing||painting)&&changed)controller.CommitEdit();panning=resizing=painting=changed=false;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();}
+            if(panning&&PanButtonReleased(mouse)){panning=false;panButton=-1;}
+            if(mouse.leftButton.wasReleasedThisFrame){if(painting&&Brush==RuntimeTileBrush.Ramp)changed|=controller.PaintTileRamp(paintStartCell,lastPaintCell,Tool==RuntimeTransformTool.Erase,FillRampBelow,false);else if(painting&&Brush!=RuntimeTileBrush.Pencil)changed|=controller.PaintTiles(RuntimeTileBrushGeometry.Cells(Brush,paintStartCell,lastPaintCell),Tool==RuntimeTransformTool.Erase,false);if(dragging)EndMove();else if((resizing||painting)&&changed)controller.CommitEdit();if(panButton==0){panning=false;panButton=-1;}resizing=painting=changed=false;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();}
             var wheel=mouse.scroll.ReadValue().y;if(Mathf.Abs(wheel)>.01f&&!overUI&&inViewport)View.orthographicSize=RuntimePointerContext.Zoom(View.orthographicSize,wheel,2,100);
             var keys=Keyboard.current;if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.zKey.wasPressedThisFrame){if(keys.leftShiftKey.isPressed||keys.rightShiftKey.isPressed)controller.Redo();else controller.Undo();}
             if(keys!=null&&(keys.leftCtrlKey.isPressed||keys.rightCtrlKey.isPressed)&&keys.yKey.wasPressedThisFrame)controller.Redo();
@@ -65,7 +71,7 @@ namespace CreaJuego.Web
         public void SetTool(RuntimeTransformTool tool)
         {
             if(Tool==tool){SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);return;}
-            Tool=tool;dragging=panning=resizing=painting=changed=false;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
+            Tool=tool;dragging=panning=resizing=painting=changed=false;panButton=-1;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
         }
         public void SetBrush(RuntimeTileBrush brush){Brush=brush;HideBrushPreview();}
         public bool BeginMoveHandle(Vector2 screen,Vector3 world)=>TryBeginMoveGizmo(screen,world);
@@ -90,6 +96,9 @@ namespace CreaJuego.Web
             if(axis==RuntimeMoveAxis.None)return false;BeginMove(item,world,axis);return true;
         }
         void BeginMove(GameItem item,Vector3 world,RuntimeMoveAxis axis){dragging=true;changed=false;moveAxis=axis;offset=item.transform.position-world;last=item.transform.position;}
+        void BeginPan(Vector3 world,int button){panning=true;panButton=button;last=world;}
+        bool PanButtonPressed(Mouse mouse)=>panButton==0?mouse.leftButton.isPressed:panButton==1?mouse.rightButton.isPressed:mouse.middleButton.isPressed;
+        bool PanButtonReleased(Mouse mouse)=>panButton==0?mouse.leftButton.wasReleasedThisFrame:panButton==1?mouse.rightButton.wasReleasedThisFrame:mouse.middleButton.wasReleasedThisFrame;
         bool TryBeginResize(Vector2 screen)
         {
             if(Tool!=RuntimeTransformTool.Resize)return false;
@@ -132,7 +141,7 @@ namespace CreaJuego.Web
         void UpdateBrushPreview(Vector3Int end)
         {
             if(brushPreview==null||Brush==RuntimeTileBrush.Pencil){HideBrushPreview();return;}brushPreview.gameObject.SetActive(true);var color=Tool==RuntimeTransformTool.Erase?new Color(1f,.25f,.2f,.95f):new Color(.2f,.9f,1f,.95f);brushPreview.startColor=brushPreview.endColor=color;
-            if(Brush==RuntimeTileBrush.Line){brushPreview.loop=false;brushPreview.positionCount=2;brushPreview.SetPositions(new[]{controller.TileCellCenter(paintStartCell),controller.TileCellCenter(end)});return;}
+            if(Brush==RuntimeTileBrush.Line||Brush==RuntimeTileBrush.Ramp){if(Brush==RuntimeTileBrush.Ramp)end=controller.ClampRampEnd(paintStartCell,end);brushPreview.loop=false;brushPreview.positionCount=2;brushPreview.SetPositions(new[]{controller.TileCellCenter(paintStartCell),controller.TileCellCenter(end)});return;}
             int minX=Mathf.Min(paintStartCell.x,end.x),maxX=Mathf.Max(paintStartCell.x,end.x),minY=Mathf.Min(paintStartCell.y,end.y),maxY=Mathf.Max(paintStartCell.y,end.y);float z=-.05f;brushPreview.loop=true;brushPreview.positionCount=4;brushPreview.SetPositions(new[]{new Vector3(minX,minY,z),new Vector3(minX,maxY+1,z),new Vector3(maxX+1,maxY+1,z),new Vector3(maxX+1,minY,z)});
         }
         void HideBrushPreview(){if(brushPreview!=null)brushPreview.gameObject.SetActive(false);}

@@ -89,7 +89,7 @@ namespace CreaJuego.Web
             if(data.gameTypeId=="catch-and-dodge")return ValidateCatch(data,kinds,context);
             var players=kinds.Where(p=>p.Value.kind==ItemKind.Player).ToArray();var platforms=kinds.Where(p=>p.Value.kind==ItemKind.Platform).ToArray();var goals=kinds.Count(p=>p.Value.kind==ItemKind.Goal);
             if(players.Length!=1)return players.Length==0?"Añade un Jugador antes de jugar.":"Tu juego debe tener un solo Jugador.";
-            bool hasTiles=data.tileLayers!=null&&data.tileLayers.Any(layer=>layer?.cells!=null&&layer.cells.Count>0);
+            bool hasTiles=data.tileLayers!=null&&data.tileLayers.Any(layer=>layer?.cells!=null&&layer.cells.Count>0)||data.tileRamps!=null&&data.tileRamps.Count>0;
             if(platforms.Length==0&&!hasTiles)return "Agrega una Plataforma o pinta terreno para comenzar.";
             if(goals!=1)return goals==0?"El nivel necesita una Meta.":"Tu juego debe tener una sola Meta.";
             if(context==null)return null;
@@ -101,9 +101,13 @@ namespace CreaJuego.Web
         }
         static bool SeemsSupportedByTile(RuntimeItemData player,GameItemDefinition definition,CreaJuegoProjectData data)
         {
-            if(data.tileLayers==null)return false;var box=definition.prefab.GetComponent<BoxCollider2D>();if(box==null)return false;
+            var box=definition.prefab.GetComponent<BoxCollider2D>();if(box==null)return false;
             float bottom=player.position.y+(box.offset.y-box.size.y*.5f)*player.scale.y;int x=Mathf.FloorToInt(player.position.x),y=Mathf.FloorToInt(bottom-.05f);
-            return data.tileLayers.Where(layer=>layer!=null&&layer.id!="decoracion").SelectMany(layer=>layer.cells??new List<RuntimeTileCellData>()).Any(cell=>cell.x==x&&cell.y==y);
+            bool onTile=data.tileLayers!=null&&data.tileLayers.Where(layer=>layer!=null&&layer.id!="decoracion").SelectMany(layer=>layer.cells??new List<RuntimeTileCellData>()).Any(cell=>cell.x==x&&cell.y==y);if(onTile)return true;
+            return data.tileRamps!=null&&data.tileRamps.Any(ramp=>
+            {
+                float minX=Mathf.Min(ramp.startX,ramp.endX),maxX=Mathf.Max(ramp.startX,ramp.endX);if(player.position.x<minX||player.position.x>maxX)return false;float t=Mathf.InverseLerp(ramp.startX,ramp.endX,player.position.x);float surface=Mathf.Lerp(ramp.startY,ramp.endY,t);return Mathf.Abs(bottom-surface)<1.1f;
+            });
         }
         static string ValidateCatch(CreaJuegoProjectData data,Dictionary<RuntimeItemData,GameItemDefinition> kinds,RuntimePreflightContext context)
         {

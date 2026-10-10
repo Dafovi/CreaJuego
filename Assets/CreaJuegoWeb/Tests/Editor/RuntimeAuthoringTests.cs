@@ -14,7 +14,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void SharedMediaRoundTripKeepsOneImageForSeveralObjects()
         {
             var data=new CreaJuegoProjectData();var media=MediaAssetData.Create("Dragón","data:image/png;base64,YWJj");data.mediaAssets.Add(media);data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",mediaAssetId=media.id});data.objects.Add(new RuntimeItemData{instanceId="2",definitionId="enemigo",mediaAssetId=media.id});
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(11));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
         }
         [Test] public void LegacyEmbeddedImagesMigrateAndDeduplicate()
         {
@@ -107,20 +107,34 @@ namespace CreaJuego.Web.Tests
             ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));Assert.That(ui.ChooseGameType("catch-and-dodge"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("catch-and-dodge"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.DefinitionAvailable(controller.Find("premio")));Assert.That(controller.DefinitionAvailable(controller.Find("peligro")));Assert.That(controller.DefinitionAvailable(controller.Find("plataforma")),Is.False);
             ui.ShowNewProjectDialog();
             Assert.That(ui.ChooseGameType("platformer"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(11));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(12));
         }
         [Test] public void TilePalettePaintEraseAndJsonRoundTripWork()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);
             Assert.That(controller.TilePalette,Is.Not.Null);Assert.That(controller.TilePalette.tiles.Count(tile=>tile!=null&&tile.tile!=null),Is.GreaterThanOrEqualTo(1));var tile=controller.TilePalette.Default;Assert.That(tile.tile.GetType().Name,Is.EqualTo("RuleTile"));Assert.That(tile.underlayTile,Is.Not.Null);Assert.That(controller.TilePalette.Find("plains-ground-1"),Is.SameAs(tile));controller.SelectTile(tile.id);
             Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1));Assert.That(controller.PaintTile(new Vector3(.8f,.7f),false),Is.False,"Dos puntos de la misma celda no deben duplicar el tile.");
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(11));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
             controller.Undo();Assert.That(controller.TileCount,Is.Zero);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),false),Is.True);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),true),Is.True);Assert.That(controller.TileCount,Is.Zero);
+            controller.SelectTile(tile.id);Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);var replacement=controller.TilePalette.tiles.FirstOrDefault(value=>value!=null&&value.tile!=null&&value.id!=tile.id);Assert.That(replacement,Is.Not.Null);controller.SelectTile(replacement.id);Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1),"Pintar otro terreno debe reemplazar la celda, no superponer capas.");Assert.That(controller.Project.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(replacement.id));
         }
         [Test] public void TileLineAndRectangleBrushesCoverExpectedCells()
         {
             var line=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Line,new Vector3Int(0,0),new Vector3Int(4,2)).ToArray();Assert.That(line.First(),Is.EqualTo(new Vector3Int(0,0)));Assert.That(line.Last(),Is.EqualTo(new Vector3Int(4,2)));Assert.That(line.Distinct().Count(),Is.EqualTo(line.Length));
             var rectangle=RuntimeTileBrushGeometry.Cells(RuntimeTileBrush.Rectangle,new Vector3Int(2,3),new Vector3Int(4,5)).ToArray();Assert.That(rectangle.Length,Is.EqualTo(9));Assert.That(rectangle,Does.Contain(new Vector3Int(2,3)));Assert.That(rectangle,Does.Contain(new Vector3Int(4,5)));
+        }
+        [Test] public void RampFillCreatesATriangularSupportWithoutTheSurfaceStep()
+        {
+            var fill=RuntimeTileBrushGeometry.RampFill(new Vector3Int(0,0),new Vector3Int(4,4)).ToArray();
+            Assert.That(fill.Contains(new Vector3Int(3,1,0)),Is.True);Assert.That(fill.Any(cell=>cell.x==4),Is.False);Assert.That(fill.All(cell=>cell.y>=0),Is.True);
+            var descending=RuntimeTileBrushGeometry.RampFill(new Vector3Int(0,4),new Vector3Int(4,0)).ToArray();Assert.That(descending.Contains(new Vector3Int(0,2,0)),Is.True);Assert.That(descending.Any(cell=>cell.x==3),Is.False);
+            Assert.That(RuntimeTileBrushGeometry.RampFill(new Vector3Int(2,0),new Vector3Int(2,4)),Is.Empty);
+        }
+        [Test] public void TileRampIsPreservedInJsonAndDragSnapsToFortyFiveDegrees()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);var end=controller.ClampRampEnd(new Vector3Int(0,0),new Vector3Int(5,2));Assert.That(end,Is.EqualTo(new Vector3Int(5,5)));
+            controller.Project.tileRamps.Add(new RuntimeTileRampData{id="r1",tileId="cave-gray",startX=0,startY=0,endX=5,endY=5,fillBelow=true});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.tileRamps.Single().fillBelow,Is.True);
+            Assert.That(RuntimeTileBrushGeometry.RampTouchesCell(controller.Project.tileRamps.Single(),new Vector3Int(5,5)),Is.True,"El extremo superior debe pertenecer al área borrable de la rampa.");Assert.That(controller.PaintTiles(new[]{new Vector3Int(5,5)},true),Is.True);Assert.That(controller.Project.tileRamps,Is.Empty,"El borrador normal debe poder eliminar una rampa desde su punta.");
         }
         [Test] public void TileDefinitionsCanBeGroupedByEducationalTheme()
         {

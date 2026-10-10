@@ -14,7 +14,8 @@ Esto evita estirar sprites de suelo, reduce la cantidad de GameObjects y conserv
 - Unity objetivo: **6000.6.0f1**.
 - Módulos públicos: `com.unity.modules.tilemap` 1.0.0 y `com.unity.2d.tilemap.extras` 9.0.0, versión publicada para Unity 6000.6.
 - Paleta inicial: un **Rule Tile** de terreno automático construido con piezas reales de `2D Pixel Art Platformer Biome - Plains`.
-- Herramientas: **Lápiz**, **Línea** y **Rectángulo**, utilizables tanto para pintar como para borrar.
+- Herramientas: **Lápiz**, **Línea**, **Rectángulo** y **Rampa**, utilizables tanto para pintar como para borrar.
+- **Rampa** usa las piezas diagonales declaradas por el tileset y ajusta el trazo a 45°. **Rellenar debajo** añade un soporte triangular de tiles que después puede editarse normalmente.
 - Acceso: botón **Nivel** → **Construir con tiles**.
 - Capas preparadas: `terreno`, `plataformas` y `decoracion`.
 - El JSON de proyecto guarda celdas como coordenadas y un id estable de tile.
@@ -32,10 +33,10 @@ Rocky World y Crystal World incluyen láminas completas sin slicing de Unity. Se
 
 ## Límites del spike
 
-- La primera paleta automática cubre terreno ortogonal. Las pendientes continúan como elementos porque requieren reglas y colliders distintos.
+- La paleta automática cubre terreno ortogonal. Las pendientes se guardan como trazos separados porque necesitan una superficie inclinada continua y un collider de una sola dirección.
 - No hay cubeta de relleno, selección múltiple ni sustitución masiva de un tipo de terreno.
 - Los paquetes importados usan escalas y PPU distintos. Cada pack deberá declarar una paleta normalizada para una cuadrícula de una unidad.
-- Las rampas siguen siendo elementos hasta evaluar `RuleTile` o una familia de tiles de pendiente con colisión coherente.
+- La herramienta sólo se habilita cuando la familia declara dos sprites de pendiente: subida y bajada. **Roca gris**, del pack Cave Platformer Tileset, es la primera familia compatible mediante sus tiles triangulares originales 16 y 18.
 - La personalización de tiles no usa la ventana Tile Palette del Editor, porque CreaJuego también necesita el mismo flujo en WebGL.
 
 ## Siguiente iteración recomendada

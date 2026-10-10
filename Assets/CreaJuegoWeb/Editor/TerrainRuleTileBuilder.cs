@@ -60,7 +60,8 @@ namespace CreaJuego.Web.Editor
         static void AddCaveTile(ICollection<RuntimeTileDefinition> definitions,int index,string id,string label)
         {
             var sprite=AssetDatabase.LoadAssetAtPath<Sprite>($"{CaveDirectory}/main_tiles_16x16_{index}.png");if(sprite==null)return;var tile=EnsureScaledTile($"Assets/CreaJuegoWeb/Content/{id}.asset",sprite,sprite.pixelsPerUnit/sprite.rect.width);
-            definitions.Add(new RuntimeTileDefinition{id=id,displayName=label,theme="Cueva",icon=sprite,tile=tile,layer=RuntimeTileLayerRole.Solid});
+            var ascending=index==1?AssetDatabase.LoadAssetAtPath<Sprite>($"{CaveDirectory}/main_tiles_16x16_16.png"):null;var descending=index==1?AssetDatabase.LoadAssetAtPath<Sprite>($"{CaveDirectory}/main_tiles_16x16_18.png"):null;
+            definitions.Add(new RuntimeTileDefinition{id=id,displayName=label,theme="Cueva",icon=sprite,tile=tile,rampAscending=ascending,rampDescending=descending,layer=RuntimeTileLayerRole.Solid});
         }
 
         static RuleTile EnsureRuleTile(string path,IReadOnlyList<Sprite> sprites)

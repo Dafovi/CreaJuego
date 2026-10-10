@@ -25,4 +25,6 @@ MonoBehaviour:
     icon: {fileID: -660070601, guid: 29e21165cb3ae334d969d4be634eaa9e, type: 3}
     tile: {fileID: 11400000, guid: 01081567e12bee242be0162b0873824e, type: 2}
     underlayTile: {fileID: 11400000, guid: 263f6ecf024cc0f45987d45799ca3020, type: 2}
+    rampAscending: {fileID: 0}
+    rampDescending: {fileID: 0}
     layer: 0

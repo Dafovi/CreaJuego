@@ -133,7 +133,7 @@ namespace CreaJuego.Web.Tests
             var c=Open();c.Project.schemaVersion=2;var player=c.Project.objects.Single(o=>o.definitionId=="jugador");var enemy=c.Project.objects.First(o=>o.definitionId=="enemigo");var enemyId=enemy.instanceId;
             player.appearanceId="tiny-dungeon-84";player.appearanceChosen=true;enemy.appearanceId="tiny-dungeon-120";enemy.appearanceChosen=true;
             var migrated=ProjectSerializer.FromJson(ProjectSerializer.ToJson(c.Project));
-            Assert.That(migrated.schemaVersion,Is.EqualTo(11));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
+            Assert.That(migrated.schemaVersion,Is.EqualTo(12));player=migrated.objects.Single(o=>o.definitionId=="jugador");enemy=migrated.objects.Single(o=>o.instanceId==enemyId);
             Assert.That(player.appearanceChosen,Is.False);Assert.That(enemy.appearanceChosen,Is.False);
             c.Project.objects=migrated.objects;c.Rebuild();
             Assert.That(player.appearanceId,Is.EqualTo(c.contentPack.DefaultFor(ItemKind.Player)));
@@ -188,7 +188,7 @@ namespace CreaJuego.Web.Tests
             var c=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=Object.FindAnyObjectByType<RuntimeAuthoringUI>();var runtimeHeader=GameObject.Find("Cabecera").GetComponent<RectTransform>();
             Assert.That(c.Project.objects.Any(value=>value.definitionId=="movil"),Is.False,"La plantilla debe retirar la plataforma móvil sin reconstruir el resto del nivel.");
             var initialBackground=c.buildRoot.GetComponentsInChildren<GameItem>(true).Single(value=>value.definition.kind==ItemKind.Background).GetComponent<RuntimeCanvasBackground>();
-            Assert.That(initialBackground,Is.Not.Null);Assert.That(initialBackground.Image,Is.Not.Null);Assert.That(initialBackground.Image.gameObject.activeInHierarchy,Is.True,"Retirar contenido obsoleto no debe ocultar el fondo al entrar en Play Mode.");
+            Assert.That(initialBackground,Is.Not.Null);Assert.That(initialBackground.Image,Is.Not.Null);Assert.That(initialBackground.Image.gameObject.activeInHierarchy,Is.True,"Retirar contenido obsoleto no debe ocultar el fondo al entrar en Play Mode.");Assert.That(initialBackground.Image.enabled,Is.True);Assert.That(initialBackground.Image.sprite,Is.Not.Null,"Play Mode debe restaurar la apariencia serializada del fondo antes de mostrar su Canvas.");
             Assert.That(runtimeHeader.anchorMin,Is.EqualTo(Vector2.zero));Assert.That(runtimeHeader.anchorMax,Is.EqualTo(Vector2.one));Assert.That(runtimeHeader.anchoredPosition,Is.EqualTo(new Vector2(0,334.54327f)).Using(Vector2ComparerWithEqualsOperator.Instance));Assert.That(runtimeHeader.sizeDelta,Is.EqualTo(new Vector2(0,-669.08655f)).Using(Vector2ComparerWithEqualsOperator.Instance),"Play Mode debe conservar el layout ajustado manualmente en WebAuthoringSpike.");
             var leftPanel=GameObject.Find("Panel de elementos").GetComponent<RectTransform>();var rightPanel=GameObject.Find("Panel de propiedades").GetComponent<RectTransform>();var canvasRect=leftPanel.GetComponentInParent<Canvas>().GetComponent<RectTransform>();
             Assert.That(leftPanel.anchorMin.x,Is.EqualTo(0));Assert.That(leftPanel.anchorMax.x,Is.EqualTo(0));Assert.That(leftPanel.rect.width,Is.EqualTo(260).Within(.1f));

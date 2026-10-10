@@ -50,6 +50,9 @@ namespace CreaJuego.Web
             EnsureVisual();
             if(item==null)item=GetComponent<GameItem>();
             image.sprite=item!=null ? item.customSprite ?? item.SelectedAppearance?.sprite ?? item.definition?.icon : null;
+            // A UI Image without a sprite renders as a solid white rectangle. If the
+            // appearance has not been restored yet, keep the camera visible instead.
+            image.enabled=image.sprite!=null;
             image.color=item!=null?ItemVisual.BaseColor(item):Color.white;
             canvas.worldCamera=targetCamera;
             canvas.planeDistance=Mathf.Clamp(targetCamera.farClipPlane-1,targetCamera.nearClipPlane+.01f,targetCamera.farClipPlane-.01f);

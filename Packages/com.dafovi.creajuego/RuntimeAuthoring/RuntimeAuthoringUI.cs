@@ -140,7 +140,7 @@ namespace CreaJuego.Web
         {
             statusOverride=tool==RuntimeTransformTool.Move?"Mover activo: arrastra cualquier elemento para cambiar su posición.":tool==RuntimeTransformTool.Resize?"Cambiar tamaño activo: arrastra los puntos amarillos del elemento.":tool==RuntimeTransformTool.Paint?"Pincel "+BrushName()+" activo: pinta el terreno. Si pulsas un objeto, pasarás a moverlo.":"Borrador "+BrushName()+" activo: borra terreno. Si pulsas un objeto, pasarás a moverlo.";UpdateTransformToolButtons();UpdateReadiness();
         }
-        string BrushName()=>authoringInput==null||authoringInput.Brush==RuntimeTileBrush.Pencil?"libre":authoringInput.Brush==RuntimeTileBrush.Line?"en línea":"rectangular";
+        string BrushName()=>authoringInput==null||authoringInput.Brush==RuntimeTileBrush.Pencil?"libre":authoringInput.Brush==RuntimeTileBrush.Line?"en línea":authoringInput.Brush==RuntimeTileBrush.Ramp?"de rampa":"rectangular";
         void SetTileBrush(RuntimeTileBrush brush){if(authoringInput==null)return;authoringInput.SetBrush(brush);SetTransformTool(RuntimeTransformTool.Paint);Refresh();}
         void UpdateTransformToolButtons()
         {
@@ -237,17 +237,19 @@ namespace CreaJuego.Web
                 {
                     Group("CONSTRUIR CON TILES",ref y);
                     ButtonAt(properties,"Mover objetos",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Move),new Vector2(238,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Move?Selected:Soft,TextColor,12);y+=44;
-                    ButtonAt(properties,"Lápiz",new Vector2(6,-y),()=>SetTileBrush(RuntimeTileBrush.Pencil),new Vector2(72,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Pencil?Selected:Soft,TextColor,11);
-                    ButtonAt(properties,"Línea",new Vector2(82,-y),()=>SetTileBrush(RuntimeTileBrush.Line),new Vector2(72,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Line?Selected:Soft,TextColor,11);
-                    ButtonAt(properties,"Rectángulo",new Vector2(158,-y),()=>SetTileBrush(RuntimeTileBrush.Rectangle),new Vector2(86,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Rectangle?Selected:Soft,TextColor,10);y+=42;
+                    ButtonAt(properties,"Lápiz",new Vector2(6,-y),()=>SetTileBrush(RuntimeTileBrush.Pencil),new Vector2(114,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Pencil?Selected:Soft,TextColor,11);
+                    ButtonAt(properties,"Línea",new Vector2(130,-y),()=>SetTileBrush(RuntimeTileBrush.Line),new Vector2(114,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Line?Selected:Soft,TextColor,11);y+=42;
+                    ButtonAt(properties,"Rectángulo",new Vector2(6,-y),()=>SetTileBrush(RuntimeTileBrush.Rectangle),new Vector2(114,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Rectangle?Selected:Soft,TextColor,10);
+                    bool rampAvailable=c.TilePalette.Find(c.SelectedTileId)?.SupportsRamp==true;var rampButton=ButtonAt(properties,"Rampa",new Vector2(130,-y),()=>SetTileBrush(RuntimeTileBrush.Ramp),new Vector2(114,36),null,authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Ramp?Selected:Soft,rampAvailable?TextColor:Muted,11);rampButton.interactable=rampAvailable;y+=42;
+                    if(authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Ramp){var fill=ToggleAt(properties,"Rellenar debajo",new Vector2(6,-y),value=>authoringInput.FillRampBelow=value,new Vector2(238,36));fill.isOn=authoringInput.FillRampBelow;y+=42;}
                     ButtonAt(properties,"Pintar",new Vector2(6,-y),()=>SetTransformTool(RuntimeTransformTool.Paint),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Paint?Selected:Soft,TextColor,12);
                     ButtonAt(properties,"Borrar",new Vector2(130,-y),()=>SetTransformTool(RuntimeTransformTool.Erase),new Vector2(114,38),null,authoringInput!=null&&authoringInput.Tool==RuntimeTransformTool.Erase?Selected:Soft,TextColor,12);y+=44;
                     foreach(var family in c.TilePalette.tiles.Where(tile=>tile!=null&&tile.tile!=null).GroupBy(tile=>string.IsNullOrWhiteSpace(tile.theme)?"Terreno":tile.theme))
                     {
                         Label(properties,family.Key.ToUpperInvariant(),12,new Vector2(6,-y),new Vector2(238,22),Muted);y+=24;
-                        foreach(var tile in family){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
+                        foreach(var tile in family){var captured=tile;ButtonAt(properties,tile.displayName,new Vector2(6,-y),()=>{if(authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Ramp&&!captured.SupportsRamp)authoringInput.SetBrush(RuntimeTileBrush.Pencil);c.SelectTile(captured.id);SetTransformTool(RuntimeTransformTool.Paint);},new Vector2(238,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;}
                     }
-                    var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,104),Hex("263B55"),true);Label(tileHelp,"Lápiz pinta libremente. Línea crea caminos y Rectángulo rellena pisos o muros. Para mover algo, pulsa el objeto. Atajos: M, P y E.",12,new Vector2(10,7),new Vector2(218,90),TextColor);y+=112;
+                    var tileHelp=PanelRect("Ayuda de tiles",properties,new Vector2(6,-y),new Vector2(238,138),Hex("263B55"),true);Label(tileHelp,(rampAvailable?"Rampa usa las piezas diagonales de este terreno y crea pendientes de 45°. Rellenar debajo completa el soporte.":"Este terreno no trae piezas de rampa. Elige uno compatible, como Roca gris.")+"\n\nArrastra con clic derecho o la rueda para recorrer el nivel sin dejar de pintar.",12,new Vector2(10,7),new Vector2(218,124),TextColor);y+=146;
                 }
                 Label(properties,"Tamaño del nivel",14,new Vector2(6,-y),new Vector2(240,26),TextColor);y+=30;
                 foreach(RuntimeLevelSize size in Enum.GetValues(typeof(RuntimeLevelSize))){var captured=size;string name=size==RuntimeLevelSize.Small?"Pequeño":size==RuntimeLevelSize.Medium?"Mediano":size==RuntimeLevelSize.Large?"Grande":"Muy grande";var button=ButtonAt(properties,name,new Vector2(6,-y),()=>c.SetLevelSize(captured),new Vector2(238,36),null,c.Project.levelSize==size?Selected:Soft,TextColor,13);y+=41;}

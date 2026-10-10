@@ -55,7 +55,18 @@ namespace CreaJuego.Web
             else NewProject(false);
             SelectedTileId=TilePalette?.Default?.id;
         }
-        void Start(){if(buildRoot!=null)foreach(var background in buildRoot.GetComponentsInChildren<RuntimeCanvasBackground>(true))background.Configure(buildCamera);if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
+        void Start(){RestoreEditableBackgrounds();if(Application.absoluteURL.Contains("stress=100"))CreateLargeStressProject();else if(Application.absoluteURL.Contains("stress=1"))CreateStressProject();Debug.Log($"CREAJUEGO_WEB_READY mode={Mode} objects={Project.objects.Count}");}
+        void RestoreEditableBackgrounds()
+        {
+            if(buildRoot==null||Project==null)return;
+            foreach(var background in buildRoot.GetComponentsInChildren<RuntimeCanvasBackground>(true))
+            {
+                var item=background.GetComponent<GameItem>();var marker=background.GetComponent<RuntimeAuthoredItem>();
+                var data=marker!=null?Project.objects.FirstOrDefault(value=>value!=null&&value.instanceId==marker.instanceId):null;
+                if(item!=null&&data!=null){item.definition=Find(data.definitionId);ApplyData(item,data);}
+                background.Configure(buildCamera);
+            }
+        }
         void Update(){if(dirty&&Time.unscaledTime>=saveAt)SaveRecovery();}
         void OnDestroy(){ReleaseImages();}
         public GameItemDefinition Find(string id)=>contentPack!=null?contentPack.Find(id):definitions.FirstOrDefault(d=>d!=null&&d.id==id);
@@ -426,6 +437,10 @@ namespace CreaJuego.Web
         {
             var bounds=Project?.bounds;if(bounds==null)return cell;cell.x=Mathf.Clamp(cell.x,Mathf.FloorToInt(bounds.left),Mathf.CeilToInt(bounds.right)-1);cell.y=Mathf.Clamp(cell.y,Mathf.FloorToInt(bounds.bottom),Mathf.CeilToInt(bounds.top)-1);cell.z=0;return cell;
         }
+        public Vector3Int ClampRampEnd(Vector3Int start,Vector3Int end)
+        {
+            start=ClampTileCell(start);end=ClampTileCell(end);int horizontal=Math.Abs(end.x-start.x),direction=Math.Sign(end.y-start.y);if(horizontal==0||direction==0)return start;var bounds=Project?.bounds;int verticalLimit=bounds==null?horizontal:direction>0?Mathf.CeilToInt(bounds.top)-1-start.y:start.y-Mathf.FloorToInt(bounds.bottom);int steps=Mathf.Min(horizontal,Mathf.Max(0,verticalLimit));return new Vector3Int(start.x+Math.Sign(end.x-start.x)*steps,start.y+direction*steps,0);
+        }
         public Vector3 TileCellCenter(Vector3Int cell)=>buildTilemap!=null?buildTilemap.Grid.GetCellCenterWorld(cell):new Vector3(cell.x+.5f,cell.y+.5f,0);
         public bool PaintTile(Vector3 world,bool erase,bool record=true)
         {
@@ -434,7 +449,24 @@ namespace CreaJuego.Web
         public bool PaintTiles(IEnumerable<Vector3Int> cells,bool erase,bool record=true)
         {
             if(IsCatchMode||TilePalette==null||cells==null)return false;if(buildTilemap==null)buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);if(buildTilemap==null)return false;
-            bool changed=false;foreach(var cell in cells.Select(ClampTileCell).Distinct())changed|=buildTilemap.SetCell(Project,cell,SelectedTileId,erase);if(changed&&record)CommitEdit();return changed;
+            var affected=cells.Select(ClampTileCell).Distinct().ToArray();bool rampsChanged=erase&&Project.tileRamps!=null&&Project.tileRamps.RemoveAll(ramp=>affected.Any(cell=>RuntimeTileBrushGeometry.RampTouchesCell(ramp,cell)))>0;
+            bool changed=rampsChanged;foreach(var cell in affected)changed|=buildTilemap.SetCell(Project,cell,SelectedTileId,erase);if(rampsChanged)Rebuild();if(changed&&record)CommitEdit();return changed;
+        }
+        public bool PaintTileRamp(Vector3Int start,Vector3Int end,bool erase,bool fillBelow,bool record=true)
+        {
+            var definition=TilePalette?.Find(SelectedTileId);if(IsCatchMode||definition==null||!erase&&!definition.SupportsRamp)return false;start=ClampTileCell(start);end=erase?ClampTileCell(end):ClampRampEnd(start,end);if(start.x==end.x&&!erase)return false;if(start.x>end.x){var swap=start;start=end;end=swap;}Project.tileRamps??=new List<RuntimeTileRampData>();bool changed=false;
+            if(erase)
+            {
+                int minX=Mathf.Min(start.x,end.x),maxX=Mathf.Max(start.x,end.x),minY=Mathf.Min(start.y,end.y),maxY=Mathf.Max(start.y,end.y);
+                changed=Project.tileRamps.RemoveAll(ramp=>Mathf.Max(ramp.startX,ramp.endX)>=minX&&Mathf.Min(ramp.startX,ramp.endX)<=maxX&&Mathf.Max(ramp.startY,ramp.endY)>=minY&&Mathf.Min(ramp.startY,ramp.endY)<=maxY)>0;
+            }
+            else
+            {
+                var same=Project.tileRamps.Any(ramp=>ramp.tileId==SelectedTileId&&ramp.startX==start.x&&ramp.startY==start.y&&ramp.endX==end.x&&ramp.endY==end.y);if(same)return false;
+                Project.tileRamps.Add(new RuntimeTileRampData{id=Guid.NewGuid().ToString("N"),tileId=SelectedTileId,startX=start.x,startY=start.y,endX=end.x,endY=end.y,fillBelow=fillBelow});changed=true;
+                if(fillBelow)PaintTiles(RuntimeTileBrushGeometry.RampFill(start,end),false,false);
+            }
+            if(changed){Rebuild();if(record)CommitEdit();}return changed;
         }
         GameItem InstantiateItem(RuntimeItemData data,Transform parent,bool authoring)
         {
