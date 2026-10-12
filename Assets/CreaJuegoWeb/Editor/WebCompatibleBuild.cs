@@ -39,6 +39,10 @@ namespace CreaJuego.Web.Editor
         [MenuItem("CreaJuego/Web/Generar Web compatible en repositorio")]
         public static void BuildFromMenu() => Build(@"E:\Github\creajuego-web");
 
+        [MenuItem("CreaJuego/Web/Generar preview local del rediseño")]
+        public static void BuildRedesignPreview() =>
+            Build(Path.GetFullPath("Builds/GamerUiRedesignPreview"));
+
         [MenuItem("CreaJuego/Web/Actualizar marca del taller")]
         public static void RefreshWorkshopBranding()
         {

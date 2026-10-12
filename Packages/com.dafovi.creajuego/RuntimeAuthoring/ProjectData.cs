@@ -25,7 +25,7 @@ namespace CreaJuego.Web
     public sealed class CreaJuegoProjectData
     {
         public int version=1; // Retained for v1 JSON compatibility.
-        public int schemaVersion=12;
+        public int schemaVersion=13;
         public string projectName="Mi juego", teamName="Mi equipo";
         public string gameTypeId="platformer";
         public int targetScore=10;
@@ -90,7 +90,7 @@ namespace CreaJuego.Web
         public float rotationZ;
         public float speed=2,jump=10,distance=3,visualScale=1,platformWidth=3,spawnInterval=.8f;
         public int health=3,damage=1,points=1,attackDamage=1;
-        public bool canJump=true,canAttack=true,disappear=true;
+        public bool canJump=true,canAttack=true,disappear=true,visualFlipX;
         public string message="¡Llegaste a la meta!";
         public Color tint=Color.white;
         public string appearanceId, mediaAssetId;
@@ -105,13 +105,13 @@ namespace CreaJuego.Web
             return new RuntimeItemData{instanceId=Guid.NewGuid().ToString("N"),definitionId=definitionId??item.definition?.id??"",
                 position=item.transform.position,scale=item.transform.localScale,rotationZ=item.transform.eulerAngles.z,speed=item.speed,jump=item.jump,distance=item.distance,
                 visualScale=item.visualScale,platformWidth=box!=null?box.size.x:3,health=item.health,damage=item.damage,points=item.points,
-                attackDamage=item.attackDamage,canJump=item.canJump,canAttack=item.canAttack,disappear=item.disappear,message=item.message,
+                attackDamage=item.attackDamage,canJump=item.canJump,canAttack=item.canAttack,disappear=item.disappear,visualFlipX=item.visualFlipX,message=item.message,
                 tint=item.tint,appearanceId=item.appearanceId};
         }
         public void Apply(GameItem item)
         {
             item.speed=speed;item.jump=jump;item.distance=distance;item.visualScale=visualScale;item.health=health;item.damage=damage;
-            item.points=points;item.attackDamage=attackDamage;item.canJump=canJump;item.canAttack=canAttack;item.disappear=disappear;
+            item.points=points;item.attackDamage=attackDamage;item.canJump=canJump;item.canAttack=canAttack;item.disappear=disappear;item.visualFlipX=visualFlipX;
             item.message=message;item.tint=tint;item.appearanceId=appearanceId??"";item.transform.position=position;item.transform.localScale=scale;item.transform.rotation=Quaternion.Euler(0,0,rotationZ);
         }
     }
@@ -132,7 +132,7 @@ namespace CreaJuego.Web
         {
             if(string.IsNullOrWhiteSpace(json))return new CreaJuegoProjectData();
             var data=JsonUtility.FromJson<CreaJuegoProjectData>(json)??new CreaJuegoProjectData();
-            if(data.schemaVersion>12)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
+            if(data.schemaVersion>13)throw new FormatException("Este proyecto necesita una versión más reciente de CreaJuego.");
             int sourceSchemaVersion=data.schemaVersion;
             bool migrateFormerDefaults=!json.Contains("\"schemaVersion\"")||data.schemaVersion<3;
             if(!json.Contains("\"schemaVersion\"")){data.alignAutomatically=true;data.levelSize=RuntimeLevelSize.Medium;data.bounds=RuntimeLevelBounds.For(data.levelSize);}
@@ -176,7 +176,7 @@ namespace CreaJuego.Web
             }
             data.tileRamps.RemoveAll(ramp=>ramp==null||string.IsNullOrWhiteSpace(ramp.tileId)||ramp.startX==ramp.endX);
             foreach(var ramp in data.tileRamps)if(string.IsNullOrWhiteSpace(ramp.id))ramp.id=Guid.NewGuid().ToString("N");
-            data.schemaVersion=12;
+            data.schemaVersion=13;
             return data;
         }
     }

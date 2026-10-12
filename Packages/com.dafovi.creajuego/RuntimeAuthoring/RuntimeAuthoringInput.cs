@@ -13,7 +13,7 @@ namespace CreaJuego.Web
     public sealed class RuntimeAuthoringInput:MonoBehaviour
     {
         RuntimeAuthoringController controller;Camera View=>controller.buildCamera;
-        bool dragging,panning,resizing,painting,resizeHorizontal,resizePositive,changed,fallingGuide;Vector3 offset,last;Vector3Int paintStartCell,lastPaintCell;float fixedEdge;RuntimeMoveAxis moveAxis;int panButton=-1;
+        bool dragging,panning,resizing,painting,resizeHorizontal,resizePositive,changed,fallingGuide,brushPointerArmed=true;Vector3 offset,last;Vector2 brushActivationScreen;Vector3Int paintStartCell,lastPaintCell;float fixedEdge;RuntimeMoveAxis moveAxis;int panButton=-1;
         LineRenderer outline,worldFrame,brushPreview,movementPath,movementArrow,moveHorizontal,moveVertical;SpriteRenderer leftHandle,rightHandle,topHandle,bottomHandle,movementStart,movementEnd,moveCenter;Material lineMaterial;Sprite handleSprite;
         public bool HasMovementGuide=>movementPath!=null&&movementPath.gameObject.activeInHierarchy;
         public Vector3 MovementGuideStart=>movementStart!=null?movementStart.transform.position:Vector3.zero;
@@ -32,13 +32,14 @@ namespace CreaJuego.Web
         {
             bool build=controller.Mode==AuthoringMode.Build;if(worldFrame!=null)worldFrame.gameObject.SetActive(build);SetSelectionVisible(build);if(!build||View==null)return;UpdateGuideScale();if(Mouse.current==null)return;
             var mouse=Mouse.current;var screen=mouse.position.ReadValue();var world=View.ScreenToWorldPoint(new Vector3(screen.x,screen.y,-View.transform.position.z));world.z=0;bool overUI=RuntimePointerContext.IsPointerOverBlockingUI(screen);bool inViewport=View.pixelRect.Contains(screen);
+            if(!brushPointerArmed&&!mouse.leftButton.isPressed&&!overUI&&Vector2.Distance(screen,brushActivationScreen)>12)brushPointerArmed=true;
             if(!panning&&!painting&&!dragging&&!resizing&&!overUI&&inViewport&&(mouse.rightButton.wasPressedThisFrame||mouse.middleButton.wasPressedThisFrame))
             {
                 BeginPan(world,mouse.middleButton.wasPressedThisFrame?2:1);
             }
             if(mouse.leftButton.wasPressedThisFrame&&!overUI&&inViewport)
             {
-                if(Tool==RuntimeTransformTool.Paint||Tool==RuntimeTransformTool.Erase)
+                if((Tool==RuntimeTransformTool.Paint||Tool==RuntimeTransformTool.Erase)&&brushPointerArmed)
                 {
                     var objectHit=RuntimeAuthoringHitTest.Pick(world,controller.buildRoot.GetComponentsInChildren<GameItem>(),controller.SelectedId());
                     if(objectHit!=null)
@@ -71,9 +72,9 @@ namespace CreaJuego.Web
         public void SetTool(RuntimeTransformTool tool)
         {
             if(Tool==tool){SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);return;}
-            Tool=tool;dragging=panning=resizing=painting=changed=false;panButton=-1;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
+            Tool=tool;dragging=panning=resizing=painting=changed=false;panButton=-1;moveAxis=RuntimeMoveAxis.None;HideBrushPreview();if(tool==RuntimeTransformTool.Paint||tool==RuntimeTransformTool.Erase){brushPointerArmed=false;brushActivationScreen=Mouse.current!=null?Mouse.current.position.ReadValue():Vector2.zero;}else brushPointerArmed=true;SetSelectionVisible(controller!=null&&controller.Mode==AuthoringMode.Build);ToolChanged?.Invoke(tool);
         }
-        public void SetBrush(RuntimeTileBrush brush){Brush=brush;HideBrushPreview();}
+        public void SetBrush(RuntimeTileBrush brush){Brush=brush;HideBrushPreview();brushPointerArmed=false;brushActivationScreen=Mouse.current!=null?Mouse.current.position.ReadValue():Vector2.zero;}
         public bool BeginMoveHandle(Vector2 screen,Vector3 world)=>TryBeginMoveGizmo(screen,world);
         public bool DragMove(Vector3 world)
         {

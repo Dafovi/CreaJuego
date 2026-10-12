@@ -34,6 +34,13 @@ namespace CreaJuego.Web.Editor
             if(!controller.CaptureEditableScene(true))throw new InvalidOperationException("No se pudo capturar el nivel inicial.");controller.ui.RefreshEditableLayout();
             EditorUtility.SetDirty(controller);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);AssetDatabase.SaveAssets();Debug.Log("CREAJUEGO_WEB_STARTER_LEVEL_READY "+controller.Project.objects.Count);
         }
+        [MenuItem("CreaJuego/Web/Aplicar vista del rediseño")]
+        public static void ApplyUiRedesignPreview()
+        {
+            var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();if(scene.path!=ScenePath)scene=EditorSceneManager.OpenScene(ScenePath,OpenSceneMode.Single);
+            var controller=UnityEngine.Object.FindAnyObjectByType<RuntimeAuthoringController>();if(controller==null)throw new InvalidOperationException("La escena Web no contiene RuntimeAuthoringController.");
+            controller.PrepareEditorPreview();controller.ui.PrepareEditableLayout();controller.ui.RefreshEditableLayout();EditorUtility.SetDirty(controller.ui);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene,ScenePath);Debug.Log("GAMER_UI_REDESIGN_PREVIEW_READY");
+        }
         [MenuItem("CreaJuego/Web/Actualizar contenido y nivel inicial")]
         public static void RefreshContentAndStarterLevel()
         {

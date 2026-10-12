@@ -7,8 +7,11 @@ using UnityEngine.UI;
 
 namespace CreaJuego.Web
 {
+    public enum RuntimeBuildSection { Objects, Terrain }
+
     public sealed class RuntimeAuthoringUI:MonoBehaviour
     {
+        public const int CurrentEditableLayoutVersion=2;
         [SerializeField] Canvas canvas;
         [SerializeField] Transform catalog,list,properties,editTop,top,hearts;
         [SerializeField] Text status,save,flow,readinessTitle,readinessChecks,brandTitle,brandTagline;
@@ -17,7 +20,9 @@ namespace CreaJuego.Web
         [SerializeField] GameObject leftPanel,rightPanel,readinessPanel,brandPanel,gameplayHudPanel,gameResultPanel,newProjectDialog;
         [SerializeField] Text hudObjective,hudScore,hudEnemies,gameResultTitle,gameResultMessage,newProjectHint;
         [SerializeField, Tooltip("Recalcula paneles y cámara según la resolución. Déjalo desactivado para respetar el layout guardado en el Canvas.")] bool adaptLayoutAtRuntime;
+        [SerializeField, HideInInspector] int editableLayoutVersion;
         RuntimeAuthoringController c;RuntimeAuthoringInput authoringInput;Font font;CanvasScaler scaler;Action<GameItem> selectionChanged;bool worldSelected,listInitialized;string appearanceSearch="",mediaSearch="",mediaCategory="todas",renamingMediaId,pendingMediaDeleteId,statusOverride="";ItemKind? searchKind;int screenWidth,screenHeight,lastHudHealth=-1,lastHudScore=-1,lastHudEnemies=-1;
+        RuntimeBuildSection buildSection=RuntimeBuildSection.Objects;Button objectsTabButton,terrainTabButton,pencilToolButton,lineToolButton,rectangleToolButton,rampToolButton,paintToolButton,eraseToolButton,projectButton;Transform terrainCatalog;Text catalogTitle,catalogHint,projectNameLabel;GameObject projectMenu;
 
         static readonly Color Background=Hex("171D27"),Header=Hex("111822"),Panel=Hex("222B39"),Soft=Hex("273344"),Selected=Hex("304D73"),TextColor=Hex("EDF2FA"),Muted=Hex("AFBDD1"),Accent=Hex("80B4FF"),Border=Hex("45556C"),Success=Hex("08743F"),SuccessBright=Hex("48C78A"),Warning=Hex("3B3020"),WarningText=Hex("F2C778"),Danger=Hex("5A2731"),DangerText=Hex("FF8C9C");
         static Color Hex(string value){ColorUtility.TryParseHtmlString("#"+value,out var color);return color;}
@@ -40,11 +45,15 @@ namespace CreaJuego.Web
         public RuntimeTransformTool ActiveTransformTool=>authoringInput!=null?authoringInput.Tool:RuntimeTransformTool.Move;
         public bool HasTransformToolControls=>moveToolButton!=null&&resizeToolButton!=null;
         public bool HasPreparedLayout=>canvas!=null&&catalog!=null&&list!=null&&properties!=null&&status!=null&&modeButton!=null&&leftPanel!=null&&rightPanel!=null&&readinessPanel!=null;
+        public RuntimeBuildSection ActiveBuildSection=>buildSection;
+        public bool ObjectCatalogVisible=>catalog!=null&&catalog.parent.gameObject.activeSelf;
+        public bool TerrainCatalogVisible=>terrainCatalog!=null&&terrainCatalog.parent.gameObject.activeSelf;
+        public bool NeedsEditableLayoutRefresh=>editableLayoutVersion<CurrentEditableLayoutVersion;
 
-        void Start(){Initialize();if(!HasPreparedLayout)Build();EnsureTransformToolControls();if(gameResultPanel==null)BuildGameResultPanel();BindStaticActions();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;if(authoringInput!=null)authoringInput.ToolChanged+=OnTransformToolChanged;Refresh();}
+        void Start(){Initialize();if(!HasPreparedLayout)Build();EnsureBuildSectionControls();EnsureTransformToolControls();EnsureHeaderControls();if(gameResultPanel==null)BuildGameResultPanel();BindStaticActions();BindModalActions();ConfigureResponsiveAnchors();selectionChanged=OnSelection;c.Selection.SelectionChanged+=selectionChanged;c.ProjectChanged+=Refresh;if(authoringInput!=null)authoringInput.ToolChanged+=OnTransformToolChanged;Refresh();}
         void OnDestroy(){if(c!=null){if(selectionChanged!=null)c.Selection.SelectionChanged-=selectionChanged;c.ProjectChanged-=Refresh;}if(authoringInput!=null)authoringInput.ToolChanged-=OnTransformToolChanged;}
         void LateUpdate(){ApplyResponsiveLayout();UpdateGameplayHud();}
-        void OnSelection(GameItem item){if(item!=null)worldSelected=false;if(item!=null&&item.definition!=null&&searchKind!=item.definition.kind){appearanceSearch="";searchKind=item.definition.kind;}Refresh();}
+        void OnSelection(GameItem item){if(item!=null){worldSelected=false;buildSection=RuntimeBuildSection.Objects;}if(item!=null&&item.definition!=null&&searchKind!=item.definition.kind){appearanceSearch="";searchKind=item.definition.kind;}Refresh();}
         void Initialize(){c=GetComponent<RuntimeAuthoringController>();authoringInput=GetComponent<RuntimeAuthoringInput>();font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");if(canvas!=null)scaler=canvas.GetComponent<CanvasScaler>();ResolveBrandLabels();ApplyBranding();}
 
         void ResolveBrandLabels()
@@ -66,7 +75,7 @@ namespace CreaJuego.Web
         {
             Initialize();
             for(int i=transform.childCount-1;i>=0;i--){var child=transform.GetChild(i);if(child.GetComponent<Canvas>()!=null||child.GetComponent<EventSystem>()!=null)DestroyNow(child.gameObject);}
-            Build();
+            Build();EnsureBuildSectionControls();EnsureTransformToolControls();EnsureHeaderControls();BindStaticActions();BindModalActions();ConfigureResponsiveAnchors();editableLayoutVersion=CurrentEditableLayoutVersion;Refresh();
         }
         public void RefreshEditableLayout(){Initialize();Refresh();}
 
@@ -85,8 +94,11 @@ namespace CreaJuego.Web
             returnButton=ButtonAt(top,"VOLVER A CONSTRUIR",new Vector2(1065,14),null,new Vector2(200,46),RuntimeIconLibrary.Back,Hex("075BD8"),TextColor,14);returnButton.gameObject.SetActive(false);
 
             leftPanel=PanelRect("Panel de elementos",canvas.transform,new Vector2(0,0),new Vector2(260,646),Panel,true).gameObject;
-            Label(leftPanel.transform,"AÑADIR AL JUEGO",18,new Vector2(14,600),new Vector2(230,30),Accent,FontStyle.Bold);Label(leftPanel.transform,"Elige algo para añadir a tu juego.",12,new Vector2(14,578),new Vector2(230,22),Muted);
-            catalog=Scroll("Catálogo",leftPanel.transform,new Vector2(10,270),new Vector2(240,304));
+            objectsTabButton=ButtonAt(leftPanel.transform,"Objetos",new Vector2(10,604),null,new Vector2(115,34),null,Selected,TextColor,12);objectsTabButton.name="Pestaña Objetos";
+            terrainTabButton=ButtonAt(leftPanel.transform,"Terreno",new Vector2(130,604),null,new Vector2(120,34),null,Soft,TextColor,12);terrainTabButton.name="Pestaña Terreno";
+            catalogTitle=Label(leftPanel.transform,"AÑADIR AL JUEGO",18,new Vector2(14,566),new Vector2(230,30),Accent,FontStyle.Bold);catalogHint=Label(leftPanel.transform,"Elige algo para añadir a tu juego.",12,new Vector2(14,544),new Vector2(230,22),Muted);
+            catalog=Scroll("Catálogo",leftPanel.transform,new Vector2(10,270),new Vector2(240,268));
+            terrainCatalog=Scroll("Catálogo de terreno",leftPanel.transform,new Vector2(10,270),new Vector2(240,268));terrainCatalog.parent.gameObject.SetActive(false);
             Label(leftPanel.transform,"MI JUEGO",18,new Vector2(14,236),new Vector2(220,30),Accent,FontStyle.Bold);
             list=Scroll("Mi juego",leftPanel.transform,new Vector2(10,50),new Vector2(240,184));
             duplicateButton=ButtonAt(leftPanel.transform,"Duplicar",new Vector2(10,8),null,new Vector2(114,36),null,Soft,TextColor,13);
@@ -115,6 +127,7 @@ namespace CreaJuego.Web
             Bind(moveToolButton,()=>SetTransformTool(RuntimeTransformTool.Move));Bind(resizeToolButton,()=>SetTransformTool(RuntimeTransformTool.Resize));
             Bind(levelButton,()=>{worldSelected=true;c.Selection.Clear();Refresh();});Bind(duplicateButton,c.DuplicateSelected);Bind(deleteButton,c.DeleteSelected);Bind(modeButton,c.ToggleMode);Bind(returnButton,c.ToggleMode);
             snap.onValueChanged.RemoveAllListeners();snap.onValueChanged.AddListener(value=>c.SetSnap(value));
+            Bind(objectsTabButton,()=>SetBuildSection(RuntimeBuildSection.Objects));Bind(terrainTabButton,()=>SetBuildSection(RuntimeBuildSection.Terrain));
         }
         static void Bind(Button button,UnityEngine.Events.UnityAction action){if(button==null)return;button.onClick.RemoveAllListeners();button.onClick.AddListener(action);}
 
@@ -131,6 +144,91 @@ namespace CreaJuego.Web
             UpdateTransformToolButtons();
         }
         static void SetToolbarButton(Button button,float x,float width){if(button==null)return;var rect=(RectTransform)button.transform;rect.anchoredPosition=new Vector2(x,7);rect.sizeDelta=new Vector2(width,36);}
+
+        void EnsureBuildSectionControls()
+        {
+            if(leftPanel==null)return;
+            objectsTabButton=FindButton(leftPanel.transform,"Pestaña Objetos")??ButtonAt(leftPanel.transform,"Objetos",new Vector2(10,604),null,new Vector2(115,34),null,Selected,TextColor,12);objectsTabButton.name="Pestaña Objetos";
+            terrainTabButton=FindButton(leftPanel.transform,"Pestaña Terreno")??ButtonAt(leftPanel.transform,"Terreno",new Vector2(130,604),null,new Vector2(120,34),null,Soft,TextColor,12);terrainTabButton.name="Pestaña Terreno";
+            if(terrainCatalog==null){var existing=leftPanel.transform.Find("Catálogo de terreno/Contenido");terrainCatalog=existing!=null?existing:Scroll("Catálogo de terreno",leftPanel.transform,Rect(catalog).anchoredPosition,Rect(catalog).sizeDelta);terrainCatalog.parent.gameObject.SetActive(false);}
+            var headings=leftPanel.GetComponentsInChildren<Text>(true);
+            catalogTitle=headings.FirstOrDefault(value=>value.text=="AÑADIR AL JUEGO")??catalogTitle;
+            catalogHint=headings.FirstOrDefault(value=>value.text=="Elige algo para añadir a tu juego.")??catalogHint;
+            if(catalogTitle!=null)Rect(catalogTitle.transform).anchoredPosition=new Vector2(14,566);
+            if(catalogHint!=null)Rect(catalogHint.transform).anchoredPosition=new Vector2(14,544);
+            Rect(catalog.parent).anchoredPosition=new Vector2(10,270);Rect(catalog.parent).sizeDelta=new Vector2(240,268);
+            Rect(terrainCatalog.parent).anchoredPosition=Rect(catalog.parent).anchoredPosition;Rect(terrainCatalog.parent).sizeDelta=Rect(catalog.parent).sizeDelta;
+            EnsureTerrainToolControls();
+        }
+
+        void EnsureTerrainToolControls()
+        {
+            if(editTop==null)return;
+            pencilToolButton=FindButton(editTop,"Herramienta Lápiz")??ButtonAt(editTop,"Lápiz",new Vector2(8,7),null,new Vector2(58,36),null,Soft,TextColor,10);pencilToolButton.name="Herramienta Lápiz";
+            lineToolButton=FindButton(editTop,"Herramienta Línea")??ButtonAt(editTop,"Línea",new Vector2(70,7),null,new Vector2(58,36),null,Soft,TextColor,10);lineToolButton.name="Herramienta Línea";
+            rectangleToolButton=FindButton(editTop,"Herramienta Rectángulo")??ButtonAt(editTop,"Rectángulo",new Vector2(132,7),null,new Vector2(80,36),null,Soft,TextColor,9);rectangleToolButton.name="Herramienta Rectángulo";
+            rampToolButton=FindButton(editTop,"Herramienta Rampa")??ButtonAt(editTop,"Rampa",new Vector2(216,7),null,new Vector2(62,36),null,Soft,TextColor,10);rampToolButton.name="Herramienta Rampa";
+            paintToolButton=FindButton(editTop,"Herramienta Pintar")??ButtonAt(editTop,"Pintar",new Vector2(282,7),null,new Vector2(60,36),null,Soft,TextColor,10);paintToolButton.name="Herramienta Pintar";
+            eraseToolButton=FindButton(editTop,"Herramienta Borrar")??ButtonAt(editTop,"Borrar",new Vector2(346,7),null,new Vector2(60,36),null,Soft,DangerText,10);eraseToolButton.name="Herramienta Borrar";
+            Bind(pencilToolButton,()=>SetTileBrush(RuntimeTileBrush.Pencil));Bind(lineToolButton,()=>SetTileBrush(RuntimeTileBrush.Line));Bind(rectangleToolButton,()=>SetTileBrush(RuntimeTileBrush.Rectangle));Bind(rampToolButton,()=>SetTileBrush(RuntimeTileBrush.Ramp));Bind(paintToolButton,()=>SetTransformTool(RuntimeTransformTool.Paint));Bind(eraseToolButton,()=>SetTransformTool(RuntimeTransformTool.Erase));
+        }
+
+        static Button FindButton(Transform root,string name){var found=root.Find(name);return found!=null?found.GetComponent<Button>():null;}
+        static Button FindButtonDeep(Transform root,string name)=>root==null?null:root.GetComponentsInChildren<Button>(true).FirstOrDefault(button=>button.name==name);
+
+        void EnsureHeaderControls()
+        {
+            if(top==null)return;
+            projectButton=FindButton(top,"Menú Proyecto")??projectButton;var existingName=top.Find("Nombre del proyecto");projectNameLabel=existingName!=null?existingName.GetComponent<Text>():projectNameLabel;var existingMenu=canvas.transform.Find("Opciones de Proyecto");projectMenu=existingMenu!=null?existingMenu.gameObject:projectMenu;
+            if(projectNameLabel==null){projectNameLabel=Label(top,"Mi aventura",12,new Vector2(865,37),new Vector2(150,24),TextColor,FontStyle.Bold);projectNameLabel.name="Nombre del proyecto";}
+            if(flow!=null)Rect(flow.transform).sizeDelta=new Vector2(500,48);
+            if(save!=null){Rect(save.transform).anchoredPosition=new Vector2(865,14);Rect(save.transform).sizeDelta=new Vector2(150,22);save.alignment=TextAnchor.MiddleLeft;save.fontSize=10;}
+            ReparentHeaderButton(undoButton,1025,"Deshacer");ReparentHeaderButton(redoButton,1067,"Rehacer");
+            if(projectButton==null){projectButton=ButtonAt(top,"Proyecto ▾",new Vector2(1111,17),null,new Vector2(154,40),null,Soft,TextColor,12);projectButton.name="Menú Proyecto";}Bind(projectButton,ToggleProjectMenu);
+            if(projectMenu==null){projectMenu=PanelRect("Opciones de Proyecto",canvas.transform,new Vector2(1015,360),new Vector2(250,276),Header,true).gameObject;Label(projectMenu.transform,"PROYECTO",13,new Vector2(14,238),new Vector2(220,24),Accent,FontStyle.Bold);ProjectAction("Nuevo proyecto",196,ShowNewProjectDialog);ProjectAction("Abrir proyecto",154,c.LoadLast);ProjectAction("Guardar ahora",112,c.SaveNow);ProjectAction("Descargar copia",70,c.DownloadProject);ProjectAction("Importar copia",28,c.PickProjectFile);}
+            else BindProjectActions();projectMenu.transform.SetAsLastSibling();projectMenu.SetActive(false);
+        }
+
+        void BindProjectActions()
+        {
+            Bind(FindButton(projectMenu.transform,"Nuevo proyecto"),()=>{projectMenu.SetActive(false);ShowNewProjectDialog();});Bind(FindButton(projectMenu.transform,"Abrir proyecto"),()=>{projectMenu.SetActive(false);c.LoadLast();});Bind(FindButton(projectMenu.transform,"Guardar ahora"),()=>{projectMenu.SetActive(false);c.SaveNow();});Bind(FindButton(projectMenu.transform,"Descargar copia"),()=>{projectMenu.SetActive(false);c.DownloadProject();});Bind(FindButton(projectMenu.transform,"Importar copia"),()=>{projectMenu.SetActive(false);c.PickProjectFile();});
+        }
+
+        void ReparentHeaderButton(Button button,float x,string tooltipName)
+        {
+            if(button==null)return;button.transform.SetParent(top,false);button.name=tooltipName;var rect=Rect(button.transform);rect.anchoredPosition=new Vector2(x,17);rect.sizeDelta=new Vector2(38,40);
+        }
+
+        void ProjectAction(string label,float y,UnityEngine.Events.UnityAction action)
+        {
+            ButtonAt(projectMenu.transform,label,new Vector2(12,y),()=>{projectMenu.SetActive(false);action?.Invoke();},new Vector2(226,36),null,Soft,TextColor,11);
+        }
+
+        void ToggleProjectMenu(){if(projectMenu==null)return;projectMenu.SetActive(!projectMenu.activeSelf);if(projectMenu.activeSelf)projectMenu.transform.SetAsLastSibling();}
+
+        void BindModalActions()
+        {
+            if(newProjectDialog!=null)
+            {
+                foreach(var option in newProjectDialog.GetComponentsInChildren<RuntimeGameTypeButton>(true))
+                {
+                    var button=option.GetComponentInChildren<Button>(true);var id=option.gameTypeId;if(button!=null)Bind(button,()=>ChooseGameType(id));
+                }
+                Bind(FindButtonDeep(newProjectDialog.transform,"Cancelar"),HideNewProjectDialog);
+            }
+            if(gameResultPanel!=null)
+            {
+                Bind(FindButtonDeep(gameResultPanel.transform,"JUGAR OTRA VEZ"),c.Replay);
+                Bind(FindButtonDeep(gameResultPanel.transform,"VOLVER A CONSTRUIR"),()=>c.ExitPlay());
+            }
+        }
+
+        public void SetBuildSection(RuntimeBuildSection section)
+        {
+            if(buildSection==section)return;buildSection=section;worldSelected=section==RuntimeBuildSection.Terrain;
+            if(worldSelected)c.Selection.Clear();
+            Refresh();
+        }
         void SetTransformTool(RuntimeTransformTool tool)
         {
             if(authoringInput==null)return;authoringInput.SetTool(tool);ShowToolStatus(tool);
@@ -145,6 +243,12 @@ namespace CreaJuego.Web
         void UpdateTransformToolButtons()
         {
             if(authoringInput==null)return;if(moveToolButton!=null)moveToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Move?Selected:Soft;if(resizeToolButton!=null)resizeToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Resize?Selected:Soft;
+            if(pencilToolButton!=null)pencilToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Paint&&authoringInput.Brush==RuntimeTileBrush.Pencil?Selected:Soft;
+            if(lineToolButton!=null)lineToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Paint&&authoringInput.Brush==RuntimeTileBrush.Line?Selected:Soft;
+            if(rectangleToolButton!=null)rectangleToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Paint&&authoringInput.Brush==RuntimeTileBrush.Rectangle?Selected:Soft;
+            if(rampToolButton!=null)rampToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Paint&&authoringInput.Brush==RuntimeTileBrush.Ramp?Selected:Soft;
+            if(paintToolButton!=null)paintToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Paint?Selected:Soft;
+            if(eraseToolButton!=null)eraseToolButton.GetComponent<Image>().color=authoringInput.Tool==RuntimeTransformTool.Erase?Danger:Soft;
         }
 
         void BuildNewProjectDialog()
@@ -175,14 +279,9 @@ namespace CreaJuego.Web
 
         public void Refresh()
         {
-            if(c==null||catalog==null)return;ApplyBranding();float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);Clear(list);Clear(properties);
+            if(c==null||catalog==null)return;ApplyBranding();float listScroll=listInitialized?list.parent.GetComponent<ScrollRect>().verticalNormalizedPosition:1;Clear(catalog);if(terrainCatalog!=null)Clear(terrainCatalog);Clear(list);Clear(properties);
             var defs=(c.contentPack!=null?c.contentPack.definitions:c.definitions).Where(c.DefinitionAvailable).OrderBy(d=>d.order).ToArray();
-            for(int i=0;i<defs.Length;i++)
-            {
-                var definition=defs[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,-row*58),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,52),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
-            }
-            int catalogRows=Mathf.CeilToInt(defs.Length/2f);var mediaButton=ButtonAt(catalog,"Añadir imágenes",new Vector2(0,-catalogRows*58),c.PickImages,new Vector2(226,44),null,Selected,TextColor,12);mediaButton.name="Abrir biblioteca de imágenes";
-            ResizeContent(catalog,catalogRows*58+50);
+            RefreshObjectCatalog(defs);RefreshTerrainCatalog();
             int itemRow=0;foreach(var data in c.Project.objects)
             {
                 var captured=data;var definition=c.Find(data.definitionId);bool selected=data.instanceId==c.SelectedId();var button=ButtonAt(list,definition!=null?definition.displayName:data.definitionId,new Vector2(0,itemRow++*-35),()=>Select(captured.instanceId),new Vector2(230,33),Preview(data,definition),selected?Selected:Panel,TextColor,13);button.gameObject.AddComponent<RuntimeItemRow>().instanceId=data.instanceId;
@@ -193,8 +292,71 @@ namespace CreaJuego.Web
             {
                 var item=c.Selection.SelectedItem;var data=c.SelectedData();if(item==null||data==null||item.definition==null){EmptyProperties(ref py);}else{SelectionHeader(item,data,ref py);TryItemProperties(item.definition.kind,data,ref py);TryAppearance(item.definition.kind,data,ref py);}
             }
-            ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);
-            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);if(gameplayHudPanel!=null)gameplayHudPanel.SetActive(!build);if(build&&gameResultPanel!=null)gameResultPanel.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateTransformToolButtons();UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
+            ResizeContent(properties,Mathf.Max(502,py+20));bool build=c.Mode==AuthoringMode.Build;returnButton.gameObject.SetActive(!build);if(projectNameLabel!=null)projectNameLabel.text=string.IsNullOrWhiteSpace(c.Project.projectName)?"Mi aventura":c.Project.projectName;
+            editTop.gameObject.SetActive(build);leftPanel.SetActive(build);rightPanel.SetActive(build);readinessPanel.SetActive(build);brandPanel.SetActive(build);flow.gameObject.SetActive(build);save.gameObject.SetActive(build);if(projectNameLabel!=null)projectNameLabel.gameObject.SetActive(build);if(projectButton!=null)projectButton.gameObject.SetActive(build);if(undoButton!=null)undoButton.gameObject.SetActive(build);if(redoButton!=null)redoButton.gameObject.SetActive(build);if(!build&&projectMenu!=null)projectMenu.SetActive(false);if(gameplayHudPanel!=null)gameplayHudPanel.SetActive(!build);if(build&&gameResultPanel!=null)gameResultPanel.SetActive(false);snap.SetIsOnWithoutNotify(c.Project.alignAutomatically);UpdateBuildSectionPresentation();UpdateTransformToolButtons();UpdateFlow();UpdateReadiness();ApplyResponsiveLayout(true);
+        }
+
+        void RefreshObjectCatalog(GameItemDefinition[] definitions)
+        {
+            var primary=definitions.Where(value=>value.kind!=ItemKind.Platform&&value.kind!=ItemKind.MovingPlatform).ToArray();
+            var quick=definitions.Where(value=>value.kind==ItemKind.Platform||value.kind==ItemKind.MovingPlatform).ToArray();
+            int y=0;y=CatalogGrid(primary,y);
+            if(quick.Length>0)
+            {
+                Label(catalog,"PIEZAS RÁPIDAS",11,new Vector2(2,-y),new Vector2(224,22),Muted,FontStyle.Bold);y+=25;y=CatalogGrid(quick,y);
+            }
+            var mediaButton=ButtonAt(catalog,"Biblioteca de imágenes",new Vector2(0,-y),c.PickImages,new Vector2(226,44),null,Selected,TextColor,11);mediaButton.name="Abrir biblioteca de imágenes";y+=50;
+            ResizeContent(catalog,y);
+        }
+
+        int CatalogGrid(GameItemDefinition[] definitions,int startY)
+        {
+            for(int i=0;i<definitions.Length;i++)
+            {
+                var definition=definitions[i];int column=i%2,row=i/2;var button=ButtonAt(catalog,"+ "+definition.displayName,new Vector2(column*116,-startY-row*58),()=>c.Create(definition.id,BuildCenter()),new Vector2(110,52),definition.icon,Soft,Accent,12);button.name="Añadir "+definition.id;
+            }
+            return startY+Mathf.CeilToInt(definitions.Length/2f)*58;
+        }
+
+        void RefreshTerrainCatalog()
+        {
+            if(terrainCatalog==null)return;int y=0;var palette=c.TilePalette;
+            if(palette==null||palette.tiles==null||!palette.tiles.Any(tile=>tile!=null&&tile.tile!=null))
+            {
+                Label(terrainCatalog,"No hay familias de terreno disponibles.",12,new Vector2(6,-y),new Vector2(218,48),Muted);ResizeContent(terrainCatalog,54);return;
+            }
+            foreach(var family in palette.tiles.Where(tile=>tile!=null&&tile.tile!=null).GroupBy(tile=>string.IsNullOrWhiteSpace(tile.theme)?"Terreno":tile.theme))
+            {
+                Label(terrainCatalog,family.Key.ToUpperInvariant(),11,new Vector2(4,-y),new Vector2(218,22),Muted,FontStyle.Bold);y+=25;
+                foreach(var tile in family)
+                {
+                    var captured=tile;ButtonAt(terrainCatalog,tile.displayName,new Vector2(0,-y),()=>SelectTerrain(captured),new Vector2(226,46),tile.Preview,c.SelectedTileId==tile.id?Selected:Soft,TextColor,12);y+=51;
+                }
+            }
+            ResizeContent(terrainCatalog,y);
+        }
+
+        void SelectTerrain(RuntimeTileDefinition tile)
+        {
+            if(tile==null)return;if(authoringInput!=null&&authoringInput.Brush==RuntimeTileBrush.Ramp&&!tile.SupportsRamp)authoringInput.SetBrush(RuntimeTileBrush.Pencil);
+            c.SelectTile(tile.id);SetTransformTool(RuntimeTransformTool.Paint);Refresh();
+        }
+
+        void UpdateBuildSectionPresentation()
+        {
+            bool objects=buildSection==RuntimeBuildSection.Objects;
+            if(catalog!=null)catalog.parent.gameObject.SetActive(objects);if(terrainCatalog!=null)terrainCatalog.parent.gameObject.SetActive(!objects);
+            if(catalogTitle!=null)catalogTitle.text=objects?"AÑADIR AL JUEGO":"CONSTRUIR TERRENO";
+            if(catalogHint!=null)catalogHint.text=objects?"Elige algo para añadir a tu juego.":"Elige una familia y pinta el recorrido.";
+            if(objectsTabButton!=null)objectsTabButton.GetComponent<Image>().color=objects?Selected:Soft;if(terrainTabButton!=null)terrainTabButton.GetComponent<Image>().color=!objects?Selected:Soft;
+            if(moveToolButton!=null)moveToolButton.gameObject.SetActive(objects);if(resizeToolButton!=null)resizeToolButton.gameObject.SetActive(objects);
+            foreach(var button in new[]{pencilToolButton,lineToolButton,rectangleToolButton,rampToolButton,paintToolButton,eraseToolButton})if(button!=null)button.gameObject.SetActive(!objects);
+            bool headerProject=projectButton!=null;if(newButton!=null)newButton.gameObject.SetActive(objects&&!headerProject);if(saveButton!=null)saveButton.gameObject.SetActive(objects&&!headerProject);if(openButton!=null)openButton.gameObject.SetActive(objects&&!headerProject);if(levelButton!=null)levelButton.gameObject.SetActive(false);
+            if(!headerProject){SetToolbarButton(undoButton,objects?198:568,34);SetToolbarButton(redoButton,objects?236:606,34);}
+            if(headerProject&&objects){SetToolbarButton(moveToolButton,8,62);SetToolbarButton(resizeToolButton,74,70);SetToolbarButton(frameAllButton,300,70);SetToolbarButton(frameSelectedButton,374,76);}
+            else if(!objects){SetToolbarButton(frameAllButton,414,70);SetToolbarButton(frameSelectedButton,488,76);}
+            if(snap!=null){var rect=Rect(snap.transform);rect.anchoredPosition=new Vector2(objects?454:648,8);rect.sizeDelta=new Vector2(objects?180:84,34);var label=snap.GetComponentsInChildren<Text>(true).FirstOrDefault();if(label!=null)label.text="Cuadrícula";}
+            if(rampToolButton!=null){bool rampAvailable=c.TilePalette?.Find(c.SelectedTileId)?.SupportsRamp==true;rampToolButton.interactable=rampAvailable;rampToolButton.GetComponentsInChildren<Text>(true).FirstOrDefault().color=rampAvailable?TextColor:Muted;}
         }
 
         void UpdateFlow()
@@ -263,6 +425,12 @@ namespace CreaJuego.Web
         void ItemProperties(ItemKind kind,RuntimeItemData data,ref int y)
         {
             if(kind!=ItemKind.Background){var size=c.SelectedWorldSize;Group("TAMAÑO",ref y);Slider("Ancho","sizeX",size.x,.25f,30,ref y);Slider("Alto","sizeY",size.y,.25f,30,ref y);}
+            if(kind!=ItemKind.Background&&!string.IsNullOrEmpty(data.mediaAssetId))
+            {
+                Group("IMAGEN IMPORTADA",ref y);Slider("Tamaño de la imagen","visualScale",data.visualScale,.1f,5,ref y);
+                ButtonAt(properties,data.visualFlipX?"Restaurar dirección":"Voltear imagen",new Vector2(6,-y),c.ToggleVisualFlip,new Vector2(238,38),data.visualFlipX?RuntimeIconLibrary.ArrowLeft:RuntimeIconLibrary.ArrowRight,data.visualFlipX?Selected:Soft,TextColor,12);y+=44;
+                Label(properties,"Estos ajustes cambian la imagen sin alterar su zona de colisión.",11,new Vector2(6,-y),new Vector2(238,38),Muted);y+=44;
+            }
             if(kind==ItemKind.Player){Group("MOVIMIENTO",ref y);Slider(c.IsCatchMode?"Velocidad lateral":"Velocidad","speed",data.speed,.2f,5,ref y);if(!c.IsCatchMode)Slider("Fuerza de salto","jump",data.jump,5,18,ref y);Group("PUNTOS DE VIDA",ref y);Slider("Puntos de vida","health",data.health,1,10,ref y);}
             else if(kind==ItemKind.Platform){if(data.definitionId=="muro"||data.definitionId=="rampa")Direction(data,ref y);}
             else if(kind==ItemKind.MovingPlatform){Group("MOVIMIENTO",ref y);Slider("Velocidad","speed",data.speed,.2f,3,ref y);Slider("Distancia","distance",data.distance,.5f,10,ref y);MovementHelp(ref y);}
@@ -432,33 +600,36 @@ namespace CreaJuego.Web
         void ApplyResponsiveLayout(bool force=false)
         {
             if(canvas==null||Screen.width<=0||Screen.height<=0||!force&&screenWidth==Screen.width&&screenHeight==Screen.height)return;
-            screenWidth=Screen.width;screenHeight=Screen.height;if(scaler!=null)scaler.matchWidthOrHeight=1f;
+            screenWidth=Screen.width;screenHeight=Screen.height;if(scaler!=null)scaler.matchWidthOrHeight=1f;ConfigureResponsiveAnchors();
             float effectiveWidth=720f*Screen.width/Mathf.Max(1f,Screen.height);
-            PinSidePanel(leftPanel?.GetComponent<RectTransform>(),true,260);
-            PinSidePanel(rightPanel?.GetComponent<RectTransform>(),false,280);
             if(c?.buildCamera!=null)
             {
-                var cameraRect=c.buildCamera.rect;
-                cameraRect.x=260/effectiveWidth;
-                cameraRect.width=Mathf.Max(.1f,(effectiveWidth-540)/effectiveWidth);
-                c.buildCamera.rect=cameraRect;
+                c.buildCamera.rect=new Rect(260/effectiveWidth,82/720f,Mathf.Max(.1f,(effectiveWidth-540)/effectiveWidth),564/720f);
             }
-            if(!adaptLayoutAtRuntime)return;
-            Stretch(top as RectTransform,0,0,646,0);Stretch(leftPanel?.GetComponent<RectTransform>(),0,effectiveWidth-260,0,74);Stretch(rightPanel?.GetComponent<RectTransform>(),effectiveWidth-280,0,82,74);
-            Stretch(editTop as RectTransform,260,280,596,74);Stretch(readinessPanel?.GetComponent<RectTransform>(),260,0,0,638);Stretch(gameplayHudPanel?.GetComponent<RectTransform>(),0,0,0,0);
-            if(returnButton!=null){var r=Rect(returnButton.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-15,14);}
-            if(save!=null){var r=Rect(save.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-215,15);}
-            if(c?.buildCamera!=null)c.buildCamera.rect=new Rect(260/effectiveWidth,82/720f,Mathf.Max(.1f,(effectiveWidth-540)/effectiveWidth),564/720f);
         }
-        static void PinSidePanel(RectTransform rect,bool left,float width)
+        void ConfigureResponsiveAnchors()
         {
-            if(rect==null)return;
-            rect.anchorMin=new Vector2(left?0:1,rect.anchorMin.y);rect.anchorMax=new Vector2(left?0:1,rect.anchorMax.y);
-            rect.pivot=new Vector2(.5f,rect.pivot.y);rect.anchoredPosition=new Vector2((left?1:-1)*width*.5f,rect.anchoredPosition.y);rect.sizeDelta=new Vector2(width,rect.sizeDelta.y);
+            if(canvas==null)return;
+            Stretch(top as RectTransform,0,0,646,0);Stretch(leftPanel?.GetComponent<RectTransform>(),0,0,0,74,false,true,260);Stretch(rightPanel?.GetComponent<RectTransform>(),0,0,82,74,true,true,280);
+            Stretch(editTop as RectTransform,260,280,596,74);Stretch(readinessPanel?.GetComponent<RectTransform>(),260,0,0,638);Stretch(gameplayHudPanel?.GetComponent<RectTransform>(),0,0,0,0);
+            if(newProjectDialog!=null){Anchor(Rect(newProjectDialog.transform));CenterCard(newProjectDialog.transform.Find("Tarjeta de nuevo proyecto"));}
+            if(gameResultPanel!=null){Anchor(Rect(gameResultPanel.transform));CenterCard(gameResultPanel.transform.Find("Tarjeta de resultado"));}
+            if(projectMenu!=null){var menu=Rect(projectMenu.transform);menu.anchorMin=menu.anchorMax=menu.pivot=Vector2.one;menu.anchoredPosition=new Vector2(-15,-80);menu.sizeDelta=new Vector2(250,276);}
+            if(flow!=null){var r=Rect(flow.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(.5f,0);r.anchoredPosition=new Vector2(-30,13);r.sizeDelta=new Vector2(500,48);}
+            AnchorHeaderRight(projectButton,-15,154);AnchorHeaderRight(redoButton,-173,38);AnchorHeaderRight(undoButton,-215,38);
+            if(projectNameLabel!=null){var r=Rect(projectNameLabel.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-265,37);r.sizeDelta=new Vector2(150,24);}
+            if(returnButton!=null){var r=Rect(returnButton.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-15,14);}
+            if(save!=null){var r=Rect(save.transform);r.anchorMin=r.anchorMax=r.pivot=new Vector2(1,0);r.anchoredPosition=new Vector2(-265,14);r.sizeDelta=new Vector2(150,22);}
         }
+        static void AnchorHeaderRight(Button button,float x,float width){if(button==null)return;var rect=Rect(button.transform);rect.anchorMin=rect.anchorMax=rect.pivot=new Vector2(1,0);rect.anchoredPosition=new Vector2(x,17);rect.sizeDelta=new Vector2(width,40);}
+        static void CenterCard(Transform value){if(value==null)return;var rect=Rect(value);rect.anchorMin=rect.anchorMax=rect.pivot=new Vector2(.5f,.5f);rect.anchoredPosition=Vector2.zero;}
         static void Stretch(RectTransform rect,float left,float right,float bottom,float top)
         {
             if(rect==null)return;rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.pivot=new Vector2(.5f,.5f);rect.offsetMin=new Vector2(left,bottom);rect.offsetMax=new Vector2(-right,-top);
+        }
+        static void Stretch(RectTransform rect,float left,float right,float bottom,float top,bool pinRight,bool vertical,float width)
+        {
+            if(rect==null)return;rect.anchorMin=new Vector2(pinRight?1:0,vertical?0:rect.anchorMin.y);rect.anchorMax=new Vector2(pinRight?1:0,vertical?1:rect.anchorMax.y);rect.pivot=new Vector2(pinRight?1:0,.5f);rect.sizeDelta=new Vector2(width,-bottom-top);rect.anchoredPosition=new Vector2(pinRight?-right:left,(bottom-top)*.5f);
         }
         void TryItemProperties(ItemKind kind,RuntimeItemData data,ref int y){try{ItemProperties(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudieron mostrar algunos ajustes.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}
         void TryAppearance(ItemKind kind,RuntimeItemData data,ref int y){try{Appearance(kind,data,ref y);}catch(Exception exception){Debug.LogException(exception);Label(properties,"No se pudo mostrar Apariencia.",13,new Vector2(6,-y),new Vector2(238,40),WarningText);y+=44;}}

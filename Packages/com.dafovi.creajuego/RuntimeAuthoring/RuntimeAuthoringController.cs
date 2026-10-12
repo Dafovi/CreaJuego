@@ -71,6 +71,11 @@ namespace CreaJuego.Web
         void OnDestroy(){ReleaseImages();}
         public GameItemDefinition Find(string id)=>contentPack!=null?contentPack.Find(id):definitions.FirstOrDefault(d=>d!=null&&d.id==id);
         public bool HasEditableScene=>editableSceneProject!=null&&buildRoot!=null&&buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length>0;
+        public void PrepareEditorPreview()
+        {
+            if(buildRoot==null)return;Selection.Bind(ResolveAuthoredItem);var preview=ReadEditableSceneProject();
+            if(preview!=null){Project=preview;EnsureDefaultAppearances(Project);History.Reset(Project);}
+        }
         public void PrepareEditableScene()
         {
             if(buildRoot==null)buildRoot=new GameObject("Runtime Authoring Root").transform;if(ui==null)ui=GetComponent<RuntimeAuthoringUI>();Selection.Bind(ResolveAuthoredItem);
@@ -232,6 +237,10 @@ namespace CreaJuego.Web
         public void SetMediaAsset(string id)
         {
             var data=SelectedData();if(data==null||Project.mediaAssets.All(asset=>asset==null||asset.id!=id))return;data.mediaAssetId=id;data.customImageBase64=null;data.appearanceId="";data.appearanceChosen=true;ApplySelected(data);CommitEdit();
+        }
+        public void ToggleVisualFlip()
+        {
+            var data=SelectedData();if(data==null)return;data.visualFlipX=!data.visualFlipX;ApplySelected(data);CommitEdit();
         }
         public long MediaBytes=>Project.mediaAssets.Where(asset=>asset!=null).Sum(asset=>(long)RuntimeImageImport.DataBytes(asset.dataUrl)+(asset.originalDataUrl==asset.dataUrl?0:RuntimeImageImport.DataBytes(asset.originalDataUrl)));
         public int MediaUsageCount(string id)=>Project.objects.Count(item=>item.mediaAssetId==id);
@@ -432,7 +441,17 @@ namespace CreaJuego.Web
         {
             if(TilePalette?.Find(tileId)?.tile==null)return;SelectedTileId=tileId;Selection.Clear();ui?.Refresh();
         }
-        public Vector3Int TileCell(Vector3 world)=>buildTilemap!=null?buildTilemap.WorldToCell(world):Vector3Int.zero;
+        void EnsureBuildTilemap()
+        {
+            if(buildTilemap!=null||buildRoot==null||Project==null||TilePalette==null)return;
+            // La escena editable puede contener la representación serializada del terreno,
+            // pero no la referencia C# que la administra. Si la primera pulsación calcula
+            // la celda antes de reconstruirla, WorldToCell devolvía (0,0) y pintaba allí.
+            var stale=buildRoot.Find("Terreno por tiles");
+            if(stale!=null){stale.gameObject.SetActive(false);DestroySafe(stale.gameObject);}
+            buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);
+        }
+        public Vector3Int TileCell(Vector3 world){EnsureBuildTilemap();return buildTilemap!=null?buildTilemap.WorldToCell(world):Vector3Int.zero;}
         public Vector3Int ClampTileCell(Vector3Int cell)
         {
             var bounds=Project?.bounds;if(bounds==null)return cell;cell.x=Mathf.Clamp(cell.x,Mathf.FloorToInt(bounds.left),Mathf.CeilToInt(bounds.right)-1);cell.y=Mathf.Clamp(cell.y,Mathf.FloorToInt(bounds.bottom),Mathf.CeilToInt(bounds.top)-1);cell.z=0;return cell;
@@ -441,14 +460,14 @@ namespace CreaJuego.Web
         {
             start=ClampTileCell(start);end=ClampTileCell(end);int horizontal=Math.Abs(end.x-start.x),direction=Math.Sign(end.y-start.y);if(horizontal==0||direction==0)return start;var bounds=Project?.bounds;int verticalLimit=bounds==null?horizontal:direction>0?Mathf.CeilToInt(bounds.top)-1-start.y:start.y-Mathf.FloorToInt(bounds.bottom);int steps=Mathf.Min(horizontal,Mathf.Max(0,verticalLimit));return new Vector3Int(start.x+Math.Sign(end.x-start.x)*steps,start.y+direction*steps,0);
         }
-        public Vector3 TileCellCenter(Vector3Int cell)=>buildTilemap!=null?buildTilemap.Grid.GetCellCenterWorld(cell):new Vector3(cell.x+.5f,cell.y+.5f,0);
+        public Vector3 TileCellCenter(Vector3Int cell){EnsureBuildTilemap();return buildTilemap!=null?buildTilemap.Grid.GetCellCenterWorld(cell):new Vector3(cell.x+.5f,cell.y+.5f,0);}
         public bool PaintTile(Vector3 world,bool erase,bool record=true)
         {
             return PaintTiles(new[]{TileCell(world)},erase,record);
         }
         public bool PaintTiles(IEnumerable<Vector3Int> cells,bool erase,bool record=true)
         {
-            if(IsCatchMode||TilePalette==null||cells==null)return false;if(buildTilemap==null)buildTilemap=RuntimeTilemapWorld.Build(buildRoot,Project,TilePalette,true);if(buildTilemap==null)return false;
+            if(IsCatchMode||TilePalette==null||cells==null)return false;EnsureBuildTilemap();if(buildTilemap==null)return false;
             var affected=cells.Select(ClampTileCell).Distinct().ToArray();bool rampsChanged=erase&&Project.tileRamps!=null&&Project.tileRamps.RemoveAll(ramp=>affected.Any(cell=>RuntimeTileBrushGeometry.RampTouchesCell(ramp,cell)))>0;
             bool changed=rampsChanged;foreach(var cell in affected)changed|=buildTilemap.SetCell(Project,cell,SelectedTileId,erase);if(rampsChanged)Rebuild();if(changed&&record)CommitEdit();return changed;
         }

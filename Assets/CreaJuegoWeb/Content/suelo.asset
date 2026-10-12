@@ -23,7 +23,7 @@ MonoBehaviour:
   kind: 1
   order: 23
   runtimeOnly: 1
-  availableInWorkshop: 1
+  availableInWorkshop: 0
   extraInWorkshop: 0
   allowMultiple: 1
   properties:

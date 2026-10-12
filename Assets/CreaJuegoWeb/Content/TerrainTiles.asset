@@ -28,3 +28,43 @@ MonoBehaviour:
     rampAscending: {fileID: 0}
     rampDescending: {fileID: 0}
     layer: 0
+  - id: village-auto-terrain
+    displayName: Aldea
+    theme: Aldea
+    legacyIds: []
+    icon: {fileID: -7190719572971877601, guid: 157cbc340d2b7e64ab85168e80e95550, type: 3}
+    tile: {fileID: 11400000, guid: 04b1dbe3818795448bbd48ab880a5f48, type: 2}
+    underlayTile: {fileID: 0}
+    rampAscending: {fileID: 0}
+    rampDescending: {fileID: 0}
+    layer: 0
+  - id: skull-garden-stone
+    displayName: Piedra oscura
+    theme: "Jard\xEDn de calaveras"
+    legacyIds: []
+    icon: {fileID: -770109476, guid: 7ff2b9508f0ccae46af6e5a15b87c353, type: 3}
+    tile: {fileID: 11400000, guid: 57b3458f753776643bfaebe15107943d, type: 2}
+    underlayTile: {fileID: 0}
+    rampAscending: {fileID: 0}
+    rampDescending: {fileID: 0}
+    layer: 0
+  - id: cave-gray
+    displayName: Roca gris
+    theme: Cueva
+    legacyIds: []
+    icon: {fileID: 21300000, guid: 00b29f071c362e94bba19768744e82f7, type: 3}
+    tile: {fileID: 11400000, guid: fc9c6f50873cb4f4191972efef2517db, type: 2}
+    underlayTile: {fileID: 0}
+    rampAscending: {fileID: 21300000, guid: a60543b673449f64884e18a9400d20cc, type: 3}
+    rampDescending: {fileID: 21300000, guid: 7c6493fc739675c4a933741768e6fa22, type: 3}
+    layer: 0
+  - id: cave-brown
+    displayName: "Roca marr\xF3n"
+    theme: Cueva
+    legacyIds: []
+    icon: {fileID: 21300000, guid: 21a16d99ec04f734da9831c83ae4cee2, type: 3}
+    tile: {fileID: 11400000, guid: 4229888a0960a2c49887a2b9bf75b588, type: 2}
+    underlayTile: {fileID: 0}
+    rampAscending: {fileID: 0}
+    rampDescending: {fileID: 0}
+    layer: 0

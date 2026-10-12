@@ -5,6 +5,7 @@ using CreaJuego.Web;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UI;
 namespace CreaJuego.Web.Tests
 {
     public sealed class RuntimeAuthoringTests
@@ -14,7 +15,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void SharedMediaRoundTripKeepsOneImageForSeveralObjects()
         {
             var data=new CreaJuegoProjectData();var media=MediaAssetData.Create("Dragón","data:image/png;base64,YWJj");data.mediaAssets.Add(media);data.objects.Add(new RuntimeItemData{instanceId="1",definitionId="jugador",mediaAssetId=media.id});data.objects.Add(new RuntimeItemData{instanceId="2",definitionId="enemigo",mediaAssetId=media.id});
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(data));Assert.That(restored.schemaVersion,Is.EqualTo(13));Assert.That(restored.mediaAssets.Count,Is.EqualTo(1));Assert.That(restored.objects.Select(item=>item.mediaAssetId).Distinct().Single(),Is.EqualTo(restored.mediaAssets.Single().id));
         }
         [Test] public void LegacyEmbeddedImagesMigrateAndDeduplicate()
         {
@@ -52,7 +53,7 @@ namespace CreaJuego.Web.Tests
             {
                 var collider=wall.GetComponent<Collider2D>();Assert.That(collider.usedByEffector,Is.False);Assert.That(wall.GetComponent<PlatformEffector2D>(),Is.Null);Assert.That(collider.bounds.size.y,Is.GreaterThanOrEqualTo(2.9f));Assert.That(collider.bounds.size.x,Is.GreaterThanOrEqualTo(5.9f));
             }
-            var soilDefinition=controller.Find("suelo");Assert.That(soilDefinition,Is.Not.Null);var soil=controller.Create("suelo",new Vector3(0,-12));Assert.That(soil,Is.Not.Null);Assert.That(soil.GetComponent<OneWayPlatformSurface>(),Is.Null);Assert.That(soil.GetComponent<PlatformEffector2D>(),Is.Null);Assert.That(soil.GetComponent<Collider2D>().usedByEffector,Is.False);
+            var soilDefinition=controller.Find("suelo");Assert.That(soilDefinition,Is.Not.Null);Assert.That(controller.DefinitionAvailable(soilDefinition),Is.False,"Suelo se conserva para proyectos anteriores, pero ya no debe duplicar Plataforma en el catálogo.");var soil=controller.Create("suelo",new Vector3(0,-12));Assert.That(soil,Is.Not.Null);Assert.That(soil.GetComponent<OneWayPlatformSurface>(),Is.Null);Assert.That(soil.GetComponent<PlatformEffector2D>(),Is.Null);Assert.That(soil.GetComponent<Collider2D>().usedByEffector,Is.False);
             var playerItem=controller.buildRoot.GetComponentsInChildren<GameItem>().Single(item=>item.definition.kind==ItemKind.Player);var playerCollider=playerItem.GetComponent<Collider2D>();var support=controller.buildRoot.GetComponentsInChildren<GameItem>().Where(item=>item.definition.id=="plataforma").Select(item=>item.GetComponent<Collider2D>()).First(collider=>playerCollider.bounds.center.x>=collider.bounds.min.x&&playerCollider.bounds.center.x<=collider.bounds.max.x);
             Assert.That(Mathf.Abs(playerCollider.bounds.min.y-support.bounds.max.y),Is.LessThan(.05f));
             foreach(var marker in controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().Where(value=>controller.Project.objects.Single(data=>data.instanceId==value.instanceId).appearanceId.StartsWith("workshop-")&&value.GetComponent<GameItem>().definition.kind!=ItemKind.Background)){var renderer=ItemVisual.Resolve(marker.GetComponent<GameItem>());Assert.That(renderer,Is.Not.Null);Assert.That(renderer.sprite,Is.Not.Null);Assert.That(renderer.bounds.size.x,Is.InRange(.05f,15f));Assert.That(renderer.bounds.size.y,Is.InRange(.05f,15f));}
@@ -103,20 +104,50 @@ namespace CreaJuego.Web.Tests
         [Test] public void PreflightExplainsMissingPlayer(){var data=new CreaJuegoProjectData();Assert.That(RuntimePreflight.Validate(data,_=>null),Does.Contain("Jugador"));}
         [Test] public void NewProjectTypeSelectionCreatesBothAvailableModes()
         {
-            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=controller.GetComponent<RuntimeAuthoringUI>();ui.RefreshEditableLayout();controller.LoadStarterLevel(false);
-            ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));Assert.That(ui.ChooseGameType("catch-and-dodge"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("catch-and-dodge"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.DefinitionAvailable(controller.Find("premio")));Assert.That(controller.DefinitionAvailable(controller.Find("peligro")));Assert.That(controller.DefinitionAvailable(controller.Find("plataforma")),Is.False);
-            ui.ShowNewProjectDialog();
-            Assert.That(ui.ChooseGameType("platformer"),Is.True);Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(12));
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=controller.GetComponent<RuntimeAuthoringUI>();ui.PrepareEditableLayout();controller.LoadStarterLevel(false);
+            ui.ShowNewProjectDialog();Assert.That(ui.NewProjectDialogVisible,Is.True);Assert.That(ui.VisibleGameTypeCount,Is.GreaterThanOrEqualTo(2));var catchChoice=Object.FindObjectsByType<RuntimeGameTypeButton>(FindObjectsInactive.Include).Single(value=>value.gameTypeId=="catch-and-dodge");catchChoice.GetComponentInChildren<Button>(true).onClick.Invoke();Assert.That(controller.Project.gameTypeId,Is.EqualTo("catch-and-dodge"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(controller.DefinitionAvailable(controller.Find("premio")));Assert.That(controller.DefinitionAvailable(controller.Find("peligro")));Assert.That(controller.DefinitionAvailable(controller.Find("plataforma")),Is.False);
+            ui.ShowNewProjectDialog();var cancel=Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Single(value=>value.name=="Cancelar");cancel.onClick.Invoke();Assert.That(ui.NewProjectDialogVisible,Is.False);
+            ui.ShowNewProjectDialog();var platformChoice=Object.FindObjectsByType<RuntimeGameTypeButton>(FindObjectsInactive.Include).Single(value=>value.gameTypeId=="platformer");platformChoice.GetComponentInChildren<Button>(true).onClick.Invoke();Assert.That(controller.Project.gameTypeId,Is.EqualTo("platformer"));Assert.That(controller.Project.objects,Is.Empty);Assert.That(ui.NewProjectDialogVisible,Is.False);
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.gameTypeId,Is.EqualTo("platformer"));Assert.That(restored.schemaVersion,Is.EqualTo(13));
+        }
+        [Test] public void BuildSectionsSeparateObjectsFromTerrainWithoutChangingTheProject()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=controller.GetComponent<RuntimeAuthoringUI>();controller.LoadStarterLevel(false);ui.PrepareEditableLayout();ui.RefreshEditableLayout();
+            int objectCount=controller.Project.objects.Count;var player=controller.Project.objects.Single(value=>value.definitionId=="jugador");Assert.That(controller.Selection.Select(player.instanceId),Is.Not.Null);
+            Assert.That(ui.ActiveBuildSection,Is.EqualTo(RuntimeBuildSection.Objects));Assert.That(ui.ObjectCatalogVisible,Is.True);Assert.That(ui.TerrainCatalogVisible,Is.False);
+            ui.SetBuildSection(RuntimeBuildSection.Terrain);Assert.That(ui.ActiveBuildSection,Is.EqualTo(RuntimeBuildSection.Terrain));Assert.That(ui.ObjectCatalogVisible,Is.False);Assert.That(ui.TerrainCatalogVisible,Is.True);Assert.That(controller.Selection.SelectedItem,Is.Null);Assert.That(controller.Project.objects.Count,Is.EqualTo(objectCount));
+            ui.SetBuildSection(RuntimeBuildSection.Objects);Assert.That(ui.ObjectCatalogVisible,Is.True);Assert.That(ui.TerrainCatalogVisible,Is.False);Assert.That(controller.Project.objects.Count,Is.EqualTo(objectCount));
+        }
+        [Test] public void EditableRedesignPreviewPreservesTheAuthoredLevelAndDoesNotDuplicateControls()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();var ui=controller.GetComponent<RuntimeAuthoringUI>();int authoredItems=controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length;
+            controller.PrepareEditorPreview();ui.PrepareEditableLayout();ui.PrepareEditableLayout();
+            Assert.That(controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>(true).Length,Is.EqualTo(authoredItems));Assert.That(ui.NeedsEditableLayoutRefresh,Is.False);
+            Assert.That(Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Count(value=>value.name=="Pestaña Objetos"),Is.EqualTo(1));Assert.That(Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Count(value=>value.name=="Pestaña Terreno"),Is.EqualTo(1));Assert.That(Object.FindObjectsByType<Button>(FindObjectsInactive.Include).Count(value=>value.name=="Menú Proyecto"),Is.EqualTo(1));
         }
         [Test] public void TilePalettePaintEraseAndJsonRoundTripWork()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);
             Assert.That(controller.TilePalette,Is.Not.Null);Assert.That(controller.TilePalette.tiles.Count(tile=>tile!=null&&tile.tile!=null),Is.GreaterThanOrEqualTo(1));var tile=controller.TilePalette.Default;Assert.That(tile.tile.GetType().Name,Is.EqualTo("RuleTile"));Assert.That(tile.underlayTile,Is.Not.Null);Assert.That(controller.TilePalette.Find("plains-ground-1"),Is.SameAs(tile));controller.SelectTile(tile.id);
             Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1));Assert.That(controller.PaintTile(new Vector3(.8f,.7f),false),Is.False,"Dos puntos de la misma celda no deben duplicar el tile.");
-            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
+            var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(13));Assert.That(restored.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(tile.id));
             controller.Undo();Assert.That(controller.TileCount,Is.Zero);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),false),Is.True);Assert.That(controller.PaintTile(new Vector3(1.2f,1.2f),true),Is.True);Assert.That(controller.TileCount,Is.Zero);
             controller.SelectTile(tile.id);Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);var replacement=controller.TilePalette.tiles.FirstOrDefault(value=>value!=null&&value.tile!=null&&value.id!=tile.id);Assert.That(replacement,Is.Not.Null);controller.SelectTile(replacement.id);Assert.That(controller.PaintTile(new Vector3(.2f,.3f),false),Is.True);Assert.That(controller.TileCount,Is.EqualTo(1),"Pintar otro terreno debe reemplazar la celda, no superponer capas.");Assert.That(controller.Project.tileLayers.SelectMany(layer=>layer.cells).Single().tileId,Is.EqualTo(replacement.id));
+        }
+        [Test] public void FirstTileUsesThePointerCellWhenTheEditableSceneHasNoTilemapRuntimeReference()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);controller.SelectTile(controller.TilePalette.Default.id);
+            var field=typeof(RuntimeAuthoringController).GetField("buildTilemap",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);Assert.That(field,Is.Not.Null);field.SetValue(controller,null);
+            var intended=new Vector3(7.25f,4.75f,0);var cell=controller.TileCell(intended);
+            Assert.That(cell,Is.EqualTo(new Vector3Int(7,4,0)),"La primera pulsación debe calcular su celda real y no caer en el centro (0,0).");
+            Assert.That(controller.PaintTiles(new[]{cell},false),Is.True);Assert.That(controller.Project.tileLayers.SelectMany(layer=>layer.cells).Single().x,Is.EqualTo(7));Assert.That(controller.Project.tileLayers.SelectMany(layer=>layer.cells).Single().y,Is.EqualTo(4));
+        }
+        [Test] public void IllustratedRampUsesItsSpriteShapeAsTheOneWayCollider()
+        {
+            EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);
+            var marker=controller.buildRoot.GetComponentsInChildren<RuntimeAuthoredItem>().First(value=>controller.Project.objects.Single(data=>data.instanceId==value.instanceId).definitionId=="rampa");var item=marker.GetComponent<GameItem>();var visual=ItemVisual.Resolve(item);var box=item.GetComponent<BoxCollider2D>();var polygon=item.GetComponent<PolygonCollider2D>();
+            Assert.That(visual,Is.Not.Null);Assert.That(polygon,Is.Not.Null,"La rampa ilustrada debe generar un collider que siga su silueta.");Assert.That(polygon.enabled,Is.True);Assert.That(polygon.usedByEffector,Is.True);Assert.That(box.enabled,Is.False,"El collider rectangular antiguo no debe bloquear el centro de la rampa.");
+            Assert.That(Mathf.Abs(polygon.bounds.min.x-visual.bounds.min.x),Is.LessThan(.12f));Assert.That(Mathf.Abs(polygon.bounds.max.x-visual.bounds.max.x),Is.LessThan(.12f));Assert.That(Mathf.Abs(polygon.bounds.min.y-visual.bounds.min.y),Is.LessThan(.12f));Assert.That(Mathf.Abs(polygon.bounds.max.y-visual.bounds.max.y),Is.LessThan(.12f));
         }
         [Test] public void TileLineAndRectangleBrushesCoverExpectedCells()
         {
@@ -133,7 +164,7 @@ namespace CreaJuego.Web.Tests
         [Test] public void TileRampIsPreservedInJsonAndDragSnapsToFortyFiveDegrees()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.NewProject(false);var end=controller.ClampRampEnd(new Vector3Int(0,0),new Vector3Int(5,2));Assert.That(end,Is.EqualTo(new Vector3Int(5,5)));
-            controller.Project.tileRamps.Add(new RuntimeTileRampData{id="r1",tileId="cave-gray",startX=0,startY=0,endX=5,endY=5,fillBelow=true});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(12));Assert.That(restored.tileRamps.Single().fillBelow,Is.True);
+            controller.Project.tileRamps.Add(new RuntimeTileRampData{id="r1",tileId="cave-gray",startX=0,startY=0,endX=5,endY=5,fillBelow=true});var restored=ProjectSerializer.FromJson(ProjectSerializer.ToJson(controller.Project));Assert.That(restored.schemaVersion,Is.EqualTo(13));Assert.That(restored.tileRamps.Single().fillBelow,Is.True);
             Assert.That(RuntimeTileBrushGeometry.RampTouchesCell(controller.Project.tileRamps.Single(),new Vector3Int(5,5)),Is.True,"El extremo superior debe pertenecer al área borrable de la rampa.");Assert.That(controller.PaintTiles(new[]{new Vector3Int(5,5)},true),Is.True);Assert.That(controller.Project.tileRamps,Is.Empty,"El borrador normal debe poder eliminar una rampa desde su punta.");
         }
         [Test] public void TileDefinitionsCanBeGroupedByEducationalTheme()
