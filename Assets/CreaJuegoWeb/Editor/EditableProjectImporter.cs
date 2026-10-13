@@ -14,8 +14,9 @@ namespace CreaJuego.Web.Editor
     public static class EditableProjectImporter
     {
         const string CommandLineArgument = "-creajuegoProject";
+        const string MenuPath = "CreaJuego/Proyecto/Importar JSON en escena editable...";
 
-        [MenuItem("CreaJuego/Web/Importar JSON en escena editable...")]
+        [MenuItem(MenuPath)]
         public static void ImportWithFilePicker()
         {
             var path = EditorUtility.OpenFilePanel(
@@ -37,6 +38,12 @@ namespace CreaJuego.Web.Editor
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("No se pudo importar", exception.Message, "Aceptar");
             }
+        }
+
+        [MenuItem(MenuPath, true)]
+        public static bool CanImportWithFilePicker()
+        {
+            return !EditorApplication.isPlaying;
         }
 
         public static void ImportFromCommandLine()

@@ -24,6 +24,27 @@ namespace CreaJuego.Web.Tests
         }
         [Test] public void HistoryUndoRedoRestoresMove(){var data=new CreaJuegoProjectData();data.objects.Add(new RuntimeItemData{instanceId="1",position=Vector3.zero});var history=new RuntimeHistory();history.Reset(data);data.objects[0].position=Vector3.right*4;history.Record(data);Assert.That(history.Undo().objects[0].position,Is.EqualTo(Vector3.zero));Assert.That(history.Redo().objects[0].position,Is.EqualTo(Vector3.right*4));}
         [Test] public void FileStorageSavesAndLoads(){var path=Path.Combine(Path.GetTempPath(),"creajuego-storage-test.json");try{var storage=new FileProjectStorage(path);storage.Save("{\"ok\":true}");Assert.That(storage.Exists);Assert.That(storage.Load(),Does.Contain("true"));}finally{if(File.Exists(path))File.Delete(path);}}
+        [Test] public void EditorExporterWritesCurrentInMemoryProject()
+        {
+            var path=Path.Combine(Path.GetTempPath(),"creajuego-playmode-export-"+System.Guid.NewGuid().ToString("N")+".json");
+            try
+            {
+                var project=new CreaJuegoProjectData{projectName="Nivel editado en Play Mode",gameTypeId="platformer"};
+                project.objects.Add(new RuntimeItemData{instanceId="jugador-prueba",definitionId="jugador",appearanceId="gino",position=new Vector3(4,5)});
+                project.tileLayers.Add(new RuntimeTileLayerData{id="terreno",cells=new List<RuntimeTileCellData>{new RuntimeTileCellData{x=7,y=3,tileId="tierra-cesped"}}});
+
+                global::CreaJuego.Web.Editor.EditableProjectExporter.ExportProjectToPath(project,path);
+
+                var restored=ProjectSerializer.FromJson(File.ReadAllText(path));
+                Assert.That(restored.projectName,Is.EqualTo("Nivel editado en Play Mode"));
+                Assert.That(restored.objects.Single().position,Is.EqualTo(new Vector3(4,5)));
+                Assert.That(restored.tileLayers.Single().cells.Single().tileId,Is.EqualTo("tierra-cesped"));
+            }
+            finally
+            {
+                if(File.Exists(path))File.Delete(path);
+            }
+        }
         [Test] public void StarterLevelIsLayeredAndNewProjectIsCompletelyEmpty()
         {
             EditorSceneManager.OpenScene(global::CreaJuego.Web.Editor.WebSpikeBuilder.ScenePath);var controller=Object.FindAnyObjectByType<RuntimeAuthoringController>();controller.LoadStarterLevel(false);
