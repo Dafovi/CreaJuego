@@ -34,6 +34,7 @@ namespace CreaJuego
         public GameObject prefab;
         public ItemKind kind;
         public int order;
+        [HideInInspector] public bool runtimeOnly;
         public bool availableInWorkshop = true;
         public bool extraInWorkshop;
         public bool allowMultiple = true;

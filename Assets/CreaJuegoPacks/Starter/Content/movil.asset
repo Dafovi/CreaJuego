@@ -22,8 +22,8 @@ MonoBehaviour:
   prefab: {fileID: 7690727540751170571, guid: 7987a2693d2f0974990a20c853aa44d8, type: 3}
   kind: 5
   order: 5
-  availableInWorkshop: 1
-  extraInWorkshop: 1
+  availableInWorkshop: 0
+  extraInWorkshop: 0
   allowMultiple: 1
   properties:
   - path: speed

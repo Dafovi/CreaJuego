@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f1cfbfde4b39c8e41abea40518bbeebb
+timeCreated: 1443622898
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Resources/GUI/Bubble/MouseIcon/Mouse.anim
+  uploadId: 87323

@@ -11,13 +11,19 @@ namespace CreaJuego
 
         public Vector3 SafePosition => safePosition;
         public bool HasSafePosition => hasSafePosition;
-        public float FallLimit => safePosition.y - fallDistance;
+        public float FallLimit => useWorldLimit ? worldLimit : safePosition.y - fallDistance;
+        private bool useWorldLimit;
+        private float worldLimit;
+        public void ConfigureWorldLimit(Vector3 initialPosition, float lowerLimit)
+        {
+            safePosition = initialPosition; hasSafePosition = true; worldLimit = lowerLimit; useWorldLimit = true;
+        }
 
         private void Awake() => CaptureCurrentPosition();
 
         private void FixedUpdate()
         {
-            if (hasSafePosition && transform.position.y < FallLimit) ReturnToStart();
+            if (hasSafePosition && GetComponent<Rigidbody2D>().position.y < FallLimit) ReturnToStart();
         }
 
         public void CaptureCurrentPosition()
@@ -30,11 +36,17 @@ namespace CreaJuego
         {
             if (!hasSafePosition) CaptureCurrentPosition();
             var body = GetComponent<Rigidbody2D>();
-            transform.position = safePosition;
-            body.position = safePosition;
+            var wasSimulated = body.simulated;
+            body.simulated = false;
             body.linearVelocity = Vector2.zero;
             body.angularVelocity = 0;
+            transform.position = safePosition;
+            body.position = safePosition;
+            body.simulated = wasSimulated;
             body.WakeUp();
+            body.position = safePosition;
+            transform.position = safePosition;
+            Physics2D.SyncTransforms();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -22,34 +23,100 @@ namespace CreaJuego
         public static SpriteRenderer Resolve(GameItem item)
         {
             var visual=item.GetComponent<ItemVisual>();
-            return visual != null && visual.renderer != null ? visual.renderer : item.GetComponent<SpriteRenderer>();
+            return visual != null && visual.renderer != null ? visual.renderer : item.GetComponentInChildren<SpriteRenderer>(true);
         }
-        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().OfType<IVisualActionState>().FirstOrDefault(); }
+        void Start() { item=GetComponent<GameItem>(); Apply(); previous=transform.position; support=GetComponents<MonoBehaviour>().Where(component=>component.isActiveAndEnabled).OfType<IVisualMotionState>().FirstOrDefault(); action=GetComponents<MonoBehaviour>().Where(component=>component.isActiveAndEnabled).OfType<IVisualActionState>().FirstOrDefault(); }
         void OnDestroy() { if(graph.IsValid()) graph.Destroy(); }
         public void Apply()
         {
             if(item==null) item=GetComponent<GameItem>();
+            if(renderer==null) renderer=GetComponentsInChildren<SpriteRenderer>(true).FirstOrDefault();
+            if(geometrySource==null) geometrySource=renderer;
             if(item==null || renderer==null) return;
+            if(graph.IsValid()) graph.Destroy();
+            // Runtime authoring prefabs may retain the source kit renderer as a
+            // geometry reference. Keep it for sizing, but show only CreaJuego's visual.
+            renderer.enabled=true;
+            if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             var appearance=item.SelectedAppearance;
+            if(animator!=null)
+            {
+                var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;
+                if(animator.runtimeAnimatorController!=controller){animator.runtimeAnimatorController=controller;animator.Rebind();if(animator.isActiveAndEnabled)animator.Update(0);}
+                animator.enabled=controller!=null || item.customSprite==null && HasDirectClips(appearance);
+            }
+            // Animator.Rebind can restore values serialized in the source prefab.
+            // The educational appearance must therefore be applied afterwards.
             if(item.customSprite!=null) renderer.sprite=item.customSprite;
             else if(appearance!=null) renderer.sprite=appearance.sprite;
             else if(geometrySource!=null) renderer.sprite=geometrySource.sprite;
             renderer.color=BaseColor(item);
             var visualAppearance=item.customSprite==null ? appearance : null;
             var size=geometrySource!=null && (item.stretchVisualToSurface || item.customSprite==null && (appearance==null || !appearance.preserveAspect)) ? geometrySource.size : Vector2.one;
-            var sourceScale=visualAppearance!=null ? visualAppearance.scale : Vector2.one;
-            float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
-            renderer.transform.localScale=new Vector3(sourceScale.x*size.x*educationalScale,sourceScale.y*size.y*educationalScale,1);
-            renderer.transform.localPosition=visualAppearance!=null ? visualAppearance.offset : Vector3.zero;
-            renderer.flipX=visualAppearance!=null && visualAppearance.flipX;
-            if(animator!=null)
-            {
-                var controller=item.customSprite==null && appearance!=null ? appearance.controller : null;
-                if(animator.runtimeAnimatorController!=controller) animator.runtimeAnimatorController=controller;
-                animator.enabled=controller!=null || item.customSprite==null && HasDirectClips(appearance);
-            }
-            if(graph.IsValid()) graph.Destroy();
+            ApplyTransform(visualAppearance,size);
+            renderer.flipX=(visualAppearance!=null && visualAppearance.flipX) ^ item.visualFlipX;
             state=0;
+        }
+        void ApplyTransform(IAppearanceData visualAppearance,Vector2 size)
+        {
+            var sourceScale=visualAppearance!=null?visualAppearance.scale:Vector2.one;float educationalScale=Mathf.Clamp(item.visualScale,.1f,5f);
+            float scaleX=sourceScale.x*educationalScale,scaleY=sourceScale.y*educationalScale;
+            var offset=visualAppearance!=null?visualAppearance.offset:Vector2.zero;
+            bool illustratedRamp=item.definition!=null&&item.definition.id=="rampa"&&item.appearanceId=="workshop-grass-ramp"&&renderer.sprite!=null;
+            if(illustratedRamp)
+            {
+                renderer.drawMode=SpriteDrawMode.Simple;
+                float fit=Mathf.Max(.01f,size.x)/Mathf.Max(.01f,renderer.sprite.bounds.size.x);
+                renderer.transform.localScale=new Vector3(scaleX*fit,scaleY*fit,1);
+                renderer.transform.localRotation=Quaternion.Inverse(transform.localRotation);
+                renderer.flipX=(transform.eulerAngles.z>180f) ^ item.visualFlipX;
+            }
+            else if(item.definition!=null&&item.definition.kind==ItemKind.Platform&&item.stretchVisualToSurface)
+            {
+                renderer.drawMode=SpriteDrawMode.Tiled;renderer.transform.localScale=new Vector3(scaleX,scaleY,1);
+                renderer.size=new Vector2(size.x/Mathf.Max(.001f,Mathf.Abs(scaleX)),size.y/Mathf.Max(.001f,Mathf.Abs(scaleY)));
+                if(renderer.sprite!=null)
+                {
+                    var pivot=new Vector2(renderer.sprite.pivot.x/renderer.sprite.rect.width,renderer.sprite.pivot.y/renderer.sprite.rect.height);
+                    offset+=Vector2.Scale(pivot-new Vector2(.5f,.5f),size);
+                }
+            }
+            else{renderer.drawMode=SpriteDrawMode.Simple;renderer.transform.localRotation=Quaternion.identity;renderer.transform.localScale=new Vector3(scaleX*size.x,scaleY*size.y,1);}
+            renderer.transform.localPosition=offset;
+            ConfigureIllustratedRampCollider(illustratedRamp);
+        }
+        void ConfigureIllustratedRampCollider(bool illustratedRamp)
+        {
+            var box=GetComponent<BoxCollider2D>();
+            var polygon=GetComponent<PolygonCollider2D>();
+            if(!illustratedRamp)
+            {
+                if(box!=null)box.enabled=true;
+                if(polygon!=null)polygon.enabled=false;
+                return;
+            }
+            if(renderer==null||renderer.sprite==null)return;
+            if(polygon==null)polygon=gameObject.AddComponent<PolygonCollider2D>();
+            int shapeCount=renderer.sprite.GetPhysicsShapeCount();
+            if(shapeCount<=0)return;
+            polygon.pathCount=shapeCount;
+            var spritePath=new List<Vector2>();
+            for(int path=0;path<shapeCount;path++)
+            {
+                spritePath.Clear();renderer.sprite.GetPhysicsShape(path,spritePath);
+                var localPath=new Vector2[spritePath.Count];
+                for(int point=0;point<spritePath.Count;point++)
+                {
+                    var world=renderer.transform.TransformPoint(spritePath[point]);
+                    localPath[point]=transform.InverseTransformPoint(world);
+                }
+                polygon.SetPath(path,localPath);
+            }
+            polygon.usedByEffector=GetComponent<PlatformEffector2D>()!=null;
+            polygon.enabled=true;
+            // El collider rectangular pertenecía a la rampa geométrica anterior y
+            // atravesaba el centro del nuevo dibujo triangular.
+            if(box!=null)box.enabled=false;
         }
         static bool HasDirectClips(IAppearanceData appearance)=>appearance!=null &&
             (appearance.idleClip!=null || appearance.moveClip!=null || appearance.jumpClip!=null || appearance.attackClip!=null);
@@ -68,14 +135,17 @@ namespace CreaJuego
         }
         void LateUpdate()
         {
+            if(renderer!=null) renderer.enabled=true;
+            if(geometrySource!=null && geometrySource!=renderer) geometrySource.enabled=false;
             if(item==null || renderer==null || item.definition==null) return;
+            var appearance=item.customSprite==null?item.SelectedAppearance:null;var size=geometrySource!=null&&(item.stretchVisualToSurface||item.customSprite==null&&(appearance==null||!appearance.preserveAspect))?geometrySource.size:Vector2.one;ApplyTransform(appearance,size);
             var body=GetComponent<Rigidbody2D>();
             float transformSpeed=(transform.position.x-previous.x)/Mathf.Max(Time.deltaTime,.0001f);
             float speed=body!=null && Mathf.Abs(body.linearVelocity.x)>.01f ? body.linearVelocity.x : transformSpeed;
             previous=transform.position;
             bool character=item.definition.kind==ItemKind.Player || item.definition.kind==ItemKind.Enemy;
-            var appearance=item.SelectedAppearance;
-            if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (appearance!=null && appearance.flipX);
+            var selectedAppearance=item.SelectedAppearance;
+            if(character && Mathf.Abs(speed)>.05f) renderer.flipX=(speed<0) ^ (selectedAppearance!=null && selectedAppearance.flipX) ^ item.visualFlipX;
             bool attacking=action!=null && action.IsVisuallyAttacking;
             if(item.customSprite==null && HasDirectClips(appearance))
             {
@@ -87,7 +157,7 @@ namespace CreaJuego
                 if(next!=state) PlayDirect(clip,next);
                 return;
             }
-            var profile=appearance!=null ? appearance.animationProfile : null;
+            var profile=selectedAppearance!=null ? selectedAppearance.animationProfile : null;
             if(animator==null || !animator.isActiveAndEnabled || animator.runtimeAnimatorController==null || profile==null) return;
             string named=attacking && !string.IsNullOrEmpty(profile.attack) && animator.HasState(0,Animator.StringToHash(profile.attack)) ? profile.attack :
                 support!=null && !support.IsSupported ? profile.jump : Mathf.Abs(speed)>profile.movementThreshold ? profile.move : profile.idle;

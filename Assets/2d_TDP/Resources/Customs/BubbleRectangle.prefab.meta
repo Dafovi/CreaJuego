@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8d3450be32d173c488fd8fd3d975012e
+timeCreated: 1443711262
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Resources/Customs/BubbleRectangle.prefab
+  uploadId: 87323

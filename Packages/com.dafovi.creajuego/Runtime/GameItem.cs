@@ -10,9 +10,10 @@ namespace CreaJuego
         [HideInInspector] public AppearanceDefinition appearance; // Legacy scene compatibility.
         [HideInInspector] public AppearanceCategory appearanceCategory;
         [HideInInspector] public string appearanceId;
-        public IAppearanceData SelectedAppearance=>appearanceCategory!=null ? appearanceCategory.Find(appearanceId) : appearance;
+        public IAppearanceData SelectedAppearance=>appearanceCategory!=null ? string.IsNullOrEmpty(appearanceId) ? appearanceCategory.Default : appearanceCategory.Find(appearanceId) : appearance;
         public Sprite customSprite;
         [Range(.1f, 5)] public float visualScale = 1;
+        [HideInInspector] public bool visualFlipX;
         [HideInInspector] public bool stretchVisualToSurface;
         [Range(.1f, 12)] public float speed = 2;
         [Range(1, 20)] public float jump = 10;

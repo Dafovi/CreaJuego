@@ -11,6 +11,13 @@ namespace CreaJuego
         GameSessionState State { get; }
         string ConfigurationError();
     }
+    public interface IWorkshopSessionMetrics : IWorkshopSession
+    {
+        int CurrentHealth { get; }
+        int Score { get; }
+        int EnemiesRemaining { get; }
+        string Objective { get; }
+    }
     public interface IBackendValidation { string ConfigurationError(); }
     public static class SceneObjects
     {

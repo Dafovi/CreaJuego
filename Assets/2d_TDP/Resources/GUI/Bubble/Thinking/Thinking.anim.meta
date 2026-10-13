@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 718c17ea32af23a4f9d68c1c1bdd03e4
+timeCreated: 1443578299
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 47537
+  packageName: 2D Dialog Bubble
+  packageVersion: 1.0
+  assetPath: Assets/2d_TDP/Resources/GUI/Bubble/Thinking/Thinking.anim
+  uploadId: 87323

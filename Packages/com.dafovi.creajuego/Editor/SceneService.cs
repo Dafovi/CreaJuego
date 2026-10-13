@@ -76,10 +76,10 @@ namespace CreaJuego.Editor
         public static string RuntimeHelp()
         {
             var session = SceneObjects.All<MonoBehaviour>(SceneManager.GetActiveScene()).OfType<IWorkshopSession>().FirstOrDefault();
-            if (session == null) return "Muévete con A/D o las flechas, salta con Espacio y golpea con X.";
+            if (session == null) return "Muévete con A/D o las flechas, corre con Shift, salta con Espacio y golpea con X o clic.";
             return session.State == GameSessionState.Won ? "¡Tu recorrido puede completarse!" :
                 session.State == GameSessionState.Lost ? "Sin puntos de vida. Detén el juego para cambiar tu recorrido." :
-                "Haz clic en Juego. Muévete con A/D o las flechas, salta con Espacio y golpea con X.";
+                "Haz clic en Juego. Muévete con A/D o las flechas, corre con Shift, salta con Espacio y golpea con X o clic.";
         }
     }
 }

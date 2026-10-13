@@ -10,7 +10,7 @@ namespace CreaJuego.Editor
     {
         public static GameItemDefinition[] Catalog() => AssetDatabase.FindAssets("t:GameItemDefinition")
             .Select(id => AssetDatabase.LoadAssetAtPath<GameItemDefinition>(AssetDatabase.GUIDToAssetPath(id)))
-            .Where(d => d != null).OrderBy(d => d.order).ThenBy(d => d.displayName).ToArray();
+            .Where(d => d != null && !d.runtimeOnly).OrderBy(d => d.order).ThenBy(d => d.displayName).ToArray();
 
         public static IItemBackend Backend(GameItem item) => item.GetComponents<MonoBehaviour>().OfType<IItemBackend>().SingleOrDefault();
 
@@ -40,7 +40,7 @@ namespace CreaJuego.Editor
             EditorSceneManager.MarkSceneDirty(go.scene);
             Selection.activeGameObject = go;
             var category=definition.appearancePack?.CategoryFor(definition.kind);
-            var option=category?.options.FirstOrDefault(o=>o!=null && o.Preview!=null);
+            var option=category?.Default;
             if(option!=null) ItemAppearance.ChooseOption(new[]{item},category,option.id);
             if(definition.kind==ItemKind.Player) {
                 var recovery=go.GetComponent<PlayerFallRecovery>();
